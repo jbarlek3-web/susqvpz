@@ -133,7 +133,7 @@ export function AppShell({
                   className={cn(
                     "relative rounded-full px-3 py-1.5 text-xs font-semibold tracking-wide transition-all duration-150 active:scale-95",
                     active
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                      ? "text-on-surface font-bold bg-transparent border border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
                       : "text-on-surface-variant hover:bg-surface-high/60 hover:text-on-surface",
                   )}
                 >
