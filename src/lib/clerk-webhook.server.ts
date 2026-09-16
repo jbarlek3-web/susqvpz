@@ -358,7 +358,7 @@ export async function handleClerkWebhook(
     const mem = event.data as unknown as Record<string, unknown>;
     const orgObj = mem.organization as Record<string, unknown> | undefined;
     const puData = mem.public_user_data as Record<string, unknown> | undefined;
-    const orgId = typeof mem.organization?.id === "string" ? mem.organization.id : typeof orgObj?.id === "string" ? orgObj.id : typeof mem.organization_id === "string" ? mem.organization_id : null;
+    const orgId = typeof orgObj?.id === "string" ? (orgObj.id as string) : typeof mem.organization_id === "string" ? (mem.organization_id as string) : null;
     const userId = typeof puData?.user_id === "string" ? puData.user_id : null;
     if (orgId && userId) {
       try {
@@ -382,7 +382,7 @@ export async function handleClerkWebhook(
     const mem = event.data as unknown as Record<string, unknown>;
     const orgObj = mem.organization as Record<string, unknown> | undefined;
     const puData = mem.public_user_data as Record<string, unknown> | undefined;
-    const orgId = typeof mem.organization?.id === "string" ? mem.organization.id : typeof orgObj?.id === "string" ? orgObj.id : typeof mem.organization_id === "string" ? mem.organization_id : null;
+    const orgId = typeof orgObj?.id === "string" ? (orgObj.id as string) : typeof mem.organization_id === "string" ? (mem.organization_id as string) : null;
     const userId = typeof puData?.user_id === "string" ? puData.user_id : null;
     if (orgId && userId) {
       try {
