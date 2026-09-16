@@ -161,7 +161,7 @@ export function HouseModelViewer({
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     scene.background = new THREE.Color(0x9fc3e8);
-    scene.fog = new THREE.FogExp2(0xb2d6f5, 0.006);
+    scene.fog = new THREE.FogExp2(0xcfe6fb, 0.0012);
 
     const contentRoot = new THREE.Group();
     contentRoot.name = "DynamicContentRoot";
@@ -558,7 +558,7 @@ export function HouseModelViewer({
 
     if (lightingMode === "day") {
       scene.background = new THREE.Color(0x9fc3e8);
-      scene.fog = new THREE.FogExp2(0xb2d6f5, 0.006);
+      scene.fog = new THREE.FogExp2(0xcfe6fb, 0.0012);
       sun.position.set(45, 75, 40);
       sun.color.setHex(0xfffaed);
       sun.intensity = 2.3;
