@@ -51,7 +51,7 @@ export type AuditLogEntry = {
   id: number;
   actorUserId: string;
   action: string;
-  metadata: Record<string, unknown> | null;
+  metadata: Record<string, any> | null;
   createdAt: string;
 };
 
@@ -64,7 +64,7 @@ export const listAuditLog = createServerFn({ method: "GET" })
       id: number;
       actor_user_id: string;
       action: string;
-      metadata: Record<string, unknown> | null;
+      metadata: Record<string, any> | null;
       created_at: string;
     }>`
       select id, actor_user_id, action, metadata, created_at

@@ -28,6 +28,9 @@ import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ZoningRouteImport } from './routes/zoning'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as OrgAuditLogRouteImport } from './routes/org.audit-log'
+import { Route as OrgBillingRouteImport } from './routes/org.billing'
+import { Route as OrgMembersRouteImport } from './routes/org.members'
 import { Route as ParcelsIdRouteImport } from './routes/parcels.$id'
 import { Route as ApiFeasibilityReportPdfRouteImport } from './routes/api/feasibility-report/pdf'
 import { Route as ApiGoogleDriveCallbackRouteImport } from './routes/api/google-drive/callback'
@@ -135,6 +138,21 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrgAuditLogRoute = OrgAuditLogRouteImport.update({
+  id: '/org/audit-log',
+  path: '/org/audit-log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgBillingRoute = OrgBillingRouteImport.update({
+  id: '/org/billing',
+  path: '/org/billing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgMembersRoute = OrgMembersRouteImport.update({
+  id: '/org/members',
+  path: '/org/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParcelsIdRoute = ParcelsIdRouteImport.update({
   id: '/parcels/$id',
   path: '/parcels/$id',
@@ -212,6 +230,9 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/zoning': typeof ZoningRoute
   '/api/health': typeof ApiHealthRoute
+  '/org/audit-log': typeof OrgAuditLogRoute
+  '/org/billing': typeof OrgBillingRoute
+  '/org/members': typeof OrgMembersRoute
   '/parcels/$id': typeof ParcelsIdRoute
   '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
   '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
@@ -244,6 +265,9 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/zoning': typeof ZoningRoute
   '/api/health': typeof ApiHealthRoute
+  '/org/audit-log': typeof OrgAuditLogRoute
+  '/org/billing': typeof OrgBillingRoute
+  '/org/members': typeof OrgMembersRoute
   '/parcels/$id': typeof ParcelsIdRoute
   '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
   '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
@@ -277,6 +301,9 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/zoning': typeof ZoningRoute
   '/api/health': typeof ApiHealthRoute
+  '/org/audit-log': typeof OrgAuditLogRoute
+  '/org/billing': typeof OrgBillingRoute
+  '/org/members': typeof OrgMembersRoute
   '/parcels/$id': typeof ParcelsIdRoute
   '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
   '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
@@ -311,6 +338,9 @@ export interface FileRouteTypes {
     | '/terms'
     | '/zoning'
     | '/api/health'
+    | '/org/audit-log'
+    | '/org/billing'
+    | '/org/members'
     | '/parcels/$id'
     | '/api/feasibility-report/pdf'
     | '/api/google-drive/callback'
@@ -343,6 +373,9 @@ export interface FileRouteTypes {
     | '/terms'
     | '/zoning'
     | '/api/health'
+    | '/org/audit-log'
+    | '/org/billing'
+    | '/org/members'
     | '/parcels/$id'
     | '/api/feasibility-report/pdf'
     | '/api/google-drive/callback'
@@ -375,6 +408,9 @@ export interface FileRouteTypes {
     | '/terms'
     | '/zoning'
     | '/api/health'
+    | '/org/audit-log'
+    | '/org/billing'
+    | '/org/members'
     | '/parcels/$id'
     | '/api/feasibility-report/pdf'
     | '/api/google-drive/callback'
@@ -408,6 +444,9 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ZoningRoute: typeof ZoningRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  OrgAuditLogRoute: typeof OrgAuditLogRoute
+  OrgBillingRoute: typeof OrgBillingRoute
+  OrgMembersRoute: typeof OrgMembersRoute
   ParcelsIdRoute: typeof ParcelsIdRoute
   ApiFeasibilityReportPdfRoute: typeof ApiFeasibilityReportPdfRoute
   ApiGoogleDriveCallbackRoute: typeof ApiGoogleDriveCallbackRoute
@@ -556,6 +595,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/org/audit-log': {
+      id: '/org/audit-log'
+      path: '/org/audit-log'
+      fullPath: '/org/audit-log'
+      preLoaderRoute: typeof OrgAuditLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/billing': {
+      id: '/org/billing'
+      path: '/org/billing'
+      fullPath: '/org/billing'
+      preLoaderRoute: typeof OrgBillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/members': {
+      id: '/org/members'
+      path: '/org/members'
+      fullPath: '/org/members'
+      preLoaderRoute: typeof OrgMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parcels/$id': {
       id: '/parcels/$id'
       path: '/parcels/$id'
@@ -656,6 +716,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ZoningRoute: ZoningRoute,
   ApiHealthRoute: ApiHealthRoute,
+  OrgAuditLogRoute: OrgAuditLogRoute,
+  OrgBillingRoute: OrgBillingRoute,
+  OrgMembersRoute: OrgMembersRoute,
   ParcelsIdRoute: ParcelsIdRoute,
   ApiFeasibilityReportPdfRoute: ApiFeasibilityReportPdfRoute,
   ApiGoogleDriveCallbackRoute: ApiGoogleDriveCallbackRoute,
