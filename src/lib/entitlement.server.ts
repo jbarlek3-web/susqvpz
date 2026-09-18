@@ -1,5 +1,5 @@
 import { auth, clerkClient } from "@clerk/tanstack-react-start/server";
-import { PRO_PLAN_KEY } from "@/lib/billing-config";
+import { ORG_PLAN_KEY, PRO_PLAN_KEY } from "@/lib/billing-config";
 import {
   assertProEntitlement,
   resolveEntitlement,
@@ -12,7 +12,7 @@ export async function currentEntitlement(): Promise<EntitlementStatus> {
   const session = await auth();
   return resolveEntitlement(
     session,
-    PRO_PLAN_KEY,
+    [PRO_PLAN_KEY, ORG_PLAN_KEY],
     process.env.ADMIN_CLERK_EMAIL,
     (userId) => clerkClient().users.getUser(userId),
   );

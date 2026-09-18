@@ -363,14 +363,39 @@ export async function handleClerkWebhook(
     if (orgId && userId) {
       try {
         const { getSql } = await import("./db.ts");
+        const { logAuditEvent } = await import("./audit-log.server.ts");
         const sql = await getSql();
         const createdAt = typeof mem.created_at === "number" ? new Date(mem.created_at) : new Date();
+        const role = mem.role as string;
+        // Read the prior role before upserting, so we can tell "new member"
+        // apart from "role changed" for the audit trail below. Clerk's
+        // membership webhook payload carries no separate "performed by" admin
+        // id, so the audited actor is the affected member themselves.
+        const previous = await sql<{ role: string }>`
+          select role from organization_memberships
+          where user_id = ${userId} and organization_id = ${orgId}
+        `;
         await sql`
           insert into organization_memberships (user_id, organization_id, role, created_at)
-          values (${userId}, ${orgId}, ${mem.role as string}, ${createdAt})
+          values (${userId}, ${orgId}, ${role}, ${createdAt})
           on conflict (user_id, organization_id) do update set
             role = excluded.role
         `;
+        if (previous.length === 0) {
+          await logAuditEvent(sql, {
+            organizationId: orgId,
+            actorUserId: userId,
+            action: "member.added",
+            metadata: { role },
+          });
+        } else if (previous[0].role !== role) {
+          await logAuditEvent(sql, {
+            organizationId: orgId,
+            actorUserId: userId,
+            action: "member.role_changed",
+            metadata: { from: previous[0].role, to: role },
+          });
+        }
       } catch (err) {
         console.error("[clerk-webhook] failed to sync organization membership data", err);
         return json({ error: "Organization membership sync failed" }, 500);
@@ -387,10 +412,16 @@ export async function handleClerkWebhook(
     if (orgId && userId) {
       try {
         const { getSql } = await import("./db.ts");
+        const { logAuditEvent } = await import("./audit-log.server.ts");
         const sql = await getSql();
         await sql`
           delete from organization_memberships where user_id = ${userId} and organization_id = ${orgId}
         `;
+        await logAuditEvent(sql, {
+          organizationId: orgId,
+          actorUserId: userId,
+          action: "member.removed",
+        });
       } catch (err) {
         console.error("[clerk-webhook] failed to delete organization membership data", err);
         return json({ error: "Organization membership delete failed" }, 500);

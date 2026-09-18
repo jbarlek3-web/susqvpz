@@ -32,14 +32,15 @@ const LOCKED: EntitlementStatus = {
 
 export async function resolveEntitlement(
   session: EntitlementSession,
-  planKey: string,
+  planKeys: string | string[],
   rawAdminEmail: string | undefined,
   getUser: (userId: string) => Promise<ClerkAdminCandidate>,
 ): Promise<EntitlementStatus> {
   if (!session.userId) return LOCKED;
 
+  const keys = Array.isArray(planKeys) ? planKeys : [planKeys];
   try {
-    if (typeof session.has === "function" && session.has({ plan: planKey })) {
+    if (typeof session.has === "function" && keys.some((key) => session.has({ plan: key }))) {
       return { isPro: true, status: "active", currentPeriodEnd: null };
     }
   } catch {

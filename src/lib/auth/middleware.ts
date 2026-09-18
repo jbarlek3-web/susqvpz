@@ -35,3 +35,18 @@ export const authMiddleware = createMiddleware({ type: "function" })
     const { userId, orgId } = await requireUser();
     return next({ context: { userId, organizationId: orgId ?? undefined } });
   });
+
+/**
+ * Like `authMiddleware`, but additionally requires the caller be an
+ * `org:admin` of their active organization. Use on every server function
+ * behind an admin-only route (org billing, member management, audit log).
+ * Never gate these on a client-side role check alone.
+ */
+export const adminMiddleware = createMiddleware({ type: "function" })
+  .server(async ({ next }) => {
+    const { assertSameSiteRequest } = await import("./isolation.server");
+    const { requireOrgAdmin } = await import("./verify.server");
+    assertSameSiteRequest();
+    const { userId, orgId } = await requireOrgAdmin();
+    return next({ context: { userId, organizationId: orgId } });
+  });

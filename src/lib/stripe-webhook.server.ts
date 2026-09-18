@@ -178,6 +178,8 @@ export async function processStripeEvent(
         typeof obj.items?.data?.[0]?.price?.product === "string"
           ? obj.items.data[0].price.product
           : null;
+      const seatCount =
+        typeof obj.items?.data?.[0]?.quantity === "number" ? obj.items.data[0].quantity : null;
 
       const existing = await tx<{ id: number }>`
         select id from stripe_entitlements
@@ -196,6 +198,7 @@ export async function processStripeEvent(
               subscription_id = coalesce(${subscriptionId}, subscription_id),
               customer_id = coalesce(${customerId}, customer_id),
               product_id = coalesce(${productId}, product_id),
+              seat_count = coalesce(${seatCount}, seat_count),
               status = ${status},
               current_period_end = coalesce(${currentPeriodEnd}, current_period_end),
               updated_at = now()
@@ -204,9 +207,9 @@ export async function processStripeEvent(
       } else {
         await tx`
           insert into stripe_entitlements
-            (organization_id, user_id, subscription_id, customer_id, product_id, status, current_period_end, updated_at)
+            (organization_id, user_id, subscription_id, customer_id, product_id, seat_count, status, current_period_end, updated_at)
           values
-            (${organizationId}, ${userId}, ${subscriptionId}, ${customerId}, ${productId}, ${status}, ${currentPeriodEnd}, now())
+            (${organizationId}, ${userId}, ${subscriptionId}, ${customerId}, ${productId}, ${seatCount}, ${status}, ${currentPeriodEnd}, now())
         `;
       }
     } else if (event.type === "customer.subscription.deleted") {

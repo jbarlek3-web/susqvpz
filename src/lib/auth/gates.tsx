@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { Navigate } from "@tanstack/react-router";
-import { UserButton as ClerkUserButton, OrganizationSwitcher as ClerkOrganizationSwitcher } from "@clerk/tanstack-react-start";
+import {
+  UserButton as ClerkUserButton,
+  OrganizationSwitcher as ClerkOrganizationSwitcher,
+  useAuth,
+} from "@clerk/tanstack-react-start";
 import { useCurrentUserState } from "./use-current-user";
 
 /**
@@ -53,4 +57,16 @@ export function UserButton() {
 
 export function OrganizationSwitcher() {
   return <ClerkOrganizationSwitcher hidePersonal={false} />;
+}
+
+/**
+ * Render children only when the active organization membership's role is
+ * `org:admin`. UX-only — the routes/server functions behind this gate must
+ * ALSO enforce it server-side via `adminMiddleware` (`./middleware`), since
+ * this component is trivially bypassable client-side.
+ */
+export function RequireOrgAdmin({ children }: { children: ReactNode }) {
+  const { isLoaded, orgId, orgRole } = useAuth();
+  if (!isLoaded || !orgId || orgRole !== "org:admin") return null;
+  return <>{children}</>;
 }

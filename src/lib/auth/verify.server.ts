@@ -39,7 +39,12 @@ export class UnauthorizedError extends Error {
   }
 }
 
-export type VerifiedUser = { id: string; email: string | null; orgId: string | null };
+export type VerifiedUser = {
+  id: string;
+  email: string | null;
+  orgId: string | null;
+  orgRole: string | null;
+};
 
 /**
  * Resolve the signed-in user from the current request, or `null` when auth isn't
@@ -51,14 +56,23 @@ export async function getSessionUser(): Promise<VerifiedUser | null> {
   if (!authConfigured) return null;
   const session = await auth();
   if (!session.userId) return null;
-  return { id: session.userId, email: null, orgId: session.orgId ?? null };
+  return {
+    id: session.userId,
+    email: null,
+    orgId: session.orgId ?? null,
+    orgRole: session.orgRole ?? null,
+  };
 }
 
 /**
  * Resolve the current user id for a server function, or throw when unauthorized.
  * Prefer `authMiddleware` (`./middleware`), which calls this for you.
  */
-export async function requireUser(): Promise<{ userId: string; orgId: string | null }> {
+export async function requireUser(): Promise<{
+  userId: string;
+  orgId: string | null;
+  orgRole: string | null;
+}> {
   if (!authConfigured) {
     if (databaseConfigured) {
       throw new Error(
@@ -66,14 +80,40 @@ export async function requireUser(): Promise<{ userId: string; orgId: string | n
           "refusing to fall back to the shared dev user against a real database.",
       );
     }
-    return { userId: DEV_USER_ID, orgId: null };
+    return { userId: DEV_USER_ID, orgId: null, orgRole: null };
   }
   const user = await getSessionUser();
   if (!user) throw new UnauthorizedError();
-  return { userId: user.id, orgId: user.orgId };
+  return { userId: user.id, orgId: user.orgId, orgRole: user.orgRole };
 }
 
 export async function requireUserId(): Promise<string> {
   const { userId } = await requireUser();
   return userId;
+}
+
+/**
+ * Thrown by `requireOrgAdmin` when the caller is signed in but is not an
+ * `org:admin` of their active organization. Carries `status: 403`.
+ */
+export class ForbiddenError extends Error {
+  readonly status = 403;
+  constructor(message = "Forbidden") {
+    super(message);
+    this.name = "ForbiddenError";
+  }
+}
+
+/**
+ * Resolve the current user id AND require they are an `org:admin` of an
+ * active organization. Used to gate admin-only server functions (org
+ * billing, member management, audit log). Never trust a client-supplied
+ * role — this reads Clerk's server-verified session only.
+ */
+export async function requireOrgAdmin(): Promise<{ userId: string; orgId: string }> {
+  const { userId, orgId, orgRole } = await requireUser();
+  if (!orgId || orgRole !== "org:admin") {
+    throw new ForbiddenError("An organization admin role is required");
+  }
+  return { userId, orgId };
 }
