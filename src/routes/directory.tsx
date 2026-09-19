@@ -65,28 +65,7 @@ function ProDirectories() {
             loading: false,
           });
       });
-    useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
     return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
-  return () => {
       current = false;
     };
   }, []);
@@ -107,28 +86,7 @@ function ProDirectories() {
             loading: false,
           });
       });
-    useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
     return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
-  return () => {
       current = false;
     };
   }, [activeTab, municipalities.data, municipalities.loading]);
@@ -206,28 +164,7 @@ function DirectoryLoadState<T>({
   children: (data: T) => ReactNode;
 }) {
   if (state.loading) {
-    useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
-  return (
+    return (
       <div className="grid min-h-64 place-items-center rounded-lg border border-outline-variant bg-card">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> Loading protected directory…
@@ -236,28 +173,7 @@ function DirectoryLoadState<T>({
     );
   }
   if (state.error || !state.data) {
-    useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
-  return (
+    return (
       <div className="rounded-lg border border-destructive/30 bg-card px-5 py-12 text-center">
         <p className="font-medium">{state.error ?? "This directory is unavailable."}</p>
         <p className="mt-2 text-sm text-muted-foreground">Reload the page to try again.</p>
@@ -281,27 +197,6 @@ function CountyDirectory({ data }: { data: CountyDirectoryPayload }) {
       ),
     [data.records, needle],
   );
-
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
 
   return (
     <section>
@@ -329,27 +224,6 @@ function CountyDirectory({ data }: { data: CountyDirectoryPayload }) {
 }
 
 function CountyCard({ entry }: { entry: CountyDirectoryRecord }) {
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
   return (
     <Card>
       <CardContent className="p-5">
@@ -408,27 +282,6 @@ function ContactLine({
       <Icon className="mt-0.5 size-4 shrink-0 text-secondary" /> <span>{text}</span>
     </>
   );
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
   return (
     <li className="flex items-start gap-2 text-on-surface-variant">
       {href ? (
@@ -466,27 +319,6 @@ function MunicipalityDirectory({ data }: { data: MunicipalityDirectoryPayload })
   }, [county, data.records, query]);
 
   useEffect(() => setVisible(60), [county, query]);
-
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
 
   return (
     <section>
@@ -557,27 +389,6 @@ function MunicipalityCard({ entry }: { entry: MunicipalityDirectoryRecord }) {
     const value = entry[key];
     return typeof value === "string" && /^https?:\/\//i.test(value) ? [{ label, url: value }] : [];
   });
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
   return (
     <Card>
       <CardContent className="p-5">
@@ -646,27 +457,6 @@ function DirectorySearch({
 }
 
 function EmptySearch({ label, onClear }: { label: string; onClear: () => void }) {
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
   return (
     <div className="mt-4 rounded-lg border border-dashed border-outline-variant bg-card px-5 py-12 text-center">
       <Building2 className="mx-auto size-8 text-on-surface-variant" />
@@ -739,9 +529,9 @@ function DocumentCategory({ title, content }: { title: string, content: string }
   if (!content || content.toUpperCase().includes('NO MUNICIPAL DEVELOPMENT FORM VERIFIED ONLINE')) return null;
   const items = parseUrls(content);
   return (
-    <div className="mt-3">
+    <div className="mt-3 border border-outline-variant rounded p-3">
       <h3 className="text-sm font-semibold text-secondary">{title}</h3>
-      <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
+      <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
         {items.map((item, i) => (
           <li key={i} className="flex items-start gap-1">
             <span>•</span>
