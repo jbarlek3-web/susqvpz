@@ -36,7 +36,6 @@ import type {
   InteriorFlooring,
   InteriorWallColor,
   RoofMaterial,
-  StudioSceneMode,
   StudioViewLevel,
 } from "@/lib/subdivision/types";
 
@@ -76,8 +75,6 @@ function Scene3DPage() {
 
   const subdivisionConfig = activeProfile.subdivision;
 
-  // 2. 3D Scene Mode State
-  const [sceneMode, setSceneMode] = useState<StudioSceneMode>("subdivision");
   const [activeTab, setActiveTab] = useState<ActiveTab>("UnderwritingCost");
 
   // 3. 3D House Design Spec State
@@ -350,6 +347,18 @@ function Scene3DPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
               <div className="flex items-center gap-2">
                 
+
+                <button
+                  onClick={() => setActiveTab("Studio3D")}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "Studio3D"
+                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                      : "bg-white/5 text-muted-foreground hover:text-foreground border border-white/10"
+                  }`}
+                >
+                  <Home className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Design Studio Controls</span>
+                </button>
 
                 <button
                   onClick={() => setActiveTab("ZoningRestrictions")}
