@@ -589,7 +589,7 @@ test("F13-T2-5: Malformed session object with throwing 'has' function falls thro
 // TIER 3: CROSS-FEATURE COMBINATIONS (5 tests for R3)
 // ---------------------------------------------------------------------------
 
-test("R3-T3-1: Query resolver location profile + 67-County cost factor + Dynamic underwriting calculation", () => {
+test("R3-T3-1: Query resolver location profile + 4-County cost factor + Dynamic underwriting calculation", () => {
   // Step 1: Query resolver extracts Lancaster location
   const resolved = resolveAddressOrParcel("125 Lititz Pike, Lancaster, PA");
   const sub = resolved.subdivision;
@@ -805,7 +805,7 @@ test("R3-T4-5: Complete Full-Stack Due Diligence Report: Query parcel -> Check P
   assert.ok(res.parcel !== null);
   const p = res.parcel;
 
-  // Step 2: Check county planning contact from official 67-county planning directory
+  // Step 2: Check county planning contact from official 4-county planning directory
   const countyPlan = planningDirectory.find((c) => c.county === p.county);
   assert.ok(countyPlan !== undefined);
   assert.ok(countyPlan.departmentName.length > 0);
