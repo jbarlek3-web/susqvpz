@@ -149,17 +149,15 @@ test("F11-T1-5: Karst sinkhole hazard classification applies geological stratifi
   assert.equal(yorkSub.karstRisk, "Low");
 });
 
-// Feature 12: 67-County Reference Catalog (R3)
-test("F12-T1-1: PA County Planning Directory encompasses all 67 Pennsylvania counties without omissions or duplicates", () => {
-  assert.equal(planningDirectory.length, 67);
+// Feature 12: 4-County Reference Catalog (R3)
+test("F12-T1-1: PA County Planning Directory encompasses all 4 Pennsylvania counties without omissions or duplicates", () => {
+  assert.equal(planningDirectory.length, 4);
 
   const countyNames = new Set(planningDirectory.map((c) => c.county));
-  assert.equal(countyNames.size, 67);
+  assert.equal(countyNames.size, 4);
 
   const keyCounties = [
-    "Adams", "Allegheny", "Berks", "Bucks", "Chester", "Cumberland",
-    "Dauphin", "Delaware", "Erie", "Lancaster", "Lehigh", "Montgomery",
-    "Northampton", "Philadelphia", "Westmoreland", "York",
+    "Cumberland", "Dauphin", "Lancaster", "York",
   ];
   for (const kc of keyCounties) {
     assert.ok(countyNames.has(kc), `Missing anticipated county: ${kc}`);
@@ -167,7 +165,7 @@ test("F12-T1-1: PA County Planning Directory encompasses all 67 Pennsylvania cou
 });
 
 test("F12-T1-2: Pro Directory counties catalog verifies official contact and zoning status classification", () => {
-  assert.equal(countiesData.records.length, 67);
+  assert.equal(countiesData.records.length, 4);
 
   for (const rec of countiesData.records) {
     assert.ok(rec.county.length > 0);
@@ -181,8 +179,8 @@ test("F12-T1-2: Pro Directory counties catalog verifies official contact and zon
   }
 });
 
-test("F12-T1-3: Pro Directory municipalities catalog contains 1,290 records mapped to valid PA counties", () => {
-  assert.equal(municipalitiesData.records.length, 1_290);
+test("F12-T1-3: Pro Directory municipalities catalog contains 202 records mapped to valid PA counties", () => {
+  assert.equal(municipalitiesData.records.length, 202);
 
   const validCountySet = new Set(countiesData.records.map((c) => c.county.toLowerCase()));
   for (const mun of municipalitiesData.records) {
@@ -379,7 +377,7 @@ test("F11-T2-5: Spatial coordinate bounds check validates latitude/longitude ord
   assert.ok(!isInside(pointOutside.lat, pointOutside.lng, yorkBounds));
 });
 
-// Feature 12 Boundaries: 67-County Reference Catalog
+// Feature 12 Boundaries: 4-County Reference Catalog
 test("F12-T2-1: Case-insensitive county lookup handles arbitrary casing cleanly", () => {
   const normalizeCounty = (input: string): County => {
     const s = input.trim().toLowerCase();
@@ -617,7 +615,7 @@ test("R3-T3-2: Query resolver + Pro directory municipality lookup + eCode360 ord
   const munName = resolved.parcel.municipality;
   assert.equal(munName, "Camp Hill Borough");
 
-  // Step 2: Search 1,290 municipalities catalog
+  // Step 2: Search 202 municipalities catalog
   const match = municipalitiesData.records.find(
     (m) => m.county === "Cumberland" && m.municipality.toLowerCase().includes("camp hill"),
   );
@@ -715,7 +713,7 @@ test("R3-T4-1: Multi-County Tri-Lateral Site Screening Journey: Compare parcels 
   assert.ok(costLancaster.singleHomeTotalCost > costYork.singleHomeTotalCost);
 });
 
-test("R3-T4-2: Enterprise Land Acquisition Workflow: Free user blocked -> Upgrades to Pro -> Ingests 1,290 municipalities -> Evaluates site feasibility with full pro forma", async () => {
+test("R3-T4-2: Enterprise Land Acquisition Workflow: Free user blocked -> Upgrades to Pro -> Ingests 202 municipalities -> Evaluates site feasibility with full pro forma", async () => {
   // Phase 1: Free user hits Pro directory route
   const freeEntitlement = await resolveEntitlement(
     { userId: "free_dev_1", has: () => false },
@@ -747,8 +745,8 @@ test("R3-T4-2: Enterprise Land Acquisition Workflow: Free user blocked -> Upgrad
   const verified = assertProEntitlement(proEntitlement);
   assert.ok(verified.isPro);
 
-  // Phase 3: Ingest 1,290 municipalities
-  assert.equal(municipalitiesData.records.length, 1_290);
+  // Phase 3: Ingest 202 municipalities
+  assert.equal(municipalitiesData.records.length, 202);
   const swatara = municipalitiesData.records.find((m) => m.municipality === "Swatara Township");
   assert.ok(swatara !== undefined);
 

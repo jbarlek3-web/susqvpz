@@ -13,8 +13,8 @@ const municipalities = JSON.parse(
 ) as { records: unknown[] };
 
 test("both supplied directories have their complete normalized record counts", () => {
-  assert.equal(counties.records.length, 67);
-  assert.equal(municipalities.records.length, 1_290);
+  assert.equal(counties.records.length, 4);
+  assert.equal(municipalities.records.length, 202);
 });
 
 test("directory data is loaded only after server-side Pro authorization", () => {

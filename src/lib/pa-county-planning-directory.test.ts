@@ -5,14 +5,14 @@ import zoningSourceRows from "./data/pa-county-zoning-source-urls.json" with { t
 
 const PA_COUNTY_PLANNING_DIRECTORY = directoryRows;
 
-test("Pennsylvania county directory contains all 67 unique counties", () => {
-  assert.equal(PA_COUNTY_PLANNING_DIRECTORY.length, 67);
-  assert.equal(new Set(PA_COUNTY_PLANNING_DIRECTORY.map((entry) => entry.county)).size, 67);
+test("Pennsylvania county directory contains all 4 unique counties", () => {
+  assert.equal(PA_COUNTY_PLANNING_DIRECTORY.length, 4);
+  assert.equal(new Set(PA_COUNTY_PLANNING_DIRECTORY.map((entry) => entry.county)).size, 4);
 });
 
-test("county zoning source URLs are deduplicated to 32 counties", () => {
-  assert.equal(zoningSourceRows.length, 32);
-  assert.equal(new Set(zoningSourceRows.map((entry) => entry.county)).size, 32);
+test("county zoning source URLs are deduplicated to 3 counties", () => {
+  assert.equal(zoningSourceRows.length, 3);
+  assert.equal(new Set(zoningSourceRows.map((entry) => entry.county)).size, 3);
 });
 
 test("every directory entry contains only department identification and URL fields", () => {

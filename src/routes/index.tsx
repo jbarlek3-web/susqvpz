@@ -95,7 +95,7 @@ function Home() {
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <Stat n="4" l="Core counties" />
             <Stat n="72" l="York municipalities" />
-            <Stat n="67" l="PA county contacts" />
+            <Stat n="4" l="PA county contacts" />
           </div>
         </div>
       </section>
