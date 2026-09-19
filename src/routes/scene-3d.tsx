@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/app-shell";
-import { HouseModelViewer, DEFAULT_HOUSE_SPEC } from "@/components/scene-3d/HouseModelViewer";
+import { DEFAULT_HOUSE_SPEC } from "@/components/scene-3d/HouseModelViewer";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import {
   Building2,
@@ -78,7 +78,7 @@ function Scene3DPage() {
 
   // 2. 3D Scene Mode State
   const [sceneMode, setSceneMode] = useState<StudioSceneMode>("subdivision");
-  const [activeTab, setActiveTab] = useState<ActiveTab>("Studio3D");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("UnderwritingCost");
 
   // 3. 3D House Design Spec State
   const [houseSpec, setHouseSpec] = useState<HouseDesignSpec>({
@@ -288,31 +288,7 @@ function Scene3DPage() {
                 />
               </div>
 
-              {/* Mode Toggle Button */}
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md">
-                <button
-                  onClick={() => setSceneMode("subdivision")}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                    sceneMode === "subdivision"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                  }`}
-                >
-                  <Waves className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Subdivision</span>
-                </button>
-                <button
-                  onClick={() => setSceneMode("houseStudio")}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                    sceneMode === "houseStudio"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                  }`}
-                >
-                  <Home className="w-3.5 h-3.5 text-orange-400" />
-                  <span>House Studio</span>
-                </button>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -367,67 +343,13 @@ function Scene3DPage() {
 
         {/* Main Workspace Area */}
         <div className="flex-1 p-3 md:p-6 flex flex-col gap-6">
-          {/* 3D Canvas Host Container with Error Boundary */}
-          <div className="relative w-full h-[580px] md:h-[640px] rounded-xl overflow-hidden shadow-lg border border-border">
-            <ErrorBoundary
-              fallback={({ reset }) => (
-                <div className="flex h-full w-full flex-col items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-lg">
-                  <div className="rounded-full bg-destructive/10 p-3 text-destructive mb-3">
-                    <AlertTriangle className="size-8" />
-                  </div>
-                  <h3 className="text-base font-semibold text-foreground">
-                    3D Scene Engine Interrupted
-                  </h3>
-                  <p className="max-w-md text-xs text-muted-foreground mt-1 mb-4">
-                    An unexpected graphics or WebGL issue occurred while rendering the 3D model. You can retry loading the scene or continue using the Spec Design Sheet and Underwriting Cost Estimator tabs below.
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={reset} className="gap-1.5 text-xs">
-                      <RotateCcw className="size-3.5" /> Retry 3D Scene
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => setActiveTab("SpecDesign")}
-                      className="text-xs"
-                    >
-                      View Spec Design Sheet
-                    </Button>
-                  </div>
-                </div>
-              )}
-            >
-              <HouseModelViewer
-                parcelId={subdivisionConfig.parcelId}
-                address={subdivisionConfig.address}
-                zoningDistrict={subdivisionConfig.zoningName}
-                subdivisionConfig={subdivisionConfig}
-                houseSpec={houseSpec}
-                onHouseSpecChange={setHouseSpec}
-                sceneMode={sceneMode}
-                onSceneModeChange={setSceneMode}
-                onSelectLot={(_lotNum) => {
-                  setSceneMode("houseStudio");
-                }}
-              />
-            </ErrorBoundary>
-          </div>
+          
 
           {/* Sub-Workspaces & Tools Tabs */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setActiveTab("Studio3D")}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === "Studio3D"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "bg-white/5 text-muted-foreground hover:text-foreground border border-white/10"
-                  }`}
-                >
-                  <Palette className="w-3.5 h-3.5 text-orange-400" />
-                  <span>3D Design Studio</span>
-                </button>
+                
 
                 <button
                   onClick={() => setActiveTab("ZoningRestrictions")}

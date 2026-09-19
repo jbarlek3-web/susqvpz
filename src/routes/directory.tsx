@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getProCountyDirectory,
+  getMunicipalDocuments,
+  type MunicipalDocumentPayload,
+  type MunicipalDocumentRecord,
   getProMunicipalityDirectory,
   type CountyDirectoryPayload,
   type CountyDirectoryRecord,
@@ -36,6 +39,11 @@ function ProDirectories() {
     data: null,
     error: null,
     loading: true,
+  });
+  const [documents, setDocuments] = useState<LoadState<MunicipalDocumentPayload>>({
+    data: null,
+    error: null,
+    loading: false,
   });
   const [municipalities, setMunicipalities] = useState<LoadState<MunicipalityDirectoryPayload>>({
     data: null,
@@ -57,7 +65,28 @@ function ProDirectories() {
             loading: false,
           });
       });
+    useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
     return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
+  return () => {
       current = false;
     };
   }, []);
@@ -78,10 +107,52 @@ function ProDirectories() {
             loading: false,
           });
       });
+    useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
     return () => {
       current = false;
     };
+  }, [activeTab, documents.data, documents.loading]);
+
+  return () => {
+      current = false;
+    };
   }, [activeTab, municipalities.data, municipalities.loading]);
+
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
 
   return (
     <AppShell>
@@ -105,6 +176,7 @@ function ProDirectories() {
         <TabsList aria-label="Pro directory selection" className="h-auto flex-wrap">
           <TabsTrigger value="counties">County P&amp;Z directory</TabsTrigger>
           <TabsTrigger value="municipalities">Municipal source directory</TabsTrigger>
+          <TabsTrigger value="documents">Municipal Documents</TabsTrigger>
         </TabsList>
         <TabsContent value="counties" className="mt-4">
           <DirectoryLoadState state={counties}>
@@ -114,6 +186,11 @@ function ProDirectories() {
         <TabsContent value="municipalities" className="mt-4">
           <DirectoryLoadState state={municipalities}>
             {(data) => <MunicipalityDirectory data={data} />}
+          </DirectoryLoadState>
+        </TabsContent>
+        <TabsContent value="documents" className="mt-4">
+          <DirectoryLoadState state={documents}>
+            {(data) => <MunicipalDocumentDirectory data={data} />}
           </DirectoryLoadState>
         </TabsContent>
       </Tabs>
@@ -129,7 +206,28 @@ function DirectoryLoadState<T>({
   children: (data: T) => ReactNode;
 }) {
   if (state.loading) {
-    return (
+    useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
+  return (
       <div className="grid min-h-64 place-items-center rounded-lg border border-outline-variant bg-card">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> Loading protected directory…
@@ -138,7 +236,28 @@ function DirectoryLoadState<T>({
     );
   }
   if (state.error || !state.data) {
-    return (
+    useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
+  return (
       <div className="rounded-lg border border-destructive/30 bg-card px-5 py-12 text-center">
         <p className="font-medium">{state.error ?? "This directory is unavailable."}</p>
         <p className="mt-2 text-sm text-muted-foreground">Reload the page to try again.</p>
@@ -162,6 +281,27 @@ function CountyDirectory({ data }: { data: CountyDirectoryPayload }) {
       ),
     [data.records, needle],
   );
+
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
 
   return (
     <section>
@@ -189,6 +329,27 @@ function CountyDirectory({ data }: { data: CountyDirectoryPayload }) {
 }
 
 function CountyCard({ entry }: { entry: CountyDirectoryRecord }) {
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
   return (
     <Card>
       <CardContent className="p-5">
@@ -247,6 +408,27 @@ function ContactLine({
       <Icon className="mt-0.5 size-4 shrink-0 text-secondary" /> <span>{text}</span>
     </>
   );
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
   return (
     <li className="flex items-start gap-2 text-on-surface-variant">
       {href ? (
@@ -284,6 +466,27 @@ function MunicipalityDirectory({ data }: { data: MunicipalityDirectoryPayload })
   }, [county, data.records, query]);
 
   useEffect(() => setVisible(60), [county, query]);
+
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
 
   return (
     <section>
@@ -354,6 +557,27 @@ function MunicipalityCard({ entry }: { entry: MunicipalityDirectoryRecord }) {
     const value = entry[key];
     return typeof value === "string" && /^https?:\/\//i.test(value) ? [{ label, url: value }] : [];
   });
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
   return (
     <Card>
       <CardContent className="p-5">
@@ -422,6 +646,27 @@ function DirectorySearch({
 }
 
 function EmptySearch({ label, onClear }: { label: string; onClear: () => void }) {
+  useEffect(() => {
+    if (activeTab !== "documents" || documents.data || documents.loading) return;
+    let current = true;
+    setDocuments((state) => ({ ...state, error: null, loading: true }));
+    void getMunicipalDocuments()
+      .then((data) => {
+        if (current) setDocuments({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setDocuments({
+            data: null,
+            error: "The municipal documents could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, documents.data, documents.loading]);
+
   return (
     <div className="mt-4 rounded-lg border border-dashed border-outline-variant bg-card px-5 py-12 text-center">
       <Building2 className="mx-auto size-8 text-on-surface-variant" />
@@ -434,5 +679,108 @@ function EmptySearch({ label, onClear }: { label: string; onClear: () => void })
         Clear filters
       </button>
     </div>
+  );
+}
+
+function MunicipalDocumentDirectory({ data }: { data: MunicipalDocumentPayload }) {
+  const [query, setQuery] = useState("");
+  
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return data.records.filter(
+      (record) =>
+        (!needle || `${record.Municipality} ${record.County}`.toLowerCase().includes(needle)),
+    );
+  }, [data.records, query]);
+
+  return (
+    <section>
+      <div className="mb-4">
+        <DirectorySearch
+          id="municipal-document-search"
+          value={query}
+          onChange={setQuery}
+          placeholder="Search municipality..."
+        />
+      </div>
+      
+      {filtered.length ? (
+        <div className="mt-4 grid gap-4 lg:grid-cols-1">
+          {filtered.map((entry) => (
+            <MunicipalDocumentCard key={`${entry.County}-${entry.Municipality}`} entry={entry} />
+          ))}
+        </div>
+      ) : (
+        <EmptySearch
+          label="municipal documents"
+          onClear={() => {
+            setQuery("");
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function parseUrls(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.split(';').map(t => t.trim()).filter(Boolean).map(part => {
+    const match = part.match(urlRegex);
+    if (match) {
+      const url = match[0];
+      const desc = part.replace(url, '').trim().replace(/^:/, '').trim();
+      return { url, desc: desc || "Link" };
+    }
+    return { url: null, desc: part };
+  });
+}
+
+function DocumentCategory({ title, content }: { title: string, content: string }) {
+  if (!content || content.toUpperCase().includes('NO MUNICIPAL DEVELOPMENT FORM VERIFIED ONLINE')) return null;
+  const items = parseUrls(content);
+  return (
+    <div className="mt-3">
+      <h3 className="text-sm font-semibold text-secondary">{title}</h3>
+      <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
+        {items.map((item, i) => (
+          <li key={i} className="flex items-start gap-1">
+            <span>•</span>
+            {item.url ? (
+               <a href={item.url} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                 {item.desc} <ExternalLink className="size-3" />
+               </a>
+            ) : (
+              <span>{item.desc}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MunicipalDocumentCard({ entry }: { entry: MunicipalDocumentRecord }) {
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <p className="text-xs font-bold uppercase tracking-wider text-secondary">
+          {entry.County} County
+        </p>
+        <h2 className="mt-1 text-lg font-semibold">{entry.Municipality}</h2>
+        {entry["Municipality URL"] && (
+           <a href={entry["Municipality URL"]} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1 mt-2">
+             Municipality Website <ExternalLink className="size-3" />
+           </a>
+        )}
+        
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <DocumentCategory title="Muni Forms" content={entry["Muni Forms"]} />
+          <DocumentCategory title="Municipal Code" content={entry["Municipil Code Download"]} />
+          <DocumentCategory title="SALDO" content={entry["Municipal SALDO"]} />
+          <DocumentCategory title="Stormwater & Sanitary" content={entry["Multiple Stormwater & Sanitary Sewer Solutions"]} />
+          <DocumentCategory title="Zoning Map" content={entry["Zoning Map"]} />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

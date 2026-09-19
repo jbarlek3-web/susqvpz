@@ -16,7 +16,7 @@ import { SignedIn, SignedOut, UserButton, OrganizationSwitcher } from "@/lib/aut
 const NAV = [
   { to: "/", label: "Home" },
   { to: "/map", label: "Map" },
-  { to: "/scene-3d", label: "3D House" },
+  { to: "/scene-3d", label: "Costs Engine" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/aide", label: "Ordinance AI" },
   { to: "/directory", label: "Directory" },
@@ -27,7 +27,7 @@ const NAV = [
 ];
 
 const MORE = [
-  { to: "/scene-3d", label: "3D Parcel Model", icon: Box },
+  { to: "/scene-3d", label: "Costs Engine", icon: FileText },
   { to: "/directory", label: "PA County Directory", icon: ContactRound },
   { to: "/minutes", label: "Meeting Minutes", icon: FileText },
   { to: "/guide", label: "Quick Start", icon: BookOpen },
