@@ -44,10 +44,10 @@ const WORKFLOW_TOOLS = [
   {
     to: "/directory",
     label: "Directory",
-    code: "DOCS",
+    code: "DIR",
     icon: FolderArchive,
     shortcut: "4",
-    desc: "Municipal Source Documents",
+    desc: "Counties & Municipal Source URLs",
   },
   {
     to: "/acquire",
@@ -80,7 +80,7 @@ function getToolSearch(
     case "/aide":
       return { county: parcel.county, municipality: parcel.municipality };
     case "/directory":
-      return { search: parcel.municipality, tab: "documents" };
+      return { search: parcel.municipality, tab: "municipalities" };
     case "/acquire":
       return { parcelId: parcel.id, tab: "Report" };
     case "/zoning":

@@ -424,11 +424,11 @@ function OrdinanceAide() {
                     to="/directory"
                     search={{
                       search: municipality,
-                      tab: "documents",
+                      tab: "municipalities",
                     }}
                   >
                     <Compass className="size-3.5 text-emerald-600 dark:text-emerald-400" />{" "}
-                    Municipal Docs
+                    Municipal Directory
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">

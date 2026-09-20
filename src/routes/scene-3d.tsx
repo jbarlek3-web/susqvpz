@@ -367,11 +367,11 @@ function Scene3DPage() {
                     to="/directory"
                     search={{
                       search: subdivisionConfig.municipality,
-                      tab: "documents",
+                      tab: "municipalities",
                     }}
                   >
                     <Compass className="size-3.5 text-emerald-600 dark:text-emerald-400" />{" "}
-                    Municipal Docs
+                    Municipal Directory
                   </Link>
                 </Button>
               </div>

@@ -19,15 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { sanitizeUrl } from "@/lib/security/threat-detector";
-import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
-import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
 import { PARCELS } from "@/lib/data/parcels";
 import {
   getProCountyDirectory,
-  getMunicipalDocuments,
-  type MunicipalDocumentPayload,
-  type MunicipalDocumentRecord,
   getProMunicipalityDirectory,
   type CountyDirectoryPayload,
   type CountyDirectoryRecord,
@@ -38,7 +32,7 @@ import {
 export interface DirectorySearch {
   county?: string;
   search?: string;
-  tab?: "counties" | "municipalities" | "documents";
+  tab?: "counties" | "municipalities";
 }
 
 export const Route = createFileRoute("/directory")({
@@ -46,7 +40,7 @@ export const Route = createFileRoute("/directory")({
     county: typeof search.county === "string" ? search.county : undefined,
     search: typeof search.search === "string" ? search.search : undefined,
     tab:
-      search.tab === "counties" || search.tab === "municipalities" || search.tab === "documents"
+      search.tab === "counties" || search.tab === "municipalities"
         ? search.tab
         : undefined,
   }),
@@ -58,17 +52,12 @@ type LoadState<T> = { data: T | null; error: string | null; loading: boolean };
 function ProDirectories() {
   const search = Route.useSearch();
   const [activeTab, setActiveTab] = useState<string>(
-    () => search.tab || (search.search ? "documents" : "counties"),
+    () => search.tab || (search.search ? "municipalities" : "counties"),
   );
   const [counties, setCounties] = useState<LoadState<CountyDirectoryPayload>>({
     data: null,
     error: null,
     loading: true,
-  });
-  const [documents, setDocuments] = useState<LoadState<MunicipalDocumentPayload>>({
-    data: null,
-    error: null,
-    loading: false,
   });
   const [municipalities, setMunicipalities] = useState<LoadState<MunicipalityDirectoryPayload>>({
     data: null,
@@ -116,27 +105,6 @@ function ProDirectories() {
     };
   }, [activeTab, municipalities.data, municipalities.loading]);
 
-  useEffect(() => {
-    if (activeTab !== "documents" || documents.data || documents.loading) return;
-    let current = true;
-    setDocuments((state) => ({ ...state, error: null, loading: true }));
-    void getMunicipalDocuments()
-      .then((data) => {
-        if (current) setDocuments({ data, error: null, loading: false });
-      })
-      .catch(() => {
-        if (current)
-          setDocuments({
-            data: null,
-            error: "The municipal documents could not be loaded.",
-            loading: false,
-          });
-      });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, documents.data, documents.loading]);
-
   return (
     <AppShell>
       <section className="rounded-xl border border-outline-variant border-t-4 border-t-brand-lime bg-card px-5 py-7 md:px-8">
@@ -151,15 +119,15 @@ function ProDirectories() {
         <h1 className="mt-2 text-3xl font-semibold">Planning and zoning directories</h1>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           Search county planning contacts and official municipal source websites. Field ACQ points
-          you to the agency, code library, or planning page where current materials are maintained.
+          you to the verified URLs directing users to the location of the document for each
+          Municipality in each County. No county or municipal documents are hosted on this platform.
         </p>
       </section>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
         <TabsList aria-label="Pro directory selection" className="h-auto flex-wrap">
-          <TabsTrigger value="counties">County P&amp;Z directory</TabsTrigger>
-          <TabsTrigger value="municipalities">Municipal source directory</TabsTrigger>
-          <TabsTrigger value="documents">Municipal Documents</TabsTrigger>
+          <TabsTrigger value="counties">County P&amp;Z directory · Counties Documents' URLs</TabsTrigger>
+          <TabsTrigger value="municipalities">Municipal source directory · Municipal Documents' URLs</TabsTrigger>
         </TabsList>
         <TabsContent value="counties" className="mt-4">
           <DirectoryLoadState state={counties}>
@@ -168,12 +136,13 @@ function ProDirectories() {
         </TabsContent>
         <TabsContent value="municipalities" className="mt-4">
           <DirectoryLoadState state={municipalities}>
-            {(data) => <MunicipalityDirectory data={data} />}
-          </DirectoryLoadState>
-        </TabsContent>
-        <TabsContent value="documents" className="mt-4">
-          <DirectoryLoadState state={documents}>
-            {(data) => <MunicipalDocumentDirectory data={data} />}
+            {(data) => (
+              <MunicipalityDirectory
+                data={data}
+                initialSearch={search.search}
+                initialCounty={search.county}
+              />
+            )}
           </DirectoryLoadState>
         </TabsContent>
       </Tabs>
@@ -326,10 +295,27 @@ const MUNICIPAL_LINKS: Array<[keyof MunicipalityDirectoryRecord, string]> = [
   ["countyPlanningUrl", "County planning website"],
 ];
 
-function MunicipalityDirectory({ data }: { data: MunicipalityDirectoryPayload }) {
-  const [query, setQuery] = useState("");
-  const [county, setCounty] = useState("all");
+function MunicipalityDirectory({
+  data,
+  initialSearch = "",
+  initialCounty = "all",
+}: {
+  data: MunicipalityDirectoryPayload;
+  initialSearch?: string;
+  initialCounty?: string;
+}) {
+  const [query, setQuery] = useState(initialSearch);
+  const [county, setCounty] = useState(initialCounty || "all");
   const [visible, setVisible] = useState(60);
+
+  useEffect(() => {
+    if (initialSearch) setQuery(initialSearch);
+  }, [initialSearch]);
+
+  useEffect(() => {
+    if (initialCounty && initialCounty !== "all") setCounty(initialCounty);
+  }, [initialCounty]);
+
   const counties = useMemo(
     () => [...new Set(data.records.map((record) => record.county))].sort(),
     [data.records],
@@ -338,7 +324,7 @@ function MunicipalityDirectory({ data }: { data: MunicipalityDirectoryPayload })
     const needle = query.trim().toLowerCase();
     return data.records.filter(
       (record) =>
-        (county === "all" || record.county === county) &&
+        (county === "all" || record.county.toLowerCase() === county.toLowerCase()) &&
         (!needle || `${record.municipality} ${record.county}`.toLowerCase().includes(needle)),
     );
   }, [county, data.records, query]);
@@ -417,10 +403,42 @@ function MunicipalityCard({ entry }: { entry: MunicipalityDirectoryRecord }) {
   return (
     <Card>
       <CardContent className="p-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-secondary">
-          {entry.county} County
-        </p>
-        <h2 className="mt-1 text-lg font-semibold">{entry.municipality}</h2>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-secondary">
+              {entry.county} County
+            </p>
+            <h2 className="mt-1 text-lg font-semibold">{entry.municipality}</h2>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/aide"
+              search={{
+                county: entry.county,
+                municipality: entry.municipality,
+                q: `What are the zoning, SALDO, and development requirements for ${entry.municipality} in ${entry.county} County?`,
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all active:scale-95 border border-primary/20"
+              title="Query private ordinance corpus for this municipality"
+            >
+              <Bot className="size-3.5" />
+              <span>Ask AI</span>
+            </Link>
+            <Link
+              to="/scene-3d"
+              search={{
+                parcelId: PARCELS.find(
+                  (p) => p.municipality.toLowerCase() === entry.municipality.toLowerCase(),
+                )?.id,
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all active:scale-95 border border-secondary/20"
+              title="Open subdivision costs engine"
+            >
+              <Box className="size-3.5" />
+              <span>Costs Engine</span>
+            </Link>
+          </div>
+        </div>
         {links.length ? (
           <ul className="mt-4 grid gap-2 sm:grid-cols-2">
             {links.map((link) => (
@@ -494,190 +512,5 @@ function EmptySearch({ label, onClear }: { label: string; onClear: () => void })
         Clear filters
       </button>
     </div>
-  );
-}
-
-function MunicipalDocumentDirectory({ data }: { data: MunicipalDocumentPayload }) {
-  const search = Route.useSearch();
-  const {
-    value: query,
-    setValue: setQuery,
-    isDirty,
-    isDraftRestored,
-    lastSavedAt,
-    resetToDefault,
-  } = usePersistentDraft<string>("muni_doc_query", () => search.search || "", {
-    storage: "sessionStorage",
-    enableBeforeUnloadWarn: false,
-  });
-
-  useEffect(() => {
-    if (search.search && !query) {
-      setQuery(search.search);
-    }
-  }, [search.search, query, setQuery]);
-
-  const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return data.records.filter(
-      (record) =>
-        !needle || `${record.Municipality} ${record.County}`.toLowerCase().includes(needle),
-    );
-  }, [data.records, query]);
-
-  return (
-    <section>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex-1 min-w-[280px]">
-          <DirectorySearch
-            id="municipal-document-search"
-            value={query}
-            onChange={setQuery}
-            placeholder="Search municipality or county..."
-          />
-        </div>
-        <DataProtectionBadge
-          isDirty={isDirty}
-          isDraftRestored={isDraftRestored}
-          lastSavedAt={lastSavedAt}
-          onReset={resetToDefault}
-        />
-      </div>
-
-      {filtered.length ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-1">
-          {filtered.map((entry) => (
-            <MunicipalDocumentCard key={`${entry.County}-${entry.Municipality}`} entry={entry} />
-          ))}
-        </div>
-      ) : (
-        <EmptySearch
-          label="municipal documents"
-          onClear={() => {
-            resetToDefault();
-          }}
-        />
-      )}
-    </section>
-  );
-}
-
-function parseUrls(text: string) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text
-    .split(";")
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const match = part.match(urlRegex);
-      if (match) {
-        const rawUrl = match[0];
-        const validUrl = sanitizeUrl(rawUrl);
-        const desc = part.replace(rawUrl, "").trim().replace(/^:/, "").trim();
-        return { url: validUrl, desc: desc || "Link" };
-      }
-      return { url: null, desc: part };
-    });
-}
-
-function DocumentCategory({ title, content }: { title: string; content: string }) {
-  if (!content || content.toUpperCase().includes("NO MUNICIPAL DEVELOPMENT FORM VERIFIED ONLINE"))
-    return null;
-  const items = parseUrls(content);
-  return (
-    <div className="mt-3 rounded-lg border border-outline-variant/70 bg-card/60 p-3 shadow-xs">
-      <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
-        {title}
-      </h3>
-      <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-1.5">
-            <span className="text-secondary">•</span>
-            {item.url ? (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary hover:underline inline-flex items-center gap-1 font-medium transition-colors hover:text-secondary"
-              >
-                {item.desc} <ExternalLink className="size-3 shrink-0" />
-              </a>
-            ) : (
-              <span>{item.desc}</span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function MunicipalDocumentCard({ entry }: { entry: MunicipalDocumentRecord }) {
-  const safeMuniUrl = sanitizeUrl(entry["Municipality URL"]);
-  return (
-    <Card className="cyber-card transition-all duration-200">
-      <CardContent className="p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
-          <div>
-            <p className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
-              {entry.County} County · Municipal Records
-            </p>
-            <h2 className="mt-0.5 text-lg font-bold tracking-tight">{entry.Municipality}</h2>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Link
-              to="/aide"
-              search={{
-                county: entry.County,
-                municipality: entry.Municipality,
-                q: `What are the zoning, SALDO, and development requirements for ${entry.Municipality} in ${entry.County} County?`,
-              }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all active:scale-95 border border-primary/20"
-              title="Query private ordinance corpus for this municipality"
-            >
-              <Bot className="size-3.5" />
-              <span>Ask AI</span>
-            </Link>
-            <Link
-              to="/scene-3d"
-              search={{
-                parcelId: PARCELS.find(
-                  (p) => p.municipality.toLowerCase() === entry.Municipality.toLowerCase(),
-                )?.id,
-              }}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all active:scale-95 border border-secondary/20"
-              title="Open subdivision costs engine"
-            >
-              <Box className="size-3.5" />
-              <span>Costs Engine</span>
-            </Link>
-            {safeMuniUrl && (
-              <Button asChild variant="outline" size="sm" className="h-7 text-xs">
-                <a
-                  href={safeMuniUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1"
-                >
-                  Website <ExternalLink className="size-3" />
-                </a>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <DocumentCategory title="Muni Forms" content={entry["Muni Forms"]} />
-          <DocumentCategory title="Municipal Code" content={entry["Municipil Code Download"]} />
-          <DocumentCategory title="SALDO" content={entry["Municipal SALDO"]} />
-          <DocumentCategory
-            title="Stormwater & Sanitary"
-            content={entry["Multiple Stormwater & Sanitary Sewer Solutions"]}
-          />
-          <DocumentCategory title="Zoning Map" content={entry["Zoning Map"]} />
-        </div>
-      </CardContent>
-    </Card>
   );
 }

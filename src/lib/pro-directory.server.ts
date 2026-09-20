@@ -1,11 +1,9 @@
 import countyRows from "@/lib/data/pro-directory/counties.json";
 import municipalityRows from "@/lib/data/pro-directory/municipalities.json";
-import municipalDocumentRows from "@/lib/data/municipal_documents.json";
 import type {
   CountyDirectoryPayload,
   CountyDirectoryRecord,
   MunicipalityDirectoryPayload,
-  MunicipalDocumentPayload,
 } from "@/lib/pro-directory";
 
 function officialCodeLibraryUrl(value: string | null) {
@@ -41,9 +39,3 @@ export function municipalityDirectory(): MunicipalityDirectoryPayload {
   };
 }
 
-export function municipalDocuments(): MunicipalDocumentPayload {
-  return {
-    source: "Field ACQ Ordinance Aide",
-    records: municipalDocumentRows as unknown as MunicipalDocumentPayload["records"],
-  };
-}

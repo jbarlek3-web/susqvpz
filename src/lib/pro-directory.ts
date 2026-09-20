@@ -51,22 +51,6 @@ export const getProCountyDirectory = createServerFn({ method: "GET" })
     return countyDirectory();
   });
 
-export type MunicipalDocumentRecord = {
-  County: string;
-  Municipality: string;
-  "Municipality URL": string;
-  "Muni Forms": string;
-  "Municipil Code Download": string;
-  "Municipal SALDO": string;
-  "Multiple Stormwater & Sanitary Sewer Solutions": string;
-  "Zoning Map": string;
-};
-
-export type MunicipalDocumentPayload = {
-  source: string;
-  records: MunicipalDocumentRecord[];
-};
-
 export const getProMunicipalityDirectory = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<MunicipalityDirectoryPayload> => {
@@ -75,10 +59,3 @@ export const getProMunicipalityDirectory = createServerFn({ method: "GET" })
     return municipalityDirectory();
   });
 
-export const getMunicipalDocuments = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }): Promise<MunicipalDocumentPayload> => {
-    await authorizeDirectoryRequest(context.userId);
-    const { municipalDocuments } = await import("@/lib/pro-directory.server");
-    return municipalDocuments();
-  });

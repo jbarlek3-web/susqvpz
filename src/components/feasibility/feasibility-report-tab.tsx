@@ -295,11 +295,11 @@ export function FeasibilityReportTab() {
                   to="/directory"
                   search={{
                     search: _parcel.municipality,
-                    tab: "documents",
+                    tab: "municipalities",
                   }}
                 >
                   <Compass className="size-3.5 text-emerald-600 dark:text-emerald-400" /> Municipal
-                  Docs
+                  Directory
                 </Link>
               </Button>
             </div>
