@@ -430,7 +430,7 @@ function Scene3DPage() {
         </div>
 
         {/* Main Workspace Area */}
-        <div className="flex-1 p-3 md:p-6 flex flex-col gap-6">
+        <div className="flex-1 p-3 pb-36 md:p-6 md:pb-52 flex flex-col gap-6">
           {/* Sub-Workspaces & Tools Tabs */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
@@ -1532,6 +1532,9 @@ function Scene3DPage() {
               </div>
             )}
           </div>
+
+          {/* Bottom Scroll Clearance Buffer */}
+          <div className="h-16 md:h-24 shrink-0" aria-hidden="true" />
         </div>
       </div>
     </AppShell>
