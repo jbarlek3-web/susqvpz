@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { COUNTIES } from "@/lib/data/catalog";
 import { useHub } from "@/lib/store";
 import type { County } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/notifications")({ component: Notifications });
 
@@ -106,11 +107,12 @@ function Notifications() {
                   <button
                     key={f}
                     onClick={() => setFreq(f)}
-                    className={
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-left text-sm font-semibold transition-all duration-150 border",
                       freq === f
-                        ? "rounded-sm border border-primary/30 bg-primary-fixed px-3 py-2 text-left text-sm text-primary"
-                        : "rounded-sm px-3 py-2 text-left text-sm hover:bg-surface-low"
-                    }
+                        ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                        : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
+                    )}
                   >
                     {f}
                   </button>

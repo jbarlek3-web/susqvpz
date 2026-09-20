@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
 import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
@@ -436,11 +437,12 @@ function Scene3DPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveTab("Studio3D")}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
                     activeTab === "Studio3D"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "bg-white/5 text-muted-foreground hover:text-foreground border border-white/10"
-                  }`}
+                      ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                      : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
+                  )}
                 >
                   <Home className="w-3.5 h-3.5 text-orange-400" />
                   <span>Design Studio Controls</span>
@@ -448,11 +450,12 @@ function Scene3DPage() {
 
                 <button
                   onClick={() => setActiveTab("ZoningRestrictions")}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
                     activeTab === "ZoningRestrictions"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "bg-white/5 text-muted-foreground hover:text-foreground border border-white/10"
-                  }`}
+                      ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                      : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
+                  )}
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-orange-400" />
                   <span>Zoning & Topography</span>
@@ -460,11 +463,12 @@ function Scene3DPage() {
 
                 <button
                   onClick={() => setActiveTab("SpecDesign")}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
                     activeTab === "SpecDesign"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "bg-white/5 text-muted-foreground hover:text-foreground border border-white/10"
-                  }`}
+                      ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                      : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
+                  )}
                 >
                   <FileText className="w-3.5 h-3.5 text-orange-400" />
                   <span>Spec Design Sheet</span>
@@ -472,11 +476,12 @@ function Scene3DPage() {
 
                 <button
                   onClick={() => setActiveTab("UnderwritingCost")}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={cn(
+                    "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
                     activeTab === "UnderwritingCost"
-                      ? "bg-orange-500/30 text-orange-300 border border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                      : "bg-white/5 text-muted-foreground hover:text-foreground border border-white/10"
-                  }`}
+                      ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                      : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
+                  )}
                 >
                   <DollarSign className="w-3.5 h-3.5 text-orange-400" />
                   <span>Cost Estimator & Underwriting</span>
@@ -518,11 +523,12 @@ function Scene3DPage() {
                         <button
                           key={s}
                           onClick={() => handleSetStories(s as 1 | 2 | 3 | 4)}
-                          className={`py-2 text-center rounded-md font-bold transition-all border ${
+                          className={cn(
+                            "py-2 text-center rounded-md font-bold transition-all border",
                             houseSpec.stories === s
-                              ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                              : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border"
-                          }`}
+                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                              : "bg-transparent hover:bg-muted/30 text-muted-foreground hover:text-foreground border-border/60",
+                          )}
                         >
                           {s}F
                         </button>
@@ -676,11 +682,12 @@ function Scene3DPage() {
                                 garageBays: g as 1 | 2 | 3,
                               }))
                             }
-                            className={`py-1 rounded border text-center font-semibold ${
+                            className={cn(
+                              "py-1 rounded-full border text-center font-semibold transition-all",
                               houseSpec.garageBays === g
-                                ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                                : "bg-muted/40 border-border text-muted-foreground"
-                            }`}
+                                ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                            )}
                           >
                             {g} Car
                           </button>
@@ -697,11 +704,12 @@ function Scene3DPage() {
                           onClick={() =>
                             setHouseSpec((prev) => ({ ...prev, hasPorch: !prev.hasPorch }))
                           }
-                          className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
+                          className={cn(
+                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
                             houseSpec.hasPorch
-                              ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                              : "bg-muted/40 border-border text-muted-foreground"
-                          }`}
+                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                          )}
                         >
                           {houseSpec.hasPorch ? "✓ Porch" : "+ Porch"}
                         </button>
@@ -709,11 +717,12 @@ function Scene3DPage() {
                           onClick={() =>
                             setHouseSpec((prev) => ({ ...prev, hasPatio: !prev.hasPatio }))
                           }
-                          className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
+                          className={cn(
+                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
                             houseSpec.hasPatio
-                              ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                              : "bg-muted/40 border-border text-muted-foreground"
-                          }`}
+                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                          )}
                         >
                           {houseSpec.hasPatio ? "✓ Patio" : "+ Patio"}
                         </button>
@@ -723,11 +732,13 @@ function Scene3DPage() {
                             setHouseSpec((prev) => ({ ...prev, hasBalcony: !prev.hasBalcony }))
                           }
                           disabled={houseSpec.stories < 2}
-                          className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
+                          className={cn(
+                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
                             houseSpec.hasBalcony && houseSpec.stories >= 2
-                              ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                              : "bg-muted/40 border-border text-muted-foreground"
-                          } ${houseSpec.stories < 2 ? "opacity-40 cursor-not-allowed" : ""}`}
+                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                            houseSpec.stories < 2 && "opacity-40 cursor-not-allowed",
+                          )}
                         >
                           {houseSpec.hasBalcony && houseSpec.stories >= 2
                             ? "✓ Balcony"
@@ -737,11 +748,12 @@ function Scene3DPage() {
                           onClick={() =>
                             setHouseSpec((prev) => ({ ...prev, hasBayTurret: !prev.hasBayTurret }))
                           }
-                          className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
+                          className={cn(
+                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
                             houseSpec.hasBayTurret
-                              ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                              : "bg-muted/40 border-border text-muted-foreground"
-                          }`}
+                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                          )}
                         >
                           {houseSpec.hasBayTurret ? "✓ Turret" : "+ Turret"}
                         </button>
@@ -813,11 +825,12 @@ function Scene3DPage() {
                             furnished: !prev.furnished,
                           }))
                         }
-                        className={`px-2.5 py-1 rounded text-xs font-semibold ${
+                        className={cn(
+                          "px-2.5 py-1 rounded-full text-xs font-semibold transition-all border",
                           houseSpec.furnished
-                            ? "bg-emerald-500/20 text-emerald-600 border border-emerald-500/30"
-                            : "bg-muted text-muted-foreground"
-                        }`}
+                            ? "bg-transparent text-foreground font-bold border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.35)]"
+                            : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                        )}
                       >
                         {houseSpec.furnished ? "Furnished" : "Unfurnished"}
                       </button>
@@ -1207,11 +1220,12 @@ function Scene3DPage() {
                             <button
                               key={tier}
                               onClick={() => setCustomFinishTier(tier)}
-                              className={`py-1.5 px-2 rounded border text-center font-semibold capitalize transition-all ${
+                              className={cn(
+                                "py-1.5 px-2 rounded-full border text-center font-semibold capitalize transition-all",
                                 customFinishTier === tier
-                                  ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
-                                  : "bg-muted/40 border-border text-muted-foreground hover:text-foreground"
-                              }`}
+                                  ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                  : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                              )}
                             >
                               {tier}
                             </button>

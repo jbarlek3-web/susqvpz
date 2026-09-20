@@ -85,10 +85,10 @@ function Acquire() {
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-sm px-3 py-2 text-xs font-semibold uppercase tracking-wider",
+              "rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-150 border",
               tab === t
-                ? "border border-primary/30 bg-primary-fixed text-primary"
-                : "bg-surface-low hover:bg-surface-container",
+                ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
             )}
           >
             {t}

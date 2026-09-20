@@ -243,17 +243,25 @@ export function AppShell({
             <FieldAcqOrdinanceAideLogo className="h-11 max-w-[180px]" />
           </div>
           <nav className="flex flex-col p-2">
-            {NAV.concat(MORE.map((m) => ({ to: m.to, label: m.label }))).map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                preload="intent"
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-sm font-medium hover:bg-primary-fixed hover:text-primary transition-colors"
-              >
-                {n.label}
-              </Link>
-            ))}
+            {NAV.concat(MORE.map((m) => ({ to: m.to, label: m.label }))).map((n) => {
+              const active = n.to === "/" ? pathname === "/" : pathname.startsWith(n.to);
+              return (
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  preload="intent"
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "rounded-lg px-3 py-3 text-sm font-medium transition-colors border",
+                    active
+                      ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                      : "border-transparent hover:bg-surface-high/60 hover:text-on-surface text-muted-foreground",
+                  )}
+                >
+                  {n.label}
+                </Link>
+              );
+            })}
           </nav>
           <div className="border-t border-outline-variant p-4">
             <SignedOut>

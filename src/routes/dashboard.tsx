@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { PARCELS } from "@/lib/data/parcels";
 import { useHub } from "@/lib/store";
 import type { Project, ProjectStatus } from "@/lib/types";
-import { formatAcres } from "@/lib/utils";
+import { cn, formatAcres } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard")({ component: Dashboard });
 
@@ -197,11 +197,12 @@ function Dashboard() {
           <button
             key={s}
             onClick={() => setStatus(s)}
-            className={
+            className={cn(
+              "rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 border",
               status === s
-                ? "rounded-full border border-primary/30 bg-primary-fixed px-3 py-1.5 text-xs font-semibold text-primary"
-                : "rounded-full bg-surface-container px-3 py-1.5 text-xs font-semibold"
-            }
+                ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
+            )}
           >
             {s}
           </button>

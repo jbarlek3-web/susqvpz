@@ -226,10 +226,10 @@ export function MapPanel() {
               key={c}
               onClick={() => setCounty(c === "all" ? "all" : (c as County))}
               className={cn(
-                "rounded-sm px-2 py-2 text-xs font-semibold",
+                "rounded-full px-2.5 py-1.5 text-xs font-semibold transition-all duration-150 border",
                 county === c
-                  ? "border border-primary/30 bg-primary-fixed text-primary"
-                  : "bg-surface-low text-on-surface hover:bg-surface-container",
+                  ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                  : "bg-transparent text-muted-foreground hover:text-foreground border-border/60 hover:border-border",
               )}
             >
               {c === "all" ? "All" : c}
@@ -286,10 +286,10 @@ export function MapPanel() {
                 key={n}
                 onClick={() => setFloodFt(n)}
                 className={cn(
-                  "rounded-sm py-2 text-xs font-semibold",
+                  "rounded-full py-1.5 text-xs font-semibold transition-all duration-150 border",
                   floodFt === n
-                    ? "border border-primary/30 bg-primary-fixed text-primary"
-                    : "bg-surface-low",
+                    ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                    : "bg-transparent text-muted-foreground hover:text-foreground border-border/60 hover:border-border",
                 )}
               >
                 {n === 0 ? "Current" : `+${n}ft`}

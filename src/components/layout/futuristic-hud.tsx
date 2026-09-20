@@ -186,18 +186,16 @@ export function FuturisticWorkflowDock() {
               preload="intent"
               title={`${tool.desc} (Alt+${tool.shortcut})`}
               className={cn(
-                "group relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all duration-150 active:scale-95",
+                "group relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all duration-150 active:scale-95 border",
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(23,125,132,0.5)] font-bold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/80",
+                  ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                  : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40 border-transparent",
               )}
             >
               <Icon
                 className={cn(
                   "size-3.5",
-                  isActive
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground group-hover:text-primary",
+                  isActive ? "text-orange-500" : "text-muted-foreground group-hover:text-primary",
                 )}
               />
               <span className="hidden lg:inline">{tool.label}</span>
@@ -206,7 +204,7 @@ export function FuturisticWorkflowDock() {
                 Alt+{tool.shortcut}
               </span>
               {isActive && (
-                <span className="absolute -top-1 right-2 size-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_cyan]" />
+                <span className="absolute -top-1 right-2 size-1.5 rounded-full bg-orange-400 shadow-[0_0_6px_rgba(249,115,22,0.8)]" />
               )}
             </Link>
           );

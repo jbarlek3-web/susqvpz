@@ -8,690 +8,691 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as AccessRouteImport } from "./routes/access";
-import { Route as AcquireRouteImport } from "./routes/acquire";
-import { Route as AideRouteImport } from "./routes/aide";
-import { Route as DashboardRouteImport } from "./routes/dashboard";
-import { Route as DirectoryRouteImport } from "./routes/directory";
-import { Route as GuideRouteImport } from "./routes/guide";
-import { Route as InsightsRouteImport } from "./routes/insights";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as MapRouteImport } from "./routes/map";
-import { Route as MinutesRouteImport } from "./routes/minutes";
-import { Route as NotificationsRouteImport } from "./routes/notifications";
-import { Route as PrivacyRouteImport } from "./routes/privacy";
-import { Route as Scene3dRouteImport } from "./routes/scene-3d";
-import { Route as SignUpRouteImport } from "./routes/sign-up";
-import { Route as SubscriptionRouteImport } from "./routes/subscription";
-import { Route as TermsRouteImport } from "./routes/terms";
-import { Route as ZoningRouteImport } from "./routes/zoning";
-import { Route as ApiHealthRouteImport } from "./routes/api/health";
-import { Route as OrgAuditLogRouteImport } from "./routes/org.audit-log";
-import { Route as OrgBillingRouteImport } from "./routes/org.billing";
-import { Route as OrgMembersRouteImport } from "./routes/org.members";
-import { Route as ParcelsIdRouteImport } from "./routes/parcels.$id";
-import { Route as ApiFeasibilityReportPdfRouteImport } from "./routes/api/feasibility-report/pdf";
-import { Route as ApiGoogleDriveCallbackRouteImport } from "./routes/api/google-drive/callback";
-import { Route as ApiGoogleDriveDisconnectRouteImport } from "./routes/api/google-drive/disconnect";
-import { Route as ApiGoogleDriveExportRouteImport } from "./routes/api/google-drive/export";
-import { Route as ApiGoogleDriveStartRouteImport } from "./routes/api/google-drive/start";
-import { Route as ApiGoogleDriveStatusRouteImport } from "./routes/api/google-drive/status";
-import { Route as ApiGoogleDriveUploadRouteImport } from "./routes/api/google-drive/upload";
-import { Route as ApiOrdinanceStreamRouteImport } from "./routes/api/ordinance/stream";
-import { Route as ApiWebhooksClerkRouteImport } from "./routes/api/webhooks/clerk";
-import { Route as ApiWebhooksStripeRouteImport } from "./routes/api/webhooks/stripe";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccessRouteImport } from './routes/access'
+import { Route as AcquireRouteImport } from './routes/acquire'
+import { Route as AideRouteImport } from './routes/aide'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DirectoryRouteImport } from './routes/directory'
+import { Route as GuideRouteImport } from './routes/guide'
+import { Route as InsightsRouteImport } from './routes/insights'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MapRouteImport } from './routes/map'
+import { Route as MinutesRouteImport } from './routes/minutes'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as Scene3dRouteImport } from './routes/scene-3d'
+import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as SubscriptionRouteImport } from './routes/subscription'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ZoningRouteImport } from './routes/zoning'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as OrgAuditLogRouteImport } from './routes/org.audit-log'
+import { Route as OrgBillingRouteImport } from './routes/org.billing'
+import { Route as OrgMembersRouteImport } from './routes/org.members'
+import { Route as ParcelsIdRouteImport } from './routes/parcels.$id'
+import { Route as ApiFeasibilityReportPdfRouteImport } from './routes/api/feasibility-report/pdf'
+import { Route as ApiGoogleDriveCallbackRouteImport } from './routes/api/google-drive/callback'
+import { Route as ApiGoogleDriveDisconnectRouteImport } from './routes/api/google-drive/disconnect'
+import { Route as ApiGoogleDriveExportRouteImport } from './routes/api/google-drive/export'
+import { Route as ApiGoogleDriveStartRouteImport } from './routes/api/google-drive/start'
+import { Route as ApiGoogleDriveStatusRouteImport } from './routes/api/google-drive/status'
+import { Route as ApiGoogleDriveUploadRouteImport } from './routes/api/google-drive/upload'
+import { Route as ApiOrdinanceStreamRouteImport } from './routes/api/ordinance/stream'
+import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
+import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
 
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AccessRoute = AccessRouteImport.update({
-  id: "/access",
-  path: "/access",
+  id: '/access',
+  path: '/access',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AcquireRoute = AcquireRouteImport.update({
-  id: "/acquire",
-  path: "/acquire",
+  id: '/acquire',
+  path: '/acquire',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AideRoute = AideRouteImport.update({
-  id: "/aide",
-  path: "/aide",
+  id: '/aide',
+  path: '/aide',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const DirectoryRoute = DirectoryRouteImport.update({
-  id: "/directory",
-  path: "/directory",
+  id: '/directory',
+  path: '/directory',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const GuideRoute = GuideRouteImport.update({
-  id: "/guide",
-  path: "/guide",
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const InsightsRoute = InsightsRouteImport.update({
-  id: "/insights",
-  path: "/insights",
+  id: '/insights',
+  path: '/insights',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const MapRoute = MapRouteImport.update({
-  id: "/map",
-  path: "/map",
+  id: '/map',
+  path: '/map',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const MinutesRoute = MinutesRouteImport.update({
-  id: "/minutes",
-  path: "/minutes",
+  id: '/minutes',
+  path: '/minutes',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const NotificationsRoute = NotificationsRouteImport.update({
-  id: "/notifications",
-  path: "/notifications",
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
-  id: "/privacy",
-  path: "/privacy",
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const Scene3dRoute = Scene3dRouteImport.update({
-  id: "/scene-3d",
-  path: "/scene-3d",
+  id: '/scene-3d',
+  path: '/scene-3d',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const SignUpRoute = SignUpRouteImport.update({
-  id: "/sign-up",
-  path: "/sign-up",
+  id: '/sign-up',
+  path: '/sign-up',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const SubscriptionRoute = SubscriptionRouteImport.update({
-  id: "/subscription",
-  path: "/subscription",
+  id: '/subscription',
+  path: '/subscription',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const TermsRoute = TermsRouteImport.update({
-  id: "/terms",
-  path: "/terms",
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ZoningRoute = ZoningRouteImport.update({
-  id: "/zoning",
-  path: "/zoning",
+  id: '/zoning',
+  path: '/zoning',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
-  id: "/api/health",
-  path: "/api/health",
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const OrgAuditLogRoute = OrgAuditLogRouteImport.update({
-  id: "/org/audit-log",
-  path: "/org/audit-log",
+  id: '/org/audit-log',
+  path: '/org/audit-log',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const OrgBillingRoute = OrgBillingRouteImport.update({
-  id: "/org/billing",
-  path: "/org/billing",
+  id: '/org/billing',
+  path: '/org/billing',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const OrgMembersRoute = OrgMembersRouteImport.update({
-  id: "/org/members",
-  path: "/org/members",
+  id: '/org/members',
+  path: '/org/members',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ParcelsIdRoute = ParcelsIdRouteImport.update({
-  id: "/parcels/$id",
-  path: "/parcels/$id",
+  id: '/parcels/$id',
+  path: '/parcels/$id',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiFeasibilityReportPdfRoute = ApiFeasibilityReportPdfRouteImport.update({
-  id: "/api/feasibility-report/pdf",
-  path: "/api/feasibility-report/pdf",
+  id: '/api/feasibility-report/pdf',
+  path: '/api/feasibility-report/pdf',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiGoogleDriveCallbackRoute = ApiGoogleDriveCallbackRouteImport.update({
-  id: "/api/google-drive/callback",
-  path: "/api/google-drive/callback",
+  id: '/api/google-drive/callback',
+  path: '/api/google-drive/callback',
   getParentRoute: () => rootRouteImport,
-} as any);
-const ApiGoogleDriveDisconnectRoute = ApiGoogleDriveDisconnectRouteImport.update({
-  id: "/api/google-drive/disconnect",
-  path: "/api/google-drive/disconnect",
-  getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
+const ApiGoogleDriveDisconnectRoute =
+  ApiGoogleDriveDisconnectRouteImport.update({
+    id: '/api/google-drive/disconnect',
+    path: '/api/google-drive/disconnect',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiGoogleDriveExportRoute = ApiGoogleDriveExportRouteImport.update({
-  id: "/api/google-drive/export",
-  path: "/api/google-drive/export",
+  id: '/api/google-drive/export',
+  path: '/api/google-drive/export',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiGoogleDriveStartRoute = ApiGoogleDriveStartRouteImport.update({
-  id: "/api/google-drive/start",
-  path: "/api/google-drive/start",
+  id: '/api/google-drive/start',
+  path: '/api/google-drive/start',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiGoogleDriveStatusRoute = ApiGoogleDriveStatusRouteImport.update({
-  id: "/api/google-drive/status",
-  path: "/api/google-drive/status",
+  id: '/api/google-drive/status',
+  path: '/api/google-drive/status',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiGoogleDriveUploadRoute = ApiGoogleDriveUploadRouteImport.update({
-  id: "/api/google-drive/upload",
-  path: "/api/google-drive/upload",
+  id: '/api/google-drive/upload',
+  path: '/api/google-drive/upload',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiOrdinanceStreamRoute = ApiOrdinanceStreamRouteImport.update({
-  id: "/api/ordinance/stream",
-  path: "/api/ordinance/stream",
+  id: '/api/ordinance/stream',
+  path: '/api/ordinance/stream',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiWebhooksClerkRoute = ApiWebhooksClerkRouteImport.update({
-  id: "/api/webhooks/clerk",
-  path: "/api/webhooks/clerk",
+  id: '/api/webhooks/clerk',
+  path: '/api/webhooks/clerk',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
-  id: "/api/webhooks/stripe",
-  path: "/api/webhooks/stripe",
+  id: '/api/webhooks/stripe',
+  path: '/api/webhooks/stripe',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/access": typeof AccessRoute;
-  "/acquire": typeof AcquireRoute;
-  "/aide": typeof AideRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/directory": typeof DirectoryRoute;
-  "/guide": typeof GuideRoute;
-  "/insights": typeof InsightsRoute;
-  "/login": typeof LoginRoute;
-  "/map": typeof MapRoute;
-  "/minutes": typeof MinutesRoute;
-  "/notifications": typeof NotificationsRoute;
-  "/privacy": typeof PrivacyRoute;
-  "/scene-3d": typeof Scene3dRoute;
-  "/sign-up": typeof SignUpRoute;
-  "/subscription": typeof SubscriptionRoute;
-  "/terms": typeof TermsRoute;
-  "/zoning": typeof ZoningRoute;
-  "/api/health": typeof ApiHealthRoute;
-  "/org/audit-log": typeof OrgAuditLogRoute;
-  "/org/billing": typeof OrgBillingRoute;
-  "/org/members": typeof OrgMembersRoute;
-  "/parcels/$id": typeof ParcelsIdRoute;
-  "/api/feasibility-report/pdf": typeof ApiFeasibilityReportPdfRoute;
-  "/api/google-drive/callback": typeof ApiGoogleDriveCallbackRoute;
-  "/api/google-drive/disconnect": typeof ApiGoogleDriveDisconnectRoute;
-  "/api/google-drive/export": typeof ApiGoogleDriveExportRoute;
-  "/api/google-drive/start": typeof ApiGoogleDriveStartRoute;
-  "/api/google-drive/status": typeof ApiGoogleDriveStatusRoute;
-  "/api/google-drive/upload": typeof ApiGoogleDriveUploadRoute;
-  "/api/ordinance/stream": typeof ApiOrdinanceStreamRoute;
-  "/api/webhooks/clerk": typeof ApiWebhooksClerkRoute;
-  "/api/webhooks/stripe": typeof ApiWebhooksStripeRoute;
+  '/': typeof IndexRoute
+  '/access': typeof AccessRoute
+  '/acquire': typeof AcquireRoute
+  '/aide': typeof AideRoute
+  '/dashboard': typeof DashboardRoute
+  '/directory': typeof DirectoryRoute
+  '/guide': typeof GuideRoute
+  '/insights': typeof InsightsRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
+  '/minutes': typeof MinutesRoute
+  '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/scene-3d': typeof Scene3dRoute
+  '/sign-up': typeof SignUpRoute
+  '/subscription': typeof SubscriptionRoute
+  '/terms': typeof TermsRoute
+  '/zoning': typeof ZoningRoute
+  '/api/health': typeof ApiHealthRoute
+  '/org/audit-log': typeof OrgAuditLogRoute
+  '/org/billing': typeof OrgBillingRoute
+  '/org/members': typeof OrgMembersRoute
+  '/parcels/$id': typeof ParcelsIdRoute
+  '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
+  '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
+  '/api/google-drive/disconnect': typeof ApiGoogleDriveDisconnectRoute
+  '/api/google-drive/export': typeof ApiGoogleDriveExportRoute
+  '/api/google-drive/start': typeof ApiGoogleDriveStartRoute
+  '/api/google-drive/status': typeof ApiGoogleDriveStatusRoute
+  '/api/google-drive/upload': typeof ApiGoogleDriveUploadRoute
+  '/api/ordinance/stream': typeof ApiOrdinanceStreamRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/access": typeof AccessRoute;
-  "/acquire": typeof AcquireRoute;
-  "/aide": typeof AideRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/directory": typeof DirectoryRoute;
-  "/guide": typeof GuideRoute;
-  "/insights": typeof InsightsRoute;
-  "/login": typeof LoginRoute;
-  "/map": typeof MapRoute;
-  "/minutes": typeof MinutesRoute;
-  "/notifications": typeof NotificationsRoute;
-  "/privacy": typeof PrivacyRoute;
-  "/scene-3d": typeof Scene3dRoute;
-  "/sign-up": typeof SignUpRoute;
-  "/subscription": typeof SubscriptionRoute;
-  "/terms": typeof TermsRoute;
-  "/zoning": typeof ZoningRoute;
-  "/api/health": typeof ApiHealthRoute;
-  "/org/audit-log": typeof OrgAuditLogRoute;
-  "/org/billing": typeof OrgBillingRoute;
-  "/org/members": typeof OrgMembersRoute;
-  "/parcels/$id": typeof ParcelsIdRoute;
-  "/api/feasibility-report/pdf": typeof ApiFeasibilityReportPdfRoute;
-  "/api/google-drive/callback": typeof ApiGoogleDriveCallbackRoute;
-  "/api/google-drive/disconnect": typeof ApiGoogleDriveDisconnectRoute;
-  "/api/google-drive/export": typeof ApiGoogleDriveExportRoute;
-  "/api/google-drive/start": typeof ApiGoogleDriveStartRoute;
-  "/api/google-drive/status": typeof ApiGoogleDriveStatusRoute;
-  "/api/google-drive/upload": typeof ApiGoogleDriveUploadRoute;
-  "/api/ordinance/stream": typeof ApiOrdinanceStreamRoute;
-  "/api/webhooks/clerk": typeof ApiWebhooksClerkRoute;
-  "/api/webhooks/stripe": typeof ApiWebhooksStripeRoute;
+  '/': typeof IndexRoute
+  '/access': typeof AccessRoute
+  '/acquire': typeof AcquireRoute
+  '/aide': typeof AideRoute
+  '/dashboard': typeof DashboardRoute
+  '/directory': typeof DirectoryRoute
+  '/guide': typeof GuideRoute
+  '/insights': typeof InsightsRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
+  '/minutes': typeof MinutesRoute
+  '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/scene-3d': typeof Scene3dRoute
+  '/sign-up': typeof SignUpRoute
+  '/subscription': typeof SubscriptionRoute
+  '/terms': typeof TermsRoute
+  '/zoning': typeof ZoningRoute
+  '/api/health': typeof ApiHealthRoute
+  '/org/audit-log': typeof OrgAuditLogRoute
+  '/org/billing': typeof OrgBillingRoute
+  '/org/members': typeof OrgMembersRoute
+  '/parcels/$id': typeof ParcelsIdRoute
+  '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
+  '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
+  '/api/google-drive/disconnect': typeof ApiGoogleDriveDisconnectRoute
+  '/api/google-drive/export': typeof ApiGoogleDriveExportRoute
+  '/api/google-drive/start': typeof ApiGoogleDriveStartRoute
+  '/api/google-drive/status': typeof ApiGoogleDriveStatusRoute
+  '/api/google-drive/upload': typeof ApiGoogleDriveUploadRoute
+  '/api/ordinance/stream': typeof ApiOrdinanceStreamRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/access": typeof AccessRoute;
-  "/acquire": typeof AcquireRoute;
-  "/aide": typeof AideRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/directory": typeof DirectoryRoute;
-  "/guide": typeof GuideRoute;
-  "/insights": typeof InsightsRoute;
-  "/login": typeof LoginRoute;
-  "/map": typeof MapRoute;
-  "/minutes": typeof MinutesRoute;
-  "/notifications": typeof NotificationsRoute;
-  "/privacy": typeof PrivacyRoute;
-  "/scene-3d": typeof Scene3dRoute;
-  "/sign-up": typeof SignUpRoute;
-  "/subscription": typeof SubscriptionRoute;
-  "/terms": typeof TermsRoute;
-  "/zoning": typeof ZoningRoute;
-  "/api/health": typeof ApiHealthRoute;
-  "/org/audit-log": typeof OrgAuditLogRoute;
-  "/org/billing": typeof OrgBillingRoute;
-  "/org/members": typeof OrgMembersRoute;
-  "/parcels/$id": typeof ParcelsIdRoute;
-  "/api/feasibility-report/pdf": typeof ApiFeasibilityReportPdfRoute;
-  "/api/google-drive/callback": typeof ApiGoogleDriveCallbackRoute;
-  "/api/google-drive/disconnect": typeof ApiGoogleDriveDisconnectRoute;
-  "/api/google-drive/export": typeof ApiGoogleDriveExportRoute;
-  "/api/google-drive/start": typeof ApiGoogleDriveStartRoute;
-  "/api/google-drive/status": typeof ApiGoogleDriveStatusRoute;
-  "/api/google-drive/upload": typeof ApiGoogleDriveUploadRoute;
-  "/api/ordinance/stream": typeof ApiOrdinanceStreamRoute;
-  "/api/webhooks/clerk": typeof ApiWebhooksClerkRoute;
-  "/api/webhooks/stripe": typeof ApiWebhooksStripeRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/access': typeof AccessRoute
+  '/acquire': typeof AcquireRoute
+  '/aide': typeof AideRoute
+  '/dashboard': typeof DashboardRoute
+  '/directory': typeof DirectoryRoute
+  '/guide': typeof GuideRoute
+  '/insights': typeof InsightsRoute
+  '/login': typeof LoginRoute
+  '/map': typeof MapRoute
+  '/minutes': typeof MinutesRoute
+  '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
+  '/scene-3d': typeof Scene3dRoute
+  '/sign-up': typeof SignUpRoute
+  '/subscription': typeof SubscriptionRoute
+  '/terms': typeof TermsRoute
+  '/zoning': typeof ZoningRoute
+  '/api/health': typeof ApiHealthRoute
+  '/org/audit-log': typeof OrgAuditLogRoute
+  '/org/billing': typeof OrgBillingRoute
+  '/org/members': typeof OrgMembersRoute
+  '/parcels/$id': typeof ParcelsIdRoute
+  '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
+  '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
+  '/api/google-drive/disconnect': typeof ApiGoogleDriveDisconnectRoute
+  '/api/google-drive/export': typeof ApiGoogleDriveExportRoute
+  '/api/google-drive/start': typeof ApiGoogleDriveStartRoute
+  '/api/google-drive/status': typeof ApiGoogleDriveStatusRoute
+  '/api/google-drive/upload': typeof ApiGoogleDriveUploadRoute
+  '/api/ordinance/stream': typeof ApiOrdinanceStreamRoute
+  '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/access"
-    | "/acquire"
-    | "/aide"
-    | "/dashboard"
-    | "/directory"
-    | "/guide"
-    | "/insights"
-    | "/login"
-    | "/map"
-    | "/minutes"
-    | "/notifications"
-    | "/privacy"
-    | "/scene-3d"
-    | "/sign-up"
-    | "/subscription"
-    | "/terms"
-    | "/zoning"
-    | "/api/health"
-    | "/org/audit-log"
-    | "/org/billing"
-    | "/org/members"
-    | "/parcels/$id"
-    | "/api/feasibility-report/pdf"
-    | "/api/google-drive/callback"
-    | "/api/google-drive/disconnect"
-    | "/api/google-drive/export"
-    | "/api/google-drive/start"
-    | "/api/google-drive/status"
-    | "/api/google-drive/upload"
-    | "/api/ordinance/stream"
-    | "/api/webhooks/clerk"
-    | "/api/webhooks/stripe";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/access'
+    | '/acquire'
+    | '/aide'
+    | '/dashboard'
+    | '/directory'
+    | '/guide'
+    | '/insights'
+    | '/login'
+    | '/map'
+    | '/minutes'
+    | '/notifications'
+    | '/privacy'
+    | '/scene-3d'
+    | '/sign-up'
+    | '/subscription'
+    | '/terms'
+    | '/zoning'
+    | '/api/health'
+    | '/org/audit-log'
+    | '/org/billing'
+    | '/org/members'
+    | '/parcels/$id'
+    | '/api/feasibility-report/pdf'
+    | '/api/google-drive/callback'
+    | '/api/google-drive/disconnect'
+    | '/api/google-drive/export'
+    | '/api/google-drive/start'
+    | '/api/google-drive/status'
+    | '/api/google-drive/upload'
+    | '/api/ordinance/stream'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/stripe'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/access"
-    | "/acquire"
-    | "/aide"
-    | "/dashboard"
-    | "/directory"
-    | "/guide"
-    | "/insights"
-    | "/login"
-    | "/map"
-    | "/minutes"
-    | "/notifications"
-    | "/privacy"
-    | "/scene-3d"
-    | "/sign-up"
-    | "/subscription"
-    | "/terms"
-    | "/zoning"
-    | "/api/health"
-    | "/org/audit-log"
-    | "/org/billing"
-    | "/org/members"
-    | "/parcels/$id"
-    | "/api/feasibility-report/pdf"
-    | "/api/google-drive/callback"
-    | "/api/google-drive/disconnect"
-    | "/api/google-drive/export"
-    | "/api/google-drive/start"
-    | "/api/google-drive/status"
-    | "/api/google-drive/upload"
-    | "/api/ordinance/stream"
-    | "/api/webhooks/clerk"
-    | "/api/webhooks/stripe";
+    | '/'
+    | '/access'
+    | '/acquire'
+    | '/aide'
+    | '/dashboard'
+    | '/directory'
+    | '/guide'
+    | '/insights'
+    | '/login'
+    | '/map'
+    | '/minutes'
+    | '/notifications'
+    | '/privacy'
+    | '/scene-3d'
+    | '/sign-up'
+    | '/subscription'
+    | '/terms'
+    | '/zoning'
+    | '/api/health'
+    | '/org/audit-log'
+    | '/org/billing'
+    | '/org/members'
+    | '/parcels/$id'
+    | '/api/feasibility-report/pdf'
+    | '/api/google-drive/callback'
+    | '/api/google-drive/disconnect'
+    | '/api/google-drive/export'
+    | '/api/google-drive/start'
+    | '/api/google-drive/status'
+    | '/api/google-drive/upload'
+    | '/api/ordinance/stream'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/stripe'
   id:
-    | "__root__"
-    | "/"
-    | "/access"
-    | "/acquire"
-    | "/aide"
-    | "/dashboard"
-    | "/directory"
-    | "/guide"
-    | "/insights"
-    | "/login"
-    | "/map"
-    | "/minutes"
-    | "/notifications"
-    | "/privacy"
-    | "/scene-3d"
-    | "/sign-up"
-    | "/subscription"
-    | "/terms"
-    | "/zoning"
-    | "/api/health"
-    | "/org/audit-log"
-    | "/org/billing"
-    | "/org/members"
-    | "/parcels/$id"
-    | "/api/feasibility-report/pdf"
-    | "/api/google-drive/callback"
-    | "/api/google-drive/disconnect"
-    | "/api/google-drive/export"
-    | "/api/google-drive/start"
-    | "/api/google-drive/status"
-    | "/api/google-drive/upload"
-    | "/api/ordinance/stream"
-    | "/api/webhooks/clerk"
-    | "/api/webhooks/stripe";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/'
+    | '/access'
+    | '/acquire'
+    | '/aide'
+    | '/dashboard'
+    | '/directory'
+    | '/guide'
+    | '/insights'
+    | '/login'
+    | '/map'
+    | '/minutes'
+    | '/notifications'
+    | '/privacy'
+    | '/scene-3d'
+    | '/sign-up'
+    | '/subscription'
+    | '/terms'
+    | '/zoning'
+    | '/api/health'
+    | '/org/audit-log'
+    | '/org/billing'
+    | '/org/members'
+    | '/parcels/$id'
+    | '/api/feasibility-report/pdf'
+    | '/api/google-drive/callback'
+    | '/api/google-drive/disconnect'
+    | '/api/google-drive/export'
+    | '/api/google-drive/start'
+    | '/api/google-drive/status'
+    | '/api/google-drive/upload'
+    | '/api/ordinance/stream'
+    | '/api/webhooks/clerk'
+    | '/api/webhooks/stripe'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  AccessRoute: typeof AccessRoute;
-  AcquireRoute: typeof AcquireRoute;
-  AideRoute: typeof AideRoute;
-  DashboardRoute: typeof DashboardRoute;
-  DirectoryRoute: typeof DirectoryRoute;
-  GuideRoute: typeof GuideRoute;
-  InsightsRoute: typeof InsightsRoute;
-  LoginRoute: typeof LoginRoute;
-  MapRoute: typeof MapRoute;
-  MinutesRoute: typeof MinutesRoute;
-  NotificationsRoute: typeof NotificationsRoute;
-  PrivacyRoute: typeof PrivacyRoute;
-  Scene3dRoute: typeof Scene3dRoute;
-  SignUpRoute: typeof SignUpRoute;
-  SubscriptionRoute: typeof SubscriptionRoute;
-  TermsRoute: typeof TermsRoute;
-  ZoningRoute: typeof ZoningRoute;
-  ApiHealthRoute: typeof ApiHealthRoute;
-  OrgAuditLogRoute: typeof OrgAuditLogRoute;
-  OrgBillingRoute: typeof OrgBillingRoute;
-  OrgMembersRoute: typeof OrgMembersRoute;
-  ParcelsIdRoute: typeof ParcelsIdRoute;
-  ApiFeasibilityReportPdfRoute: typeof ApiFeasibilityReportPdfRoute;
-  ApiGoogleDriveCallbackRoute: typeof ApiGoogleDriveCallbackRoute;
-  ApiGoogleDriveDisconnectRoute: typeof ApiGoogleDriveDisconnectRoute;
-  ApiGoogleDriveExportRoute: typeof ApiGoogleDriveExportRoute;
-  ApiGoogleDriveStartRoute: typeof ApiGoogleDriveStartRoute;
-  ApiGoogleDriveStatusRoute: typeof ApiGoogleDriveStatusRoute;
-  ApiGoogleDriveUploadRoute: typeof ApiGoogleDriveUploadRoute;
-  ApiOrdinanceStreamRoute: typeof ApiOrdinanceStreamRoute;
-  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute;
-  ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute;
+  IndexRoute: typeof IndexRoute
+  AccessRoute: typeof AccessRoute
+  AcquireRoute: typeof AcquireRoute
+  AideRoute: typeof AideRoute
+  DashboardRoute: typeof DashboardRoute
+  DirectoryRoute: typeof DirectoryRoute
+  GuideRoute: typeof GuideRoute
+  InsightsRoute: typeof InsightsRoute
+  LoginRoute: typeof LoginRoute
+  MapRoute: typeof MapRoute
+  MinutesRoute: typeof MinutesRoute
+  NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
+  Scene3dRoute: typeof Scene3dRoute
+  SignUpRoute: typeof SignUpRoute
+  SubscriptionRoute: typeof SubscriptionRoute
+  TermsRoute: typeof TermsRoute
+  ZoningRoute: typeof ZoningRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  OrgAuditLogRoute: typeof OrgAuditLogRoute
+  OrgBillingRoute: typeof OrgBillingRoute
+  OrgMembersRoute: typeof OrgMembersRoute
+  ParcelsIdRoute: typeof ParcelsIdRoute
+  ApiFeasibilityReportPdfRoute: typeof ApiFeasibilityReportPdfRoute
+  ApiGoogleDriveCallbackRoute: typeof ApiGoogleDriveCallbackRoute
+  ApiGoogleDriveDisconnectRoute: typeof ApiGoogleDriveDisconnectRoute
+  ApiGoogleDriveExportRoute: typeof ApiGoogleDriveExportRoute
+  ApiGoogleDriveStartRoute: typeof ApiGoogleDriveStartRoute
+  ApiGoogleDriveStatusRoute: typeof ApiGoogleDriveStatusRoute
+  ApiGoogleDriveUploadRoute: typeof ApiGoogleDriveUploadRoute
+  ApiOrdinanceStreamRoute: typeof ApiOrdinanceStreamRoute
+  ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
+  ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/access": {
-      id: "/access";
-      path: "/access";
-      fullPath: "/access";
-      preLoaderRoute: typeof AccessRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/acquire": {
-      id: "/acquire";
-      path: "/acquire";
-      fullPath: "/acquire";
-      preLoaderRoute: typeof AcquireRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/aide": {
-      id: "/aide";
-      path: "/aide";
-      fullPath: "/aide";
-      preLoaderRoute: typeof AideRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/dashboard": {
-      id: "/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof DashboardRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/directory": {
-      id: "/directory";
-      path: "/directory";
-      fullPath: "/directory";
-      preLoaderRoute: typeof DirectoryRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/guide": {
-      id: "/guide";
-      path: "/guide";
-      fullPath: "/guide";
-      preLoaderRoute: typeof GuideRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/insights": {
-      id: "/insights";
-      path: "/insights";
-      fullPath: "/insights";
-      preLoaderRoute: typeof InsightsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/map": {
-      id: "/map";
-      path: "/map";
-      fullPath: "/map";
-      preLoaderRoute: typeof MapRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/minutes": {
-      id: "/minutes";
-      path: "/minutes";
-      fullPath: "/minutes";
-      preLoaderRoute: typeof MinutesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/notifications": {
-      id: "/notifications";
-      path: "/notifications";
-      fullPath: "/notifications";
-      preLoaderRoute: typeof NotificationsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/privacy": {
-      id: "/privacy";
-      path: "/privacy";
-      fullPath: "/privacy";
-      preLoaderRoute: typeof PrivacyRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/scene-3d": {
-      id: "/scene-3d";
-      path: "/scene-3d";
-      fullPath: "/scene-3d";
-      preLoaderRoute: typeof Scene3dRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/sign-up": {
-      id: "/sign-up";
-      path: "/sign-up";
-      fullPath: "/sign-up";
-      preLoaderRoute: typeof SignUpRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/subscription": {
-      id: "/subscription";
-      path: "/subscription";
-      fullPath: "/subscription";
-      preLoaderRoute: typeof SubscriptionRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/terms": {
-      id: "/terms";
-      path: "/terms";
-      fullPath: "/terms";
-      preLoaderRoute: typeof TermsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/zoning": {
-      id: "/zoning";
-      path: "/zoning";
-      fullPath: "/zoning";
-      preLoaderRoute: typeof ZoningRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/health": {
-      id: "/api/health";
-      path: "/api/health";
-      fullPath: "/api/health";
-      preLoaderRoute: typeof ApiHealthRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/org/audit-log": {
-      id: "/org/audit-log";
-      path: "/org/audit-log";
-      fullPath: "/org/audit-log";
-      preLoaderRoute: typeof OrgAuditLogRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/org/billing": {
-      id: "/org/billing";
-      path: "/org/billing";
-      fullPath: "/org/billing";
-      preLoaderRoute: typeof OrgBillingRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/org/members": {
-      id: "/org/members";
-      path: "/org/members";
-      fullPath: "/org/members";
-      preLoaderRoute: typeof OrgMembersRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/parcels/$id": {
-      id: "/parcels/$id";
-      path: "/parcels/$id";
-      fullPath: "/parcels/$id";
-      preLoaderRoute: typeof ParcelsIdRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/feasibility-report/pdf": {
-      id: "/api/feasibility-report/pdf";
-      path: "/api/feasibility-report/pdf";
-      fullPath: "/api/feasibility-report/pdf";
-      preLoaderRoute: typeof ApiFeasibilityReportPdfRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/google-drive/callback": {
-      id: "/api/google-drive/callback";
-      path: "/api/google-drive/callback";
-      fullPath: "/api/google-drive/callback";
-      preLoaderRoute: typeof ApiGoogleDriveCallbackRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/google-drive/disconnect": {
-      id: "/api/google-drive/disconnect";
-      path: "/api/google-drive/disconnect";
-      fullPath: "/api/google-drive/disconnect";
-      preLoaderRoute: typeof ApiGoogleDriveDisconnectRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/google-drive/export": {
-      id: "/api/google-drive/export";
-      path: "/api/google-drive/export";
-      fullPath: "/api/google-drive/export";
-      preLoaderRoute: typeof ApiGoogleDriveExportRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/google-drive/start": {
-      id: "/api/google-drive/start";
-      path: "/api/google-drive/start";
-      fullPath: "/api/google-drive/start";
-      preLoaderRoute: typeof ApiGoogleDriveStartRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/google-drive/status": {
-      id: "/api/google-drive/status";
-      path: "/api/google-drive/status";
-      fullPath: "/api/google-drive/status";
-      preLoaderRoute: typeof ApiGoogleDriveStatusRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/google-drive/upload": {
-      id: "/api/google-drive/upload";
-      path: "/api/google-drive/upload";
-      fullPath: "/api/google-drive/upload";
-      preLoaderRoute: typeof ApiGoogleDriveUploadRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/ordinance/stream": {
-      id: "/api/ordinance/stream";
-      path: "/api/ordinance/stream";
-      fullPath: "/api/ordinance/stream";
-      preLoaderRoute: typeof ApiOrdinanceStreamRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/webhooks/clerk": {
-      id: "/api/webhooks/clerk";
-      path: "/api/webhooks/clerk";
-      fullPath: "/api/webhooks/clerk";
-      preLoaderRoute: typeof ApiWebhooksClerkRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/webhooks/stripe": {
-      id: "/api/webhooks/stripe";
-      path: "/api/webhooks/stripe";
-      fullPath: "/api/webhooks/stripe";
-      preLoaderRoute: typeof ApiWebhooksStripeRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access': {
+      id: '/access'
+      path: '/access'
+      fullPath: '/access'
+      preLoaderRoute: typeof AccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acquire': {
+      id: '/acquire'
+      path: '/acquire'
+      fullPath: '/acquire'
+      preLoaderRoute: typeof AcquireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aide': {
+      id: '/aide'
+      path: '/aide'
+      fullPath: '/aide'
+      preLoaderRoute: typeof AideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/directory': {
+      id: '/directory'
+      path: '/directory'
+      fullPath: '/directory'
+      preLoaderRoute: typeof DirectoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minutes': {
+      id: '/minutes'
+      path: '/minutes'
+      fullPath: '/minutes'
+      preLoaderRoute: typeof MinutesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scene-3d': {
+      id: '/scene-3d'
+      path: '/scene-3d'
+      fullPath: '/scene-3d'
+      preLoaderRoute: typeof Scene3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscription': {
+      id: '/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof SubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zoning': {
+      id: '/zoning'
+      path: '/zoning'
+      fullPath: '/zoning'
+      preLoaderRoute: typeof ZoningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/audit-log': {
+      id: '/org/audit-log'
+      path: '/org/audit-log'
+      fullPath: '/org/audit-log'
+      preLoaderRoute: typeof OrgAuditLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/billing': {
+      id: '/org/billing'
+      path: '/org/billing'
+      fullPath: '/org/billing'
+      preLoaderRoute: typeof OrgBillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/members': {
+      id: '/org/members'
+      path: '/org/members'
+      fullPath: '/org/members'
+      preLoaderRoute: typeof OrgMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parcels/$id': {
+      id: '/parcels/$id'
+      path: '/parcels/$id'
+      fullPath: '/parcels/$id'
+      preLoaderRoute: typeof ParcelsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/feasibility-report/pdf': {
+      id: '/api/feasibility-report/pdf'
+      path: '/api/feasibility-report/pdf'
+      fullPath: '/api/feasibility-report/pdf'
+      preLoaderRoute: typeof ApiFeasibilityReportPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-drive/callback': {
+      id: '/api/google-drive/callback'
+      path: '/api/google-drive/callback'
+      fullPath: '/api/google-drive/callback'
+      preLoaderRoute: typeof ApiGoogleDriveCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-drive/disconnect': {
+      id: '/api/google-drive/disconnect'
+      path: '/api/google-drive/disconnect'
+      fullPath: '/api/google-drive/disconnect'
+      preLoaderRoute: typeof ApiGoogleDriveDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-drive/export': {
+      id: '/api/google-drive/export'
+      path: '/api/google-drive/export'
+      fullPath: '/api/google-drive/export'
+      preLoaderRoute: typeof ApiGoogleDriveExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-drive/start': {
+      id: '/api/google-drive/start'
+      path: '/api/google-drive/start'
+      fullPath: '/api/google-drive/start'
+      preLoaderRoute: typeof ApiGoogleDriveStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-drive/status': {
+      id: '/api/google-drive/status'
+      path: '/api/google-drive/status'
+      fullPath: '/api/google-drive/status'
+      preLoaderRoute: typeof ApiGoogleDriveStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/google-drive/upload': {
+      id: '/api/google-drive/upload'
+      path: '/api/google-drive/upload'
+      fullPath: '/api/google-drive/upload'
+      preLoaderRoute: typeof ApiGoogleDriveUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ordinance/stream': {
+      id: '/api/ordinance/stream'
+      path: '/api/ordinance/stream'
+      fullPath: '/api/ordinance/stream'
+      preLoaderRoute: typeof ApiOrdinanceStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/clerk': {
+      id: '/api/webhooks/clerk'
+      path: '/api/webhooks/clerk'
+      fullPath: '/api/webhooks/clerk'
+      preLoaderRoute: typeof ApiWebhooksClerkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/stripe': {
+      id: '/api/webhooks/stripe'
+      path: '/api/webhooks/stripe'
+      fullPath: '/api/webhooks/stripe'
+      preLoaderRoute: typeof ApiWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -729,17 +730,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOrdinanceStreamRoute: ApiOrdinanceStreamRoute,
   ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { startInstance } from "./start.ts";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
