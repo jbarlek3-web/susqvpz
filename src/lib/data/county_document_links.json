@@ -1,0 +1,123 @@
+{
+  "source": "PA County Planning Commissions Official Document Links",
+  "records": [
+    {
+      "county": "Cumberland",
+      "departmentName": "Cumberland County Planning Department",
+      "websiteUrl": "https://www.cumberlandcountypa.gov/120/Planning-Department",
+      "documentLinks": [
+        {
+          "title": "Planning Procedures & Reviews (SLDO)",
+          "url": "https://www.cumberlandcountypa.gov/4889/Planning-Procedures-Reviews-SLDOrdinance",
+          "description": "County subdivision and land development review procedures and ordinance guidelines"
+        },
+        {
+          "title": "Cumberland County Comprehensive Plan",
+          "url": "https://www.cumberlandcountypa.gov/4921/Cumberland-Plans-Program",
+          "description": "Cumberland County Comprehensive Plan (Cumberland Plans Program)"
+        },
+        {
+          "title": "Municipal Planning & Zoning Information",
+          "url": "https://www.cumberlandcountypa.gov/5091/Municipal-Information",
+          "description": "Directory of municipal zoning ordinances and planning status for Cumberland County"
+        },
+        {
+          "title": "County GIS & Mapping Services",
+          "url": "https://www.cumberlandcountypa.gov/119/GIS-Mapping",
+          "description": "County parcel mapping, GIS layers, and spatial planning datasets"
+        }
+      ]
+    },
+    {
+      "county": "Dauphin",
+      "departmentName": "Dauphin County Planning Commission (DCPC)",
+      "websiteUrl": "https://www.tcrpc-pa.org/dcpc-about",
+      "documentLinks": [
+        {
+          "title": "Dauphin County Planning Commission",
+          "url": "https://www.tcrpc-pa.org/dcpc-about",
+          "description": "Official portal of DCPC administered through the Tri-County Regional Planning Commission"
+        },
+        {
+          "title": "Regional Comprehensive Plan & Studies",
+          "url": "https://www.tcrpc-pa.org/",
+          "description": "Tri-County Regional Planning Commission regional plans, transportation, and land development policies"
+        },
+        {
+          "title": "Planning Reviews & Submission Contacts",
+          "url": "https://www.tcrpc-pa.org/dcpc-contact",
+          "description": "Mandated municipal and county development review submissions and staff contacts"
+        },
+        {
+          "title": "Dauphin County GIS Services",
+          "url": "https://www.dauphincounty.gov/government/departments/information_technology/gis_services/",
+          "description": "Official Dauphin County geographic information systems, parcel viewer, and open data"
+        }
+      ]
+    },
+    {
+      "county": "Lancaster",
+      "departmentName": "Lancaster County Planning Department (LCPD)",
+      "websiteUrl": "https://lancastercountyplanning.org/",
+      "documentLinks": [
+        {
+          "title": "Places2040 County Comprehensive Plan",
+          "url": "https://lancastercountyplanning.org/",
+          "description": "Lancaster County Places2040 comprehensive plan and regional growth frameworks"
+        },
+        {
+          "title": "County Planning Commission & Reviews",
+          "url": "https://co.lancaster.pa.us/2861/Planning-Commission",
+          "description": "Lancaster County Planning Commission application forms, agendas, and submittal requirements"
+        },
+        {
+          "title": "County Subdivision & Land Development (SALDO)",
+          "url": "https://www.cityoflancasterpa.gov/saldo/",
+          "description": "Subdivision and land development regulations for municipalities under regional and local SALDO"
+        },
+        {
+          "title": "Lancaster County GIS & Parcel Viewer",
+          "url": "https://lancasterpa.devnetwedge.com/",
+          "description": "County public parcel assessment search and spatial GIS mapping"
+        }
+      ]
+    },
+    {
+      "county": "York",
+      "departmentName": "York County Planning Commission (YCPC)",
+      "websiteUrl": "https://www.ycpc.org/",
+      "documentLinks": [
+        {
+          "title": "County SALDO Ordinance",
+          "url": "https://www.ycpc.org/DocumentCenter/View/478/Subdivision-Land-Development-Ordinance-PDF",
+          "description": "Official York County Subdivision and Land Development Ordinance document (PDF)"
+        },
+        {
+          "title": "County SALDO Application Form",
+          "url": "https://www.ycpc.org/DocumentCenter/View/479/County-SALDO-Application-PDF",
+          "description": "York County Planning Commission SALDO application and review submission package (PDF)"
+        },
+        {
+          "title": "County Planning Commission Fee Schedule",
+          "url": "https://www.ycpc.org/DocumentCenter/View/481/2026-York-County-Planning-Commission-Fee-Schedule-PDF",
+          "description": "Current YCPC plan review and application fee schedule (PDF)"
+        },
+        {
+          "title": "York County Comprehensive Plan / Land Use",
+          "url": "https://www.ycpc.org/224/Land-Use",
+          "description": "York County Comprehensive Plan land use element and future growth projections"
+        },
+        {
+          "title": "County Current Zoning Maps & Layers",
+          "url": "https://www.ycpc.org/473/Current-Zoning-Maps",
+          "description": "Official municipal zoning maps catalog and interactive countywide zoning viewer"
+        },
+        {
+          "title": "York County Act 167 Stormwater Program",
+          "url": "https://www.ycpc.org/320/Water-Quality-Stormwater-Management",
+          "description": "York County integrated water resources, Act 167 stormwater management, and watershed guidelines"
+        }
+      ]
+    }
+  ]
+}

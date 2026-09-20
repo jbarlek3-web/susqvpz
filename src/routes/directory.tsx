@@ -4,6 +4,7 @@ import {
   Box,
   Building2,
   ExternalLink,
+  FileText,
   Loader2,
   Mail,
   MapPin,
@@ -19,31 +20,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sanitizeUrl } from "@/lib/security/threat-detector";
 import { PARCELS } from "@/lib/data/parcels";
 import {
   getProCountyDirectory,
-  getProMunicipalityDirectory,
+  getProCountyDocumentLinks,
+  getProMunicipalDocumentLinks,
   type CountyDirectoryPayload,
   type CountyDirectoryRecord,
-  type MunicipalityDirectoryPayload,
-  type MunicipalityDirectoryRecord,
+  type CountyDocumentPayload,
+  type CountyDocumentRecord,
+  type MunicipalDocPayload,
+  type MunicipalDocRecord,
 } from "@/lib/pro-directory";
 
 export interface DirectorySearch {
   county?: string;
   search?: string;
-  tab?: "counties" | "municipalities";
+  tab?: "county-contacts" | "county-docs" | "municipal-docs" | "counties" | "municipalities";
 }
 
 export const Route = createFileRoute("/directory")({
-  validateSearch: (search: Record<string, unknown>): DirectorySearch => ({
-    county: typeof search.county === "string" ? search.county : undefined,
-    search: typeof search.search === "string" ? search.search : undefined,
-    tab:
-      search.tab === "counties" || search.tab === "municipalities"
-        ? search.tab
-        : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): DirectorySearch => {
+    const validTabs = ["county-contacts", "county-docs", "municipal-docs", "counties", "municipalities"];
+    const tab =
+      typeof search.tab === "string" && validTabs.includes(search.tab)
+        ? (search.tab as DirectorySearch["tab"])
+        : undefined;
+    return {
+      county: typeof search.county === "string" ? search.county : undefined,
+      search: typeof search.search === "string" ? search.search : undefined,
+      tab,
+    };
+  },
   component: ProDirectories,
 });
 
@@ -51,15 +60,26 @@ type LoadState<T> = { data: T | null; error: string | null; loading: boolean };
 
 function ProDirectories() {
   const search = Route.useSearch();
-  const [activeTab, setActiveTab] = useState<string>(
-    () => search.tab || (search.search ? "municipalities" : "counties"),
-  );
+  const getInitialTab = () => {
+    if (search.tab === "county-contacts" || search.tab === "counties") return "county-contacts";
+    if (search.tab === "county-docs") return "county-docs";
+    if (search.tab === "municipal-docs" || search.tab === "municipalities") return "municipal-docs";
+    if (search.search) return "municipal-docs";
+    return "county-contacts";
+  };
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab);
+
   const [counties, setCounties] = useState<LoadState<CountyDirectoryPayload>>({
     data: null,
     error: null,
     loading: true,
   });
-  const [municipalities, setMunicipalities] = useState<LoadState<MunicipalityDirectoryPayload>>({
+  const [countyDocs, setCountyDocs] = useState<LoadState<CountyDocumentPayload>>({
+    data: null,
+    error: null,
+    loading: false,
+  });
+  const [municipalDocs, setMunicipalDocs] = useState<LoadState<MunicipalDocPayload>>({
     data: null,
     error: null,
     loading: false,
@@ -75,7 +95,7 @@ function ProDirectories() {
         if (current)
           setCounties({
             data: null,
-            error: "The county directory could not be loaded.",
+            error: "The county contact directory could not be loaded.",
             loading: false,
           });
       });
@@ -85,59 +105,87 @@ function ProDirectories() {
   }, []);
 
   useEffect(() => {
-    if (activeTab !== "municipalities" || municipalities.data || municipalities.loading) return;
+    if (activeTab !== "county-docs" || countyDocs.data || countyDocs.loading) return;
     let current = true;
-    setMunicipalities((state) => ({ ...state, error: null, loading: true }));
-    void getProMunicipalityDirectory()
+    setCountyDocs((state) => ({ ...state, error: null, loading: true }));
+    void getProCountyDocumentLinks()
       .then((data) => {
-        if (current) setMunicipalities({ data, error: null, loading: false });
+        if (current) setCountyDocs({ data, error: null, loading: false });
       })
       .catch(() => {
         if (current)
-          setMunicipalities({
+          setCountyDocs({
             data: null,
-            error: "The municipal source directory could not be loaded.",
+            error: "The county document links could not be loaded.",
             loading: false,
           });
       });
     return () => {
       current = false;
     };
-  }, [activeTab, municipalities.data, municipalities.loading]);
+  }, [activeTab, countyDocs.data, countyDocs.loading]);
+
+  useEffect(() => {
+    if (activeTab !== "municipal-docs" || municipalDocs.data || municipalDocs.loading) return;
+    let current = true;
+    setMunicipalDocs((state) => ({ ...state, error: null, loading: true }));
+    void getProMunicipalDocumentLinks()
+      .then((data) => {
+        if (current) setMunicipalDocs({ data, error: null, loading: false });
+      })
+      .catch(() => {
+        if (current)
+          setMunicipalDocs({
+            data: null,
+            error: "The municipal document links could not be loaded.",
+            loading: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [activeTab, municipalDocs.data, municipalDocs.loading]);
 
   return (
     <AppShell>
       <section className="rounded-xl border border-outline-variant border-t-4 border-t-brand-lime bg-card px-5 py-7 md:px-8">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-secondary">
-            Pennsylvania development directories
+            Pennsylvania Development Directories
           </p>
           <Badge variant="approved">
             <ShieldCheck className="mr-1 size-3" /> Pro only
           </Badge>
         </div>
-        <h1 className="mt-2 text-3xl font-semibold">Planning and zoning directories</h1>
+        <h1 className="mt-2 text-3xl font-semibold">Planning and Zoning Directories</h1>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-          Search county planning contacts and official municipal source websites. Field ACQ points
-          you to the verified URLs directing users to the location of the document for each
-          Municipality in each County. No county or municipal documents are hosted on this platform.
+          Access county contact details, verified county document links, and comprehensive municipal
+          document links for all municipalities across Cumberland, Dauphin, Lancaster, and York.
+          No document files are hosted on this platform — all links direct users to verified official
+          government websites and code repositories.
         </p>
       </section>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
         <TabsList aria-label="Pro directory selection" className="h-auto flex-wrap">
-          <TabsTrigger value="counties">County P&amp;Z directory · Counties Documents' URLs</TabsTrigger>
-          <TabsTrigger value="municipalities">Municipal source directory · Municipal Documents' URLs</TabsTrigger>
+          <TabsTrigger value="county-contacts">County P&amp;Z directory · Contacts</TabsTrigger>
+          <TabsTrigger value="county-docs">County Document Links</TabsTrigger>
+          <TabsTrigger value="municipal-docs">Municipal source directory · Municipal Document Links</TabsTrigger>
         </TabsList>
-        <TabsContent value="counties" className="mt-4">
+        <TabsContent value="county-contacts" className="mt-4">
           <DirectoryLoadState state={counties}>
             {(data) => <CountyDirectory data={data} />}
           </DirectoryLoadState>
         </TabsContent>
-        <TabsContent value="municipalities" className="mt-4">
-          <DirectoryLoadState state={municipalities}>
+        <TabsContent value="county-docs" className="mt-4">
+          <DirectoryLoadState state={countyDocs}>
+            {(data) => <CountyDocumentDirectory data={data} />}
+          </DirectoryLoadState>
+        </TabsContent>
+        <TabsContent value="municipal-docs" className="mt-4">
+          <DirectoryLoadState state={municipalDocs}>
             {(data) => (
-              <MunicipalityDirectory
+              <MunicipalDocumentLinksDirectory
                 data={data}
                 initialSearch={search.search}
                 initialCounty={search.county}
@@ -161,7 +209,7 @@ function DirectoryLoadState<T>({
     return (
       <div className="grid min-h-64 place-items-center rounded-lg border border-outline-variant bg-card">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading protected directory…
+          <Loader2 className="size-4 animate-spin" /> Loading directory data…
         </div>
       </div>
     );
@@ -198,11 +246,10 @@ function CountyDirectory({ data }: { data: CountyDirectoryPayload }) {
         id="county-directory-search"
         value={query}
         onChange={setQuery}
-        placeholder="Search county, department, or official"
+        placeholder="Search county, department, or official..."
       />
       <p className="mt-3 text-xs text-muted-foreground">
-        Showing {filtered.length} of {data.records.length} county departments · Source:{" "}
-        {data.source}
+        Showing {filtered.length} of {data.records.length} county departments · Source: {data.source}
       </p>
       {filtered.length ? (
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -262,6 +309,111 @@ function CountyCard({ entry }: { entry: CountyDirectoryRecord }) {
   );
 }
 
+function CountyDocumentDirectory({ data }: { data: CountyDocumentPayload }) {
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const filtered = useMemo(
+    () =>
+      data.records.filter((entry) =>
+        needle
+          ? `${entry.county} ${entry.departmentName} ${entry.documentLinks.map((d) => d.title).join(" ")}`
+              .toLowerCase()
+              .includes(needle)
+          : true,
+      ),
+    [data.records, needle],
+  );
+
+  return (
+    <section>
+      <DirectorySearch
+        id="county-document-search"
+        value={query}
+        onChange={setQuery}
+        placeholder="Search county or document title (e.g. SALDO, Comprehensive Plan, Zoning)..."
+      />
+      <p className="mt-3 text-xs text-muted-foreground">
+        Showing official document links for {filtered.length} of {data.records.length} regional PA counties · Source: {data.source}
+      </p>
+      {filtered.length ? (
+        <div className="mt-4 grid gap-5 lg:grid-cols-2">
+          {filtered.map((entry) => (
+            <CountyDocumentCard key={entry.county} entry={entry} />
+          ))}
+        </div>
+      ) : (
+        <EmptySearch label="county document links" onClear={() => setQuery("")} />
+      )}
+    </section>
+  );
+}
+
+function CountyDocumentCard({ entry }: { entry: CountyDocumentRecord }) {
+  return (
+    <Card className="cyber-card transition-all duration-200">
+      <CardContent className="p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+          <div>
+            <p className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
+              {entry.county} County · Official Documents
+            </p>
+            <h2 className="mt-0.5 text-lg font-bold tracking-tight">{entry.departmentName}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/aide"
+              search={{
+                county: entry.county,
+                q: `What are the county-level planning, SALDO, and development requirements for ${entry.county} County?`,
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all active:scale-95 border border-primary/20"
+              title="Query private ordinance corpus for this county"
+            >
+              <Bot className="size-3.5" />
+              <span>Ask AI</span>
+            </Link>
+            {entry.websiteUrl && (
+              <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+                <a href={entry.websiteUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+                  Website <ExternalLink className="size-3" />
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2.5">
+          {entry.documentLinks.map((doc, i) => (
+            <div
+              key={i}
+              className="rounded-lg border border-outline-variant/60 bg-card/60 p-3 hover:border-primary/40 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <FileText className="size-3.5 text-secondary shrink-0" />
+                    <span>{doc.title}</span>
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{doc.description}</p>
+                </div>
+                <a
+                  href={doc.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline shrink-0 px-2 py-1 rounded bg-primary/10 hover:bg-primary/20 transition-colors"
+                >
+                  <span>Open URL</span>
+                  <ExternalLink className="size-3 shrink-0" />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ContactLine({
   icon: Icon,
   text,
@@ -289,18 +441,12 @@ function ContactLine({
   );
 }
 
-const MUNICIPAL_LINKS: Array<[keyof MunicipalityDirectoryRecord, string]> = [
-  ["municipalityWebsiteUrl", "Municipal website"],
-  ["ecode360Url", "Official code library"],
-  ["countyPlanningUrl", "County planning website"],
-];
-
-function MunicipalityDirectory({
+function MunicipalDocumentLinksDirectory({
   data,
   initialSearch = "",
   initialCounty = "all",
 }: {
-  data: MunicipalityDirectoryPayload;
+  data: MunicipalDocPayload;
   initialSearch?: string;
   initialCounty?: string;
 }) {
@@ -317,15 +463,16 @@ function MunicipalityDirectory({
   }, [initialCounty]);
 
   const counties = useMemo(
-    () => [...new Set(data.records.map((record) => record.county))].sort(),
+    () => [...new Set(data.records.map((record) => record.County))].sort(),
     [data.records],
   );
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return data.records.filter(
       (record) =>
-        (county === "all" || record.county.toLowerCase() === county.toLowerCase()) &&
-        (!needle || `${record.municipality} ${record.county}`.toLowerCase().includes(needle)),
+        (county === "all" || record.County.toLowerCase() === county.toLowerCase()) &&
+        (!needle || `${record.Municipality} ${record.County}`.toLowerCase().includes(needle)),
     );
   }, [county, data.records, query]);
 
@@ -335,17 +482,17 @@ function MunicipalityDirectory({
     <section>
       <div className="grid gap-3 rounded-lg border border-outline-variant bg-card p-4 md:grid-cols-[minmax(0,1fr)_260px]">
         <DirectorySearch
-          id="municipality-directory-search"
+          id="municipal-document-search"
           value={query}
           onChange={setQuery}
-          placeholder="Search municipality or notes"
+          placeholder="Search municipality, code, forms, or stormwater..."
           bare
         />
         <label className="grid gap-1 text-xs font-semibold text-on-surface-variant">
           County
           <select
-            id="municipality-directory-county"
-            name="municipalityDirectoryCounty"
+            id="municipal-document-county"
+            name="municipalDocumentCounty"
             value={county}
             onChange={(event) => setCounty(event.target.value)}
             className="h-10 rounded-md border border-outline-variant bg-card px-3 text-sm text-on-surface"
@@ -361,13 +508,13 @@ function MunicipalityDirectory({
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
         Showing {Math.min(visible, filtered.length)} of {filtered.length} matching municipalities ·{" "}
-        {data.records.length} total · Compiled {data.compiled} · Source: {data.source}
+        {data.records.length} total municipal document directories · Source: {data.source}
       </p>
       {filtered.length ? (
         <>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-1">
             {filtered.slice(0, visible).map((entry) => (
-              <MunicipalityCard key={`${entry.county}-${entry.municipality}`} entry={entry} />
+              <MunicipalDocCard key={`${entry.County}-${entry.Municipality}`} entry={entry} />
             ))}
           </div>
           {visible < filtered.length ? (
@@ -377,14 +524,14 @@ function MunicipalityDirectory({
                 variant="outline"
                 onClick={() => setVisible((value) => value + 60)}
               >
-                Show 60 more
+                Show 60 more ({filtered.length - visible} remaining)
               </Button>
             </div>
           ) : null}
         </>
       ) : (
         <EmptySearch
-          label="municipal records"
+          label="municipal document links"
           onClear={() => {
             setQuery("");
             setCounty("all");
@@ -395,28 +542,78 @@ function MunicipalityDirectory({
   );
 }
 
-function MunicipalityCard({ entry }: { entry: MunicipalityDirectoryRecord }) {
-  const links = MUNICIPAL_LINKS.flatMap(([key, label]) => {
-    const value = entry[key];
-    return typeof value === "string" && /^https?:\/\//i.test(value) ? [{ label, url: value }] : [];
-  });
+function parseUrls(text: string) {
+  if (!text) return [];
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text
+    .split(";")
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const match = part.match(urlRegex);
+      if (match) {
+        const rawUrl = match[0];
+        const validUrl = sanitizeUrl(rawUrl);
+        const desc = part.replace(rawUrl, "").trim().replace(/^:/, "").replace(/:$/, "").trim();
+        return { url: validUrl, desc: desc || "Official Document Link" };
+      }
+      return { url: null, desc: part };
+    });
+}
+
+function DocumentCategory({ title, content }: { title: string; content: string }) {
+  if (!content || content.toUpperCase().includes("NO MUNICIPAL DEVELOPMENT FORM VERIFIED ONLINE"))
+    return null;
+  const items = parseUrls(content);
+  if (!items.length) return null;
   return (
-    <Card>
+    <div className="mt-3 rounded-lg border border-outline-variant/70 bg-card/60 p-3 shadow-xs">
+      <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
+        {title}
+      </h3>
+      <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+        {items.map((item, i) => (
+          <li key={i} className="flex items-start gap-1.5">
+            <span className="text-secondary mt-0.5">•</span>
+            {item.url ? (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline inline-flex items-center gap-1 font-medium transition-colors hover:text-secondary break-all"
+              >
+                <span>{item.desc}</span> <ExternalLink className="size-3 shrink-0" />
+              </a>
+            ) : (
+              <span>{item.desc}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MunicipalDocCard({ entry }: { entry: MunicipalDocRecord }) {
+  const safeMuniUrl = sanitizeUrl(entry["Municipality URL"]);
+  return (
+    <Card className="cyber-card transition-all duration-200">
       <CardContent className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-secondary">
-              {entry.county} County
+            <p className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
+              {entry.County} County · Municipal Records &amp; Document Links
             </p>
-            <h2 className="mt-1 text-lg font-semibold">{entry.municipality}</h2>
+            <h2 className="mt-0.5 text-lg font-bold tracking-tight">{entry.Municipality}</h2>
           </div>
-          <div className="flex items-center gap-1.5">
+
+          <div className="flex items-center gap-2">
             <Link
               to="/aide"
               search={{
-                county: entry.county,
-                municipality: entry.municipality,
-                q: `What are the zoning, SALDO, and development requirements for ${entry.municipality} in ${entry.county} County?`,
+                county: entry.County,
+                municipality: entry.Municipality,
+                q: `What are the zoning, SALDO, and development requirements for ${entry.Municipality} in ${entry.County} County?`,
               }}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all active:scale-95 border border-primary/20"
               title="Query private ordinance corpus for this municipality"
@@ -428,7 +625,7 @@ function MunicipalityCard({ entry }: { entry: MunicipalityDirectoryRecord }) {
               to="/scene-3d"
               search={{
                 parcelId: PARCELS.find(
-                  (p) => p.municipality.toLowerCase() === entry.municipality.toLowerCase(),
+                  (p) => p.municipality.toLowerCase() === entry.Municipality.toLowerCase(),
                 )?.id,
               }}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all active:scale-95 border border-secondary/20"
@@ -437,28 +634,31 @@ function MunicipalityCard({ entry }: { entry: MunicipalityDirectoryRecord }) {
               <Box className="size-3.5" />
               <span>Costs Engine</span>
             </Link>
-          </div>
-        </div>
-        {links.length ? (
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {links.map((link) => (
-              <li key={`${link.label}-${link.url}`}>
+            {safeMuniUrl && (
+              <Button asChild variant="outline" size="sm" className="h-7 text-xs">
                 <a
-                  className="inline-flex items-start gap-2 text-sm font-medium text-primary-container hover:underline"
-                  href={link.url}
+                  href={safeMuniUrl}
                   target="_blank"
                   rel="noreferrer"
+                  className="inline-flex items-center gap-1"
                 >
-                  <ExternalLink className="mt-0.5 size-3.5 shrink-0" /> {link.label}
+                  Website <ExternalLink className="size-3" />
                 </a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-4 text-sm text-muted-foreground">
-            No official municipal or county source website is listed.
-          </p>
-        )}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <DocumentCategory title="Muni Forms" content={entry["Muni Forms"]} />
+          <DocumentCategory title="Municipal Code" content={entry["Municipil Code Download"]} />
+          <DocumentCategory title="SALDO" content={entry["Municipal SALDO"]} />
+          <DocumentCategory
+            title="Stormwater & Sanitary"
+            content={entry["Multiple Stormwater & Sanitary Sewer Solutions"]}
+          />
+          <DocumentCategory title="Zoning Map" content={entry["Zoning Map"]} />
+        </div>
       </CardContent>
     </Card>
   );

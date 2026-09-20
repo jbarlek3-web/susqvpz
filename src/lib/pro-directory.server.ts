@@ -1,9 +1,13 @@
 import countyRows from "@/lib/data/pro-directory/counties.json";
 import municipalityRows from "@/lib/data/pro-directory/municipalities.json";
+import countyDocRows from "@/lib/data/county_document_links.json";
+import municipalDocRows from "@/lib/data/municipal_document_links.json";
 import type {
   CountyDirectoryPayload,
   CountyDirectoryRecord,
   MunicipalityDirectoryPayload,
+  CountyDocumentPayload,
+  MunicipalDocPayload,
 } from "@/lib/pro-directory";
 
 function officialCodeLibraryUrl(value: string | null) {
@@ -38,4 +42,13 @@ export function municipalityDirectory(): MunicipalityDirectoryPayload {
     })),
   };
 }
+
+export function countyDocumentLinks(): CountyDocumentPayload {
+  return countyDocRows as CountyDocumentPayload;
+}
+
+export function municipalDocumentLinks(): MunicipalDocPayload {
+  return municipalDocRows as MunicipalDocPayload;
+}
+
 
