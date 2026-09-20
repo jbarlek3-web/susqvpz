@@ -4,9 +4,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 
-const LeafletMap = lazy(() =>
-  import("./leaflet-map").then((m) => ({ default: m.LeafletMap })),
-);
+const LeafletMap = lazy(() => import("./leaflet-map").then((m) => ({ default: m.LeafletMap })));
 
 export function ParcelMap({ className }: { className?: string }) {
   const [ready, setReady] = useState(false);
@@ -14,7 +12,12 @@ export function ParcelMap({ className }: { className?: string }) {
 
   if (!ready) {
     return (
-      <div className={cn("flex min-h-80 items-center justify-center bg-surface-high text-sm text-muted-foreground", className)}>
+      <div
+        className={cn(
+          "flex min-h-80 items-center justify-center bg-surface-high text-sm text-muted-foreground",
+          className,
+        )}
+      >
         Loading regional map…
       </div>
     );
@@ -23,7 +26,12 @@ export function ParcelMap({ className }: { className?: string }) {
   return (
     <ErrorBoundary
       fallback={({ reset }) => (
-        <div className={cn("flex min-h-80 flex-col items-center justify-center gap-3 bg-surface-high p-6 text-center", className)}>
+        <div
+          className={cn(
+            "flex min-h-80 flex-col items-center justify-center gap-3 bg-surface-high p-6 text-center",
+            className,
+          )}
+        >
           <div className="rounded-full bg-destructive/10 p-3 text-destructive">
             <AlertTriangle className="size-6" />
           </div>
@@ -39,7 +47,12 @@ export function ParcelMap({ className }: { className?: string }) {
     >
       <Suspense
         fallback={
-          <div className={cn("flex min-h-80 items-center justify-center bg-surface-high text-sm text-muted-foreground", className)}>
+          <div
+            className={cn(
+              "flex min-h-80 items-center justify-center bg-surface-high text-sm text-muted-foreground",
+              className,
+            )}
+          >
             Loading regional map…
           </div>
         }

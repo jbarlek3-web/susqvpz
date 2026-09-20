@@ -11,7 +11,7 @@ export interface StudioTextures {
 
 export function buildHouseStudioModel(
   spec: HouseDesignSpec,
-  textures?: StudioTextures
+  textures?: StudioTextures,
 ): THREE.Group {
   const root = new THREE.Group();
   root.name = "HouseStudioRoot";
@@ -203,7 +203,7 @@ export function buildHouseStudioModel(
     // Area Rug
     const rug = new THREE.Mesh(
       new THREE.PlaneGeometry(3.0, 2.6),
-      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 })
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9 }),
     );
     rug.rotation.x = -Math.PI / 2;
     rug.position.set(-2.5, 0.02, -1.9);
@@ -217,7 +217,7 @@ export function buildHouseStudioModel(
 
     const fireOpening = new THREE.Mesh(
       new THREE.BoxGeometry(0.8, 0.8, 0.2),
-      new THREE.MeshBasicMaterial({ color: 0xf97316 })
+      new THREE.MeshBasicMaterial({ color: 0xf97316 }),
     );
     fireOpening.position.set(-6.3, 0.5, -1.8);
     group.add(fireOpening);
@@ -320,10 +320,7 @@ export function buildHouseStudioModel(
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.5 });
 
     for (let i = 0; i < stepCount; i++) {
-      const step = new THREE.Mesh(
-        new THREE.BoxGeometry(stepWidth, stepHeight, stepDepth),
-        woodMat
-      );
+      const step = new THREE.Mesh(new THREE.BoxGeometry(stepWidth, stepHeight, stepDepth), woodMat);
       step.position.set(0, (i + 0.5) * stepHeight, (i - stepCount / 2) * stepDepth);
       stairGroup.add(step);
     }
@@ -351,10 +348,7 @@ export function buildHouseStudioModel(
     if (!isStoryVisible) continue;
 
     // Floor Slab (with selected interior flooring)
-    const floorSlab = new THREE.Mesh(
-      new THREE.BoxGeometry(width, 0.15, depth),
-      interiorFloorMat
-    );
+    const floorSlab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.15, depth), interiorFloorMat);
     floorSlab.position.set(0, baseElevation + 0.08, 0);
     floorSlab.receiveShadow = true;
     storyGroup.add(floorSlab);
@@ -365,10 +359,7 @@ export function buildHouseStudioModel(
 
     if (showFrontWall) {
       // Front Wall with Windows
-      const frontWall = new THREE.Mesh(
-        new THREE.BoxGeometry(width, storyHeight, 0.2),
-        facadeMat
-      );
+      const frontWall = new THREE.Mesh(new THREE.BoxGeometry(width, storyHeight, 0.2), facadeMat);
       frontWall.position.set(0, baseElevation + storyHeight / 2, depth / 2);
       frontWall.castShadow = true;
       frontWall.receiveShadow = true;
@@ -385,7 +376,7 @@ export function buildHouseStudioModel(
       // Back Wall
       const backWall = new THREE.Mesh(
         new THREE.BoxGeometry(width, storyHeight, 0.2),
-        interiorWallMat
+        interiorWallMat,
       );
       backWall.position.set(0, baseElevation + storyHeight / 2, -depth / 2);
       storyGroup.add(backWall);
@@ -393,7 +384,7 @@ export function buildHouseStudioModel(
       // Left Wall
       const leftWall = new THREE.Mesh(
         new THREE.BoxGeometry(0.2, storyHeight, depth),
-        interiorWallMat
+        interiorWallMat,
       );
       leftWall.position.set(-width / 2, baseElevation + storyHeight / 2, 0);
       storyGroup.add(leftWall);
@@ -401,7 +392,7 @@ export function buildHouseStudioModel(
       // Right Wall
       const rightWall = new THREE.Mesh(
         new THREE.BoxGeometry(0.2, storyHeight, depth),
-        interiorWallMat
+        interiorWallMat,
       );
       rightWall.position.set(width / 2, baseElevation + storyHeight / 2, 0);
       storyGroup.add(rightWall);
@@ -409,7 +400,7 @@ export function buildHouseStudioModel(
       // Interior Dividing Partition Walls
       const divider = new THREE.Mesh(
         new THREE.BoxGeometry(0.12, storyHeight * 0.95, depth * 0.6),
-        interiorWallMat
+        interiorWallMat,
       );
       divider.position.set(1.0, baseElevation + (storyHeight * 0.95) / 2, -1.5);
       storyGroup.add(divider);
@@ -446,7 +437,7 @@ export function buildHouseStudioModel(
     // Story Division Trim Beltline
     const beltline = new THREE.Mesh(
       new THREE.BoxGeometry(width + 0.2, 0.15, depth + 0.2),
-      whiteTrimMat
+      whiteTrimMat,
     );
     beltline.position.set(0, baseElevation + storyHeight, 0);
     storyGroup.add(beltline);
@@ -482,19 +473,13 @@ export function buildHouseStudioModel(
     root.add(roofMesh);
 
     // Brick Chimney
-    const chimney = new THREE.Mesh(
-      new THREE.BoxGeometry(1.2, roofHeight + 1.8, 1.2),
-      facadeMat
-    );
+    const chimney = new THREE.Mesh(new THREE.BoxGeometry(1.2, roofHeight + 1.8, 1.2), facadeMat);
     chimney.position.set(2.2, roofBaseY + (roofHeight + 1.8) / 2, -1.0);
     chimney.castShadow = true;
     root.add(chimney);
 
     // Dormer on front of roof
-    const dormer = new THREE.Mesh(
-      new THREE.BoxGeometry(1.6, 1.4, 1.8),
-      facadeMat
-    );
+    const dormer = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 1.8), facadeMat);
     dormer.position.set(-2.5, roofBaseY + 1.0, depth / 2 - 0.2);
     dormer.castShadow = true;
     root.add(dormer);
@@ -515,12 +500,12 @@ export function buildHouseStudioModel(
     const garageHeight = 3.1;
     const garageMesh = new THREE.Mesh(
       new THREE.BoxGeometry(garageWidth, garageHeight, garageDepth),
-      facadeMat
+      facadeMat,
     );
     garageMesh.position.set(
       -width / 2 - garageWidth / 2 + 2.0,
       garageHeight / 2,
-      depth / 2 + garageDepth / 2 - 2.0
+      depth / 2 + garageDepth / 2 - 2.0,
     );
     garageMesh.castShadow = true;
     garageMesh.receiveShadow = true;
@@ -529,12 +514,12 @@ export function buildHouseStudioModel(
     // Garage Door
     const garageDoor = new THREE.Mesh(
       new THREE.BoxGeometry(garageWidth - 0.8, 2.3, 0.08),
-      whiteTrimMat
+      whiteTrimMat,
     );
     garageDoor.position.set(
       -width / 2 - garageWidth / 2 + 2.0,
       1.2,
-      depth / 2 + garageDepth - 2.0 + 0.04
+      depth / 2 + garageDepth - 2.0 + 0.04,
     );
     garageDoor.castShadow = true;
     root.add(garageDoor);
@@ -543,10 +528,7 @@ export function buildHouseStudioModel(
     if (spec.hasPorch) {
       const porchW = 4.8;
       const porchD = 2.4;
-      const porchFloor = new THREE.Mesh(
-        new THREE.BoxGeometry(porchW, 0.35, porchD),
-        concreteMat
-      );
+      const porchFloor = new THREE.Mesh(new THREE.BoxGeometry(porchW, 0.35, porchD), concreteMat);
       porchFloor.position.set(2.8, 0.18, depth / 2 + porchD / 2);
       porchFloor.castShadow = true;
       porchFloor.receiveShadow = true;
@@ -556,17 +538,14 @@ export function buildHouseStudioModel(
       [-porchW / 2 + 0.3, 0, porchW / 2 - 0.3].forEach((cx) => {
         if (spec.style === "craftsman") {
           // Craftsman: Stone pedestal base with tapered column post
-          const stoneBase = new THREE.Mesh(
-            new THREE.BoxGeometry(0.45, 0.9, 0.45),
-            facadeMat
-          );
+          const stoneBase = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.9, 0.45), facadeMat);
           stoneBase.position.set(2.8 + cx, 0.65, depth / 2 + porchD - 0.3);
           stoneBase.castShadow = true;
           root.add(stoneBase);
 
           const taperedCol = new THREE.Mesh(
             new THREE.CylinderGeometry(0.09, 0.14, 1.7, 4),
-            whiteTrimMat
+            whiteTrimMat,
           );
           taperedCol.position.set(2.8 + cx, 1.95, depth / 2 + porchD - 0.3);
           taperedCol.rotation.y = Math.PI / 4;
@@ -574,19 +553,13 @@ export function buildHouseStudioModel(
           root.add(taperedCol);
         } else if (spec.style === "modernFarmhouse") {
           // Clean square timber post
-          const post = new THREE.Mesh(
-            new THREE.BoxGeometry(0.18, 2.6, 0.18),
-            whiteTrimMat
-          );
+          const post = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.18), whiteTrimMat);
           post.position.set(2.8 + cx, 1.5, depth / 2 + porchD - 0.3);
           post.castShadow = true;
           root.add(post);
         } else {
           // Classical round fluted column
-          const col = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.12, 0.12, 2.6, 16),
-            whiteTrimMat
-          );
+          const col = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.6, 16), whiteTrimMat);
           col.position.set(2.8 + cx, 1.5, depth / 2 + porchD - 0.3);
           col.castShadow = true;
           root.add(col);
@@ -596,7 +569,7 @@ export function buildHouseStudioModel(
       // Porch Roof
       const porchRoof = new THREE.Mesh(
         new THREE.BoxGeometry(porchW + 0.3, 0.25, porchD + 0.4),
-        roofMat
+        roofMat,
       );
       porchRoof.position.set(2.8, 2.9, depth / 2 + porchD / 2);
       porchRoof.rotation.x = 0.12;
@@ -606,10 +579,7 @@ export function buildHouseStudioModel(
 
     // --- Rear Backyard Patio ---
     if (spec.hasPatio) {
-      const patio = new THREE.Mesh(
-        new THREE.BoxGeometry(6.5, 0.15, 4.5),
-        concreteMat
-      );
+      const patio = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.15, 4.5), concreteMat);
       patio.position.set(1.5, 0.08, -depth / 2 - 2.5);
       patio.receiveShadow = true;
       root.add(patio);
@@ -617,14 +587,14 @@ export function buildHouseStudioModel(
       // Patio Table & Chairs
       const pTable = new THREE.Mesh(
         new THREE.CylinderGeometry(0.9, 0.9, 0.06, 16),
-        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 })
+        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 }),
       );
       pTable.position.set(2.5, 0.75, -depth / 2 - 2.5);
       root.add(pTable);
 
       const umbrella = new THREE.Mesh(
         new THREE.ConeGeometry(1.6, 0.6, 12),
-        new THREE.MeshStandardMaterial({ color: 0x047857, roughness: 0.7 })
+        new THREE.MeshStandardMaterial({ color: 0x047857, roughness: 0.7 }),
       );
       umbrella.position.set(2.5, 2.3, -depth / 2 - 2.5);
       root.add(umbrella);
@@ -650,10 +620,7 @@ export function buildHouseStudioModel(
 
     // Brackets
     [-bW / 2 + 0.4, bW / 2 - 0.4].forEach((bx) => {
-      const bracket = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, 0.6, bD * 0.8),
-        whiteTrimMat
-      );
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, bD * 0.8), whiteTrimMat);
       bracket.position.set(-2.0 + bx, bElevation - 0.25, depth / 2 + (bD * 0.8) / 2);
       balconyGroup.add(bracket);
     });
@@ -678,7 +645,7 @@ export function buildHouseStudioModel(
     for (let bx = -bW / 2; bx <= bW / 2; bx += 0.35) {
       const baluster = new THREE.Mesh(
         new THREE.CylinderGeometry(0.02, 0.02, rHeight, 8),
-        railingMat
+        railingMat,
       );
       baluster.position.set(-2.0 + bx, bElevation + rHeight / 2, depth / 2 + bD);
       balconyGroup.add(baluster);
@@ -696,7 +663,7 @@ export function buildHouseStudioModel(
 
     const turretMesh = new THREE.Mesh(
       new THREE.CylinderGeometry(turretR, turretR, turretH, turretSegments),
-      facadeMat
+      facadeMat,
     );
     turretMesh.position.set(width / 2 - 1.2, turretH / 2, depth / 2);
     turretMesh.castShadow = true;
@@ -714,7 +681,7 @@ export function buildHouseStudioModel(
       const capH = 2.8;
       const turretCap = new THREE.Mesh(
         new THREE.ConeGeometry(turretR * 1.2, capH, turretSegments),
-        roofMat
+        roofMat,
       );
       turretCap.position.set(width / 2 - 1.2, turretH + capH / 2, depth / 2);
       turretCap.castShadow = true;
@@ -722,7 +689,7 @@ export function buildHouseStudioModel(
 
       const finial = new THREE.Mesh(
         new THREE.CylinderGeometry(0.04, 0.08, 1.2, 8),
-        new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.9, roughness: 0.1 })
+        new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.9, roughness: 0.1 }),
       );
       finial.position.set(width / 2 - 1.2, turretH + capH + 0.6, depth / 2);
       turretGroup.add(finial);

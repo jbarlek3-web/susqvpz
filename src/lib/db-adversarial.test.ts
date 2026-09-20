@@ -37,7 +37,9 @@ test("ADV-DB-02: Atomic Rollback - Explicit exception rolls back all partial wri
     await sql.transaction(async (tx) => {
       await tx`insert into test_adv_tx (id, val, num) values ('rollback_1', 'transient', 999)`;
       // Verify row is visible inside the uncommitted transaction
-      const innerRows = await tx<{ id: string }>`select id from test_adv_tx where id = 'rollback_1'`;
+      const innerRows = await tx<{
+        id: string;
+      }>`select id from test_adv_tx where id = 'rollback_1'`;
       assert.equal(innerRows.length, 1, "Write should be visible within transaction before throw");
       throw new Error("Simulated business logic failure aborting transaction");
     });
@@ -78,7 +80,11 @@ test("ADV-DB-03: SQL Error inside Transaction - Database syntax/constraint error
 
   // Verify the connection pool is still healthy and accepts new queries immediately
   const healthyCheck = await sql<{ result: number }>`select 1 as result`;
-  assert.equal(healthyCheck[0]?.result, 1, "Connection must remain usable after transaction failure");
+  assert.equal(
+    healthyCheck[0]?.result,
+    1,
+    "Connection must remain usable after transaction failure",
+  );
 });
 
 test("ADV-DB-04: Concurrency Burst - 50 concurrent transactions execute without leaks or deadlocks", async () => {
@@ -89,8 +95,11 @@ test("ADV-DB-04: Concurrency Burst - 50 concurrent transactions execute without 
   const tasks = Array.from({ length: BURST_COUNT }, async (_, i) => {
     const id = `burst_50_${i}`;
     return sql.transaction(async (tx) => {
-      await tx`insert into test_adv_tx (id, val, num) values (${id}, ${'burst_val_' + i}, ${i})`;
-      const readBack = await tx<{ id: string; num: number }>`select id, num from test_adv_tx where id = ${id}`;
+      await tx`insert into test_adv_tx (id, val, num) values (${id}, ${"burst_val_" + i}, ${i})`;
+      const readBack = await tx<{
+        id: string;
+        num: number;
+      }>`select id, num from test_adv_tx where id = ${id}`;
       assert.equal(readBack.length, 1);
       assert.equal(readBack[0].num, i);
       return readBack[0].id;
@@ -224,8 +233,12 @@ test("ADV-DB-06c: Nested Transactions / Savepoints Empirical Finding - Lack of S
     await outerTx`insert into test_adv_tx (id, val, num) values ('savepoint_outer_2', 'outer_val_2', 30)`;
   });
 
-  const innerRow = await sql<{ id: string }>`select id from test_adv_tx where id = 'savepoint_inner'`;
-  const outerRows = await sql<{ id: string }>`select id from test_adv_tx where id in ('savepoint_outer', 'savepoint_outer_2')`;
+  const innerRow = await sql<{
+    id: string;
+  }>`select id from test_adv_tx where id = 'savepoint_inner'`;
+  const outerRows = await sql<{
+    id: string;
+  }>`select id from test_adv_tx where id in ('savepoint_outer', 'savepoint_outer_2')`;
 
   assert.equal(outerRows.length, 2, "Outer rows committed cleanly");
 
@@ -258,7 +271,10 @@ test("ADV-DB-07: SQL Parameter Injection & Sanitization - Tagged templates resis
       await tx`insert into test_adv_tx (id, val, num) values (${id}, ${payload}, ${i})`;
     });
 
-    const read = await sql<{ id: string; val: string }>`select id, val from test_adv_tx where id = ${id}`;
+    const read = await sql<{
+      id: string;
+      val: string;
+    }>`select id, val from test_adv_tx where id = ${id}`;
     assert.equal(read.length, 1);
     assert.equal(read[0].val, payload, "Payload should be stored verbatim without SQL execution");
   }
@@ -285,7 +301,9 @@ test("ADV-DB-08: PGlite Single-Threaded WASM Deadlock Guard", async () => {
 
     // Attempting to query base `sql` concurrently while inside PGlite transaction:
     const queryPromise = sql`select count(*) from test_adv_tx`;
-    const timeoutPromise = new Promise<"TIMED_OUT">((resolve) => setTimeout(() => resolve("TIMED_OUT"), 150));
+    const timeoutPromise = new Promise<"TIMED_OUT">((resolve) =>
+      setTimeout(() => resolve("TIMED_OUT"), 150),
+    );
 
     const raceResult = await Promise.race([queryPromise, timeoutPromise]);
     assert.equal(
@@ -379,7 +397,9 @@ test("ADV-DB-10: Neon Pool Transaction Engine Stress Simulation", async () => {
 
   const pool = new MockPool();
 
-  const runNeonTransactionSim = async <R>(cb: (client: MockPoolClient) => Promise<R>): Promise<R> => {
+  const runNeonTransactionSim = async <R>(
+    cb: (client: MockPoolClient) => Promise<R>,
+  ): Promise<R> => {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
@@ -416,5 +436,8 @@ test("ADV-DB-10: Neon Pool Transaction Engine Stress Simulation", async () => {
   assert.equal(simResults.length, SIM_TASKS);
   assert.equal(activeClients, 0, "All pool clients must be released back to pool");
   assert.equal(totalConnections, totalReleases, "Every connection must be matched by a release");
-  assert.ok(maxConcurrentClients <= POOL_MAX, `Concurrent active clients (${maxConcurrentClients}) must never exceed pool max (${POOL_MAX})`);
+  assert.ok(
+    maxConcurrentClients <= POOL_MAX,
+    `Concurrent active clients (${maxConcurrentClients}) must never exceed pool max (${POOL_MAX})`,
+  );
 });

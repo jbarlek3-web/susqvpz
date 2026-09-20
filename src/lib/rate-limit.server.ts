@@ -24,12 +24,15 @@ function bucketKey(action: string, subject: string) {
   if (!salt && process.env.VERCEL_ENV === "production") {
     throw new Error("RATE_LIMIT_SALT is required in production");
   }
-  return `${action}:${createHash("sha256").update(`${salt ?? "local"}:${subject}`).digest("hex")}`;
+  return `${action}:${createHash("sha256")
+    .update(`${salt ?? "local"}:${subject}`)
+    .digest("hex")}`;
 }
 
 export async function consumeRateLimit(limit: Limit) {
   if (!Number.isSafeInteger(limit.max) || limit.max < 1) throw new Error("Invalid rate limit max");
-  if (!Number.isSafeInteger(limit.windowSeconds) || limit.windowSeconds < 1) throw new Error("Invalid rate limit window");
+  if (!Number.isSafeInteger(limit.windowSeconds) || limit.windowSeconds < 1)
+    throw new Error("Invalid rate limit window");
 
   const nowSeconds = Math.floor(Date.now() / 1000);
   const windowId = Math.floor(nowSeconds / limit.windowSeconds);

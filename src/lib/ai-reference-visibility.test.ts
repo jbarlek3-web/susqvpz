@@ -35,10 +35,10 @@ test("the complete regional corpus is private and explicitly attributed", () => 
   const parsedDocuments = shardUrls.flatMap((url) => {
     const parsed = JSON.parse(readFileSync(url, "utf8")) as {
       documents: Array<{
-      id: string;
-      jurisdictions: Array<{ county: string; municipality: string }>;
-      status: string;
-      failureReason: string | null;
+        id: string;
+        jurisdictions: Array<{ county: string; municipality: string }>;
+        status: string;
+        failureReason: string | null;
       }>;
     };
     return parsed.documents;
@@ -122,7 +122,10 @@ test("the latest Cumberland municipal intake is fully searchable", () => {
 
   assert.equal(records.length, 68);
   assert.equal(records.filter(({ document }) => document.status === "ready").length, 68);
-  assert.equal(records.filter(({ document }) => document.extractionMode === "ocr-sidecar").length, 7);
+  assert.equal(
+    records.filter(({ document }) => document.extractionMode === "ocr-sidecar").length,
+    7,
+  );
   assert.equal(records.filter(({ document }) => document.needsOcr).length, 0);
   assert.ok(records.reduce((total, { document }) => total + document.chunkCount, 0) >= 588);
 });
@@ -142,7 +145,10 @@ test("public routes and shared catalogs do not import the private AI corpus", ()
 test("classifyDocumentDomain accurately identifies all land-use pillars", () => {
   // 1. Fee schedules
   assert.equal(classifyDocumentDomain("Dickinson Township - 2026 Fee Schedule.pdf"), "fees");
-  assert.equal(classifyDocumentDomain("York Township - Resolution 2025-04 Fee Schedule.pdf"), "fees");
+  assert.equal(
+    classifyDocumentDomain("York Township - Resolution 2025-04 Fee Schedule.pdf"),
+    "fees",
+  );
   assert.equal(classifyDocumentDomain("Lower Allen Township - Schedule of Fees.pdf"), "fees");
 
   // 2. Permits and applications
@@ -165,10 +171,7 @@ test("classifyDocumentDomain accurately identifies all land-use pillars", () => 
     classifyDocumentDomain("Codification-and-Various-Changes-SLDO-Review-Report.pdf"),
     "saldo",
   );
-  assert.equal(
-    classifyDocumentDomain("York County - SALDO Requirements.pdf", "SALDO"),
-    "saldo",
-  );
+  assert.equal(classifyDocumentDomain("York County - SALDO Requirements.pdf", "SALDO"), "saldo");
 
   // 4. Zoning
   assert.equal(
@@ -191,7 +194,10 @@ test("classifyDocumentDomain accurately identifies all land-use pillars", () => 
     classifyDocumentDomain("Cumberland County Comprehensive Plan 2024.pdf"),
     "comprehensive_plan",
   );
-  assert.equal(classifyDocumentDomain("Carlisle Borough - Comprehensive Plan.html"), "comprehensive_plan");
+  assert.equal(
+    classifyDocumentDomain("Carlisle Borough - Comprehensive Plan.html"),
+    "comprehensive_plan",
+  );
 });
 
 test("getAiReferenceScope reports domain distributions", () => {

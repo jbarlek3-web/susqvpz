@@ -57,14 +57,27 @@ if (artifactPaths.length > 0) {
     process.exit(0);
   }
 
-  process.stderr.write("[secrets] potential credentials found in deployable artifacts (values redacted):\n");
+  process.stderr.write(
+    "[secrets] potential credentials found in deployable artifacts (values redacted):\n",
+  );
   for (const file of [...new Set(findings)].sort()) process.stderr.write(`${file}\n`);
   process.exit(1);
 }
 
 const result = spawnSync(
   "git",
-  ["grep", "--cached", "-l", "-I", "-E", patterns.join("|"), "--", ".", ":!scripts/scan-secrets.mjs", ":!scripts/scan-secrets.test.mjs"],
+  [
+    "grep",
+    "--cached",
+    "-l",
+    "-I",
+    "-E",
+    patterns.join("|"),
+    "--",
+    ".",
+    ":!scripts/scan-secrets.mjs",
+    ":!scripts/scan-secrets.test.mjs",
+  ],
   { encoding: "utf8", shell: false },
 );
 

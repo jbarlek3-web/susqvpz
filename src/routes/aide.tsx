@@ -1,26 +1,62 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Bot, Gauge, Loader2, Network, Send, ShieldCheck } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Bot,
+  Box,
+  Compass,
+  FileSpreadsheet,
+  Gauge,
+  Loader2,
+  Network,
+  Send,
+  ShieldCheck,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  getOrdinanceAgentScope,
-  type OrdinanceAgentScope,
-} from "@/lib/ordinance-agent";
+import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
+import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
+import { logSecurityEvent, analyzeInput } from "@/lib/security/threat-detector";
+import { PARCELS } from "@/lib/data/parcels";
+import { getOrdinanceAgentScope, type OrdinanceAgentScope } from "@/lib/ordinance-agent";
 
-export const Route = createFileRoute("/aide")({ component: OrdinanceAide });
+export interface AideSearch {
+  county?: string;
+  municipality?: string;
+  q?: string;
+}
+
+export const Route = createFileRoute("/aide")({
+  validateSearch: (search: Record<string, unknown>): AideSearch => ({
+    county: typeof search.county === "string" ? search.county : undefined,
+    municipality: typeof search.municipality === "string" ? search.municipality : undefined,
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
+  component: OrdinanceAide,
+});
 
 type Message = { id: number; role: "assistant" | "user"; text: string };
 
 function OrdinanceAide() {
+  const search = Route.useSearch();
   const [scope, setScope] = useState<OrdinanceAgentScope | null>(null);
   const [scopeError, setScopeError] = useState("");
-  const [county, setCounty] = useState("York");
-  const [municipality, setMunicipality] = useState("");
-  const [question, setQuestion] = useState("");
+  const [county, setCounty] = useState(() => search.county || "York");
+  const [municipality, setMunicipality] = useState(() => search.municipality || "");
+  const {
+    value: question,
+    setValue: setQuestion,
+    isDirty: isPromptDirty,
+    isDraftRestored: isPromptRestored,
+    lastSavedAt: promptLastSavedAt,
+    resetToDefault: resetPrompt,
+    clearDraft: clearPromptDraft,
+  } = usePersistentDraft<string>("aide_prompt_draft_v1", () => search.q || "", {
+    storage: "sessionStorage",
+    enableBeforeUnloadWarn: true,
+  });
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -41,8 +77,18 @@ function OrdinanceAide() {
       .then((data) => {
         if (!current) return;
         setScope(data);
-        const first = data.counties.find((item) => item.county === countyRef.current)?.municipalities[0];
-        setMunicipality(first ?? "");
+        const targetCounty = search.county || countyRef.current;
+        const countyData = data.counties.find((item) => item.county === targetCounty);
+        if (countyData) {
+          if (search.county) setCounty(search.county);
+          const hasMuni =
+            search.municipality && countyData.municipalities.includes(search.municipality);
+          setMunicipality(hasMuni ? search.municipality! : (countyData.municipalities[0] ?? ""));
+        } else {
+          const first = data.counties[0];
+          setCounty(first?.county ?? "York");
+          setMunicipality(first?.municipalities[0] ?? "");
+        }
       })
       .catch(() => {
         if (current) setScopeError("The private ordinance corpus could not be loaded.");
@@ -50,7 +96,13 @@ function OrdinanceAide() {
     return () => {
       current = false;
     };
-  }, []);
+  }, [search.county, search.municipality]);
+
+  useEffect(() => {
+    if (search.q && !question) {
+      setQuestion(search.q);
+    }
+  }, [search.q, question, setQuestion]);
 
   const municipalities = useMemo(
     () => scope?.counties.find((item) => item.county === county)?.municipalities ?? [],
@@ -73,8 +125,21 @@ function OrdinanceAide() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    const prompt = question.trim();
-    if (!prompt || !municipality || busy) return;
+    const rawPrompt = question.trim();
+    if (!rawPrompt || !municipality || busy) return;
+
+    const threatCheck = analyzeInput(rawPrompt);
+    if (threatCheck.isThreat) {
+      logSecurityEvent({
+        threatType: threatCheck.threatType || "UNKNOWN",
+        details: threatCheck.details || "Threat pattern detected in AI prompt",
+        sourceContext: "OrdinanceAide",
+      });
+    }
+
+    const prompt = rawPrompt;
+
+    clearPromptDraft();
     const userMsgId = Date.now();
     const assistantMsgId = userMsgId + 1;
 
@@ -88,7 +153,6 @@ function OrdinanceAide() {
       { id: userMsgId, role: "user", text: prompt },
       { id: assistantMsgId, role: "assistant", text: "" },
     ]);
-    setQuestion("");
     setBusy(true);
 
     try {
@@ -159,7 +223,10 @@ function OrdinanceAide() {
       setMessages((current) =>
         current.map((m) =>
           m.id === assistantMsgId && !m.text
-            ? { ...m, text: "The Ordinance Aide could not complete that request. Please try again." }
+            ? {
+                ...m,
+                text: "The Ordinance Aide could not complete that request. Please try again.",
+              }
             : m,
         ),
       );
@@ -299,7 +366,9 @@ function OrdinanceAide() {
                   </div>
                 );
               })}
-              {busy && (!messages[messages.length - 1]?.text || messages[messages.length - 1]?.role === "user") ? (
+              {busy &&
+              (!messages[messages.length - 1]?.text ||
+                messages[messages.length - 1]?.role === "user") ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" /> Searching the private corpus…
                 </div>
@@ -314,15 +383,67 @@ function OrdinanceAide() {
                 className="min-h-24"
                 disabled={!scope || busy || usage?.exhausted}
               />
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground">
-                  Research aid only. Confirm controlling requirements with the municipality.
-                </p>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <DataProtectionBadge
+                    isDirty={isPromptDirty}
+                    isDraftRestored={isPromptRestored}
+                    lastSavedAt={promptLastSavedAt}
+                    onReset={resetPrompt}
+                  />
+                  <p className="text-xs text-muted-foreground hidden sm:block">
+                    Research aid only. Confirm controlling requirements with the municipality.
+                  </p>
+                </div>
                 <Button
                   type="submit"
                   disabled={!scope || !municipality || !question.trim() || busy || usage?.exhausted}
                 >
                   <Send className="size-4" /> Ask Aide
+                </Button>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-border/60">
+                <span className="text-xs font-mono font-medium text-muted-foreground">
+                  Workflow Teleport:
+                </span>
+                <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+                  <Link
+                    to="/scene-3d"
+                    search={{
+                      parcelId: PARCELS.find(
+                        (p) => p.municipality.toLowerCase() === municipality.toLowerCase(),
+                      )?.id,
+                    }}
+                  >
+                    <Box className="size-3.5 text-primary" /> Costs Engine
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+                  <Link
+                    to="/directory"
+                    search={{
+                      search: municipality,
+                      tab: "documents",
+                    }}
+                  >
+                    <Compass className="size-3.5 text-emerald-600 dark:text-emerald-400" />{" "}
+                    Municipal Docs
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+                  <Link
+                    to="/acquire"
+                    search={{
+                      parcelId: PARCELS.find(
+                        (p) => p.municipality.toLowerCase() === municipality.toLowerCase(),
+                      )?.id,
+                      tab: "Report",
+                    }}
+                  >
+                    <FileSpreadsheet className="size-3.5 text-amber-600 dark:text-amber-400" />{" "}
+                    Feasibility
+                  </Link>
                 </Button>
               </div>
               {usage?.exhausted ? (

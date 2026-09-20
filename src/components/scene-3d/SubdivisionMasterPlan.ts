@@ -14,7 +14,7 @@ export interface SubdivisionSceneRefs {
 export function buildSubdivisionMasterPlan(
   config: SubdivisionConfig,
   textures?: StudioTextures,
-  _onSelectLot?: (lotNumber: number) => void
+  _onSelectLot?: (lotNumber: number) => void,
 ): SubdivisionSceneRefs {
   const root = new THREE.Group();
   root.name = "SubdivisionMasterPlanRoot";
@@ -176,7 +176,11 @@ export function buildSubdivisionMasterPlan(
   });
   const stopSignMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
   const signGreenMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.4 });
-  const metalPoleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.3 });
+  const metalPoleMat = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    metalness: 0.8,
+    roughness: 0.3,
+  });
   const mulchMat = new THREE.MeshStandardMaterial({ color: 0x29180c, roughness: 0.95 });
   const shrubMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85 });
   const flowerMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.7 });
@@ -184,13 +188,22 @@ export function buildSubdivisionMasterPlan(
   const treeCanopyMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
   const woodDeckMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
   const mailboxPostMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
-  const mailboxMetalMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.3 });
+  const mailboxMetalMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.8,
+    roughness: 0.3,
+  });
   const redFlagMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
 
   // 1. Terrain Mesh with subtle Topographic Slope
   const terrainSize = 260; // 260m x 260m (~17 acres in scale)
   const terrainSegments = 64;
-  const terrainGeo = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+  const terrainGeo = new THREE.PlaneGeometry(
+    terrainSize,
+    terrainSize,
+    terrainSegments,
+    terrainSegments,
+  );
 
   // Apply civil-engineered subdivision grading:
   // - Retention pond basin depression at the center (r < 36m)
@@ -267,7 +280,7 @@ export function buildSubdivisionMasterPlan(
   // Fountain Base Nozzle
   const fountainNozzle = new THREE.Mesh(
     new THREE.CylinderGeometry(0.6, 0.9, 0.8, 16),
-    new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 })
+    new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 }),
   );
   fountainGroup.add(fountainNozzle);
 
@@ -290,7 +303,7 @@ export function buildSubdivisionMasterPlan(
   const rippleGeo = new THREE.RingGeometry(0.5, 3.8, 32);
   const rippleMesh = new THREE.Mesh(
     rippleGeo,
-    new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45 })
+    new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45 }),
   );
   rippleMesh.rotation.x = -Math.PI / 2;
   rippleMesh.position.y = 0.05;
@@ -325,13 +338,13 @@ export function buildSubdivisionMasterPlan(
     benchGroup.rotation.y = -angle - Math.PI / 2;
     const benchSeat = new THREE.Mesh(
       new THREE.BoxGeometry(1.4, 0.1, 0.45),
-      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 })
+      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 }),
     );
     benchSeat.position.y = 0.45;
     benchGroup.add(benchSeat);
     const benchBack = new THREE.Mesh(
       new THREE.BoxGeometry(1.4, 0.4, 0.08),
-      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 })
+      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 }),
     );
     benchBack.position.set(0, 0.75, -0.2);
     benchGroup.add(benchBack);
@@ -345,13 +358,13 @@ export function buildSubdivisionMasterPlan(
     treeGroup.position.set(tx, -0.6, tz);
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.2, 0.35, 3.5, 8),
-      new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 })
+      new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 }),
     );
     trunk.position.y = 1.75;
     treeGroup.add(trunk);
     const canopy = new THREE.Mesh(
       new THREE.SphereGeometry(2.2, 12, 12),
-      new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 })
+      new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 }),
     );
     canopy.position.y = 4.2;
     canopy.scale.set(1.2, 1.4, 1.2);
@@ -369,10 +382,10 @@ export function buildSubdivisionMasterPlan(
   const innerRoadR2 = innerRoadR1 + roadWidth; // 53.5
   const innerRoadMesh = new THREE.Mesh(
     new THREE.RingGeometry(innerRoadR1, innerRoadR2, 64),
-    asphaltMat
+    asphaltMat,
   );
   innerRoadMesh.rotation.x = -Math.PI / 2;
-  innerRoadMesh.position.set(0, 0.10, 0);
+  innerRoadMesh.position.set(0, 0.1, 0);
   innerRoadMesh.receiveShadow = true;
   root.add(innerRoadMesh);
 
@@ -380,7 +393,7 @@ export function buildSubdivisionMasterPlan(
   const innerStripeR = innerRoadR1 + roadWidth / 2; // 49.25
   const innerStripeMesh = new THREE.Mesh(
     new THREE.RingGeometry(innerStripeR - 0.08, innerStripeR + 0.08, 64),
-    roadStripeYellowMat
+    roadStripeYellowMat,
   );
   innerStripeMesh.rotation.x = -Math.PI / 2;
   innerStripeMesh.position.set(0, 0.12, 0);
@@ -389,18 +402,18 @@ export function buildSubdivisionMasterPlan(
   // Inner Road Curbs
   const innerCurbInner = new THREE.Mesh(
     new THREE.RingGeometry(innerRoadR1 - 0.4, innerRoadR1, 64),
-    curbMat
+    curbMat,
   );
   innerCurbInner.rotation.x = -Math.PI / 2;
-  innerCurbInner.position.set(0, 0.20, 0);
+  innerCurbInner.position.set(0, 0.2, 0);
   root.add(innerCurbInner);
 
   const innerCurbOuter = new THREE.Mesh(
     new THREE.RingGeometry(innerRoadR2, innerRoadR2 + 0.4, 64),
-    curbMat
+    curbMat,
   );
   innerCurbOuter.rotation.x = -Math.PI / 2;
-  innerCurbOuter.position.set(0, 0.20, 0);
+  innerCurbOuter.position.set(0, 0.2, 0);
   root.add(innerCurbOuter);
 
   // Inner Pedestrian Sidewalk
@@ -408,7 +421,7 @@ export function buildSubdivisionMasterPlan(
   const innerSidewalkR2 = innerSidewalkR1 + 1.6; // 56.3
   const innerSidewalk = new THREE.Mesh(
     new THREE.RingGeometry(innerSidewalkR1, innerSidewalkR2, 64),
-    concreteMat
+    concreteMat,
   );
   innerSidewalk.rotation.x = -Math.PI / 2;
   innerSidewalk.position.set(0, 0.15, 0);
@@ -419,10 +432,10 @@ export function buildSubdivisionMasterPlan(
   const outerRoadR2 = outerRoadR1 + roadWidth; // 104.5
   const outerRoadMesh = new THREE.Mesh(
     new THREE.RingGeometry(outerRoadR1, outerRoadR2, 80),
-    asphaltMat
+    asphaltMat,
   );
   outerRoadMesh.rotation.x = -Math.PI / 2;
-  outerRoadMesh.position.set(0, 0.10, 0);
+  outerRoadMesh.position.set(0, 0.1, 0);
   outerRoadMesh.receiveShadow = true;
   root.add(outerRoadMesh);
 
@@ -430,7 +443,7 @@ export function buildSubdivisionMasterPlan(
   const outerStripeR = outerRoadR1 + roadWidth / 2; // 100.25
   const outerStripeMesh = new THREE.Mesh(
     new THREE.RingGeometry(outerStripeR - 0.08, outerStripeR + 0.08, 80),
-    roadStripeYellowMat
+    roadStripeYellowMat,
   );
   outerStripeMesh.rotation.x = -Math.PI / 2;
   outerStripeMesh.position.set(0, 0.12, 0);
@@ -439,24 +452,24 @@ export function buildSubdivisionMasterPlan(
   // Outer Road Curbs
   const outerCurbInner = new THREE.Mesh(
     new THREE.RingGeometry(outerRoadR1 - 0.4, outerRoadR1, 80),
-    curbMat
+    curbMat,
   );
   outerCurbInner.rotation.x = -Math.PI / 2;
-  outerCurbInner.position.set(0, 0.20, 0);
+  outerCurbInner.position.set(0, 0.2, 0);
   root.add(outerCurbInner);
 
   const outerCurbOuter = new THREE.Mesh(
     new THREE.RingGeometry(outerRoadR2, outerRoadR2 + 0.4, 80),
-    curbMat
+    curbMat,
   );
   outerCurbOuter.rotation.x = -Math.PI / 2;
-  outerCurbOuter.position.set(0, 0.20, 0);
+  outerCurbOuter.position.set(0, 0.2, 0);
   root.add(outerCurbOuter);
 
   // Outer Sidewalk along inner edge of outer road
   const outerSidewalk = new THREE.Mesh(
     new THREE.RingGeometry(outerRoadR1 - 2.8, outerRoadR1 - 1.2, 80),
-    concreteMat
+    concreteMat,
   );
   outerSidewalk.rotation.x = -Math.PI / 2;
   outerSidewalk.position.set(0, 0.15, 0);
@@ -467,14 +480,20 @@ export function buildSubdivisionMasterPlan(
   // 1. South Main Entrance Boulevard (Gateway connecting boundary Z=125 through outer loop into inner loop Z=53.5)
   const southAvenueLength = 125 - innerRoadR2; // 71.5m
   const southAvenueZ = innerRoadR2 + southAvenueLength / 2;
-  const southAvenue = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, southAvenueLength), asphaltMat);
+  const southAvenue = new THREE.Mesh(
+    new THREE.PlaneGeometry(roadWidth, southAvenueLength),
+    asphaltMat,
+  );
   southAvenue.rotation.x = -Math.PI / 2;
-  southAvenue.position.set(0, 0.10, southAvenueZ);
+  southAvenue.position.set(0, 0.1, southAvenueZ);
   southAvenue.receiveShadow = true;
   root.add(southAvenue);
 
   // South Entrance Boulevard Centerline Yellow Stripe
-  const southStripe = new THREE.Mesh(new THREE.PlaneGeometry(0.16, southAvenueLength), roadStripeYellowMat);
+  const southStripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.16, southAvenueLength),
+    roadStripeYellowMat,
+  );
   southStripe.rotation.x = -Math.PI / 2;
   southStripe.position.set(0, 0.12, southAvenueZ);
   root.add(southStripe);
@@ -490,7 +509,7 @@ export function buildSubdivisionMasterPlan(
   root.add(monumentWall);
   const monumentPlaque = new THREE.Mesh(
     new THREE.BoxGeometry(3.8, 1.1, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.2 })
+    new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.2 }),
   );
   monumentPlaque.position.set(roadWidth / 2 + 3.8, 1.3, 118 + 0.46);
   root.add(monumentPlaque);
@@ -498,13 +517,19 @@ export function buildSubdivisionMasterPlan(
   // 2. North Heritage Way (Connecting Inner Loop Z=-53.5 to Outer Loop Z=-104.5)
   const northAvenueLength = outerRoadR2 - innerRoadR2; // 51m
   const northAvenueZ = -(innerRoadR2 + northAvenueLength / 2);
-  const northAvenue = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, northAvenueLength), asphaltMat);
+  const northAvenue = new THREE.Mesh(
+    new THREE.PlaneGeometry(roadWidth, northAvenueLength),
+    asphaltMat,
+  );
   northAvenue.rotation.x = -Math.PI / 2;
-  northAvenue.position.set(0, 0.10, northAvenueZ);
+  northAvenue.position.set(0, 0.1, northAvenueZ);
   northAvenue.receiveShadow = true;
   root.add(northAvenue);
 
-  const northStripe = new THREE.Mesh(new THREE.PlaneGeometry(0.16, northAvenueLength), roadStripeYellowMat);
+  const northStripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.16, northAvenueLength),
+    roadStripeYellowMat,
+  );
   northStripe.rotation.x = -Math.PI / 2;
   northStripe.position.set(0, 0.12, northAvenueZ);
   root.add(northStripe);
@@ -512,13 +537,19 @@ export function buildSubdivisionMasterPlan(
   // 3. East Ridge Drive (Connecting Inner Loop X=53.5 to Outer Loop X=104.5)
   const eastAvenueLength = outerRoadR2 - innerRoadR2;
   const eastAvenueX = innerRoadR2 + eastAvenueLength / 2;
-  const eastAvenue = new THREE.Mesh(new THREE.PlaneGeometry(eastAvenueLength, roadWidth), asphaltMat);
+  const eastAvenue = new THREE.Mesh(
+    new THREE.PlaneGeometry(eastAvenueLength, roadWidth),
+    asphaltMat,
+  );
   eastAvenue.rotation.x = -Math.PI / 2;
-  eastAvenue.position.set(eastAvenueX, 0.10, 0);
+  eastAvenue.position.set(eastAvenueX, 0.1, 0);
   eastAvenue.receiveShadow = true;
   root.add(eastAvenue);
 
-  const eastStripe = new THREE.Mesh(new THREE.PlaneGeometry(eastAvenueLength, 0.16), roadStripeYellowMat);
+  const eastStripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(eastAvenueLength, 0.16),
+    roadStripeYellowMat,
+  );
   eastStripe.rotation.x = -Math.PI / 2;
   eastStripe.position.set(eastAvenueX, 0.12, 0);
   root.add(eastStripe);
@@ -526,13 +557,19 @@ export function buildSubdivisionMasterPlan(
   // 4. West Valley Court / Drive (Connecting Inner Loop X=-53.5 to Outer Loop X=-104.5)
   const westAvenueLength = outerRoadR2 - innerRoadR2;
   const westAvenueX = -(innerRoadR2 + westAvenueLength / 2);
-  const westAvenue = new THREE.Mesh(new THREE.PlaneGeometry(westAvenueLength, roadWidth), asphaltMat);
+  const westAvenue = new THREE.Mesh(
+    new THREE.PlaneGeometry(westAvenueLength, roadWidth),
+    asphaltMat,
+  );
   westAvenue.rotation.x = -Math.PI / 2;
-  westAvenue.position.set(westAvenueX, 0.10, 0);
+  westAvenue.position.set(westAvenueX, 0.1, 0);
   westAvenue.receiveShadow = true;
   root.add(westAvenue);
 
-  const westStripe = new THREE.Mesh(new THREE.PlaneGeometry(westAvenueLength, 0.16), roadStripeYellowMat);
+  const westStripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(westAvenueLength, 0.16),
+    roadStripeYellowMat,
+  );
   westStripe.rotation.x = -Math.PI / 2;
   westStripe.position.set(westAvenueX, 0.12, 0);
   root.add(westStripe);
@@ -609,7 +646,7 @@ export function buildSubdivisionMasterPlan(
         roughness: 0.1,
         emissive: 0xfef08a,
         emissiveIntensity: 0.8,
-      })
+      }),
     );
     lantern.position.y = 4.7;
     postGroup.add(lantern);
@@ -796,9 +833,9 @@ export function buildSubdivisionMasterPlan(
       walkway.position.set(-4.2, 0.05, 6.4);
       hGroup.add(walkway);
 
-    // -----------------------------------------------------------------------
-    // STYLE 1: THE CRAFTSMAN ESTATE (Sage Siding, Stone Water Table, Tapered Posts)
-    // -----------------------------------------------------------------------
+      // -----------------------------------------------------------------------
+      // STYLE 1: THE CRAFTSMAN ESTATE (Sage Siding, Stone Water Table, Tapered Posts)
+      // -----------------------------------------------------------------------
     } else if (style === 1) {
       const stoneBase = new THREE.Mesh(new THREE.BoxGeometry(12.4, 1.4, 8.8), stoneMat);
       stoneBase.position.y = 0.7;
@@ -827,7 +864,10 @@ export function buildSubdivisionMasterPlan(
         stonePier.position.set(px, 1.0, 6.5);
         hGroup.add(stonePier);
 
-        const taperedPost = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 2.2, 4), whiteTrimMat);
+        const taperedPost = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12, 0.18, 2.2, 4),
+          whiteTrimMat,
+        );
         taperedPost.rotation.y = Math.PI / 4;
         taperedPost.position.set(px, 2.3, 6.5);
         hGroup.add(taperedPost);
@@ -901,9 +941,9 @@ export function buildSubdivisionMasterPlan(
       walkway.position.set(-3.5, 0.05, 7.0);
       hGroup.add(walkway);
 
-    // -----------------------------------------------------------------------
-    // STYLE 2: THE MODERN FARMHOUSE (Crisp White Board & Batten, Black Windows)
-    // -----------------------------------------------------------------------
+      // -----------------------------------------------------------------------
+      // STYLE 2: THE MODERN FARMHOUSE (Crisp White Board & Batten, Black Windows)
+      // -----------------------------------------------------------------------
     } else if (style === 2) {
       const foundation = new THREE.Mesh(new THREE.BoxGeometry(12.4, 0.8, 8.8), concreteMat);
       foundation.position.y = 0.4;
@@ -996,9 +1036,9 @@ export function buildSubdivisionMasterPlan(
       walkway.position.set(-4.2, 0.05, 6.4);
       hGroup.add(walkway);
 
-    // -----------------------------------------------------------------------
-    // STYLE 3: THE EUROPEAN HERITAGE (Limestone Base, Stucco, Arched Entry)
-    // -----------------------------------------------------------------------
+      // -----------------------------------------------------------------------
+      // STYLE 3: THE EUROPEAN HERITAGE (Limestone Base, Stucco, Arched Entry)
+      // -----------------------------------------------------------------------
     } else {
       const stoneBase = new THREE.Mesh(new THREE.BoxGeometry(12.4, 3.2, 8.8), stoneMat);
       stoneBase.position.y = 1.6;
@@ -1016,7 +1056,7 @@ export function buildSubdivisionMasterPlan(
 
       const archCut = new THREE.Mesh(
         new THREE.CylinderGeometry(0.85, 0.85, 2.0, 16),
-        new THREE.MeshBasicMaterial({ color: 0x1c1917 })
+        new THREE.MeshBasicMaterial({ color: 0x1c1917 }),
       );
       archCut.rotation.x = Math.PI / 2;
       archCut.position.set(0, 1.8, 5.1);
@@ -1156,7 +1196,7 @@ export function buildSubdivisionMasterPlan(
   // Divide lots evenly across the 4 quadrant sectors (leaving clean clearings for the 4 avenues)
   // Cross avenues are at: 0 (East), PI/2 (South), PI (West), 3*PI/2 (North)
   const sectors = [
-    { start: 0.30, end: 1.25 }, // NE
+    { start: 0.3, end: 1.25 }, // NE
     { start: 1.88, end: 2.84 }, // SE
     { start: 3.45, end: 4.41 }, // SW
     { start: 5.02, end: 5.98 }, // NW
@@ -1209,7 +1249,7 @@ export function buildSubdivisionMasterPlan(
       ]);
       const lotBounds = new THREE.Line(
         lotBoundsGeo,
-        new THREE.LineDashedMaterial({ color: 0x38bdf8, dashSize: 0.8, gapSize: 0.4 })
+        new THREE.LineDashedMaterial({ color: 0x38bdf8, dashSize: 0.8, gapSize: 0.4 }),
       );
       lotBounds.computeLineDistances();
       lotBounds.userData = { lotNumber: lotIndex + 1, styleIdx: lotIndex % 4 };
@@ -1236,7 +1276,7 @@ export function buildSubdivisionMasterPlan(
         transparent: true,
         opacity: 0.5,
         side: THREE.DoubleSide,
-      })
+      }),
     );
     contourLine.rotation.x = -Math.PI / 2;
     contourLine.position.y = (c - 4) * 0.4;

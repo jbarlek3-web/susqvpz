@@ -9,7 +9,10 @@ export function AccordionItem({
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Item>) {
   return (
-    <AccordionPrimitive.Item className={cn("border-b border-outline-variant", className)} {...props} />
+    <AccordionPrimitive.Item
+      className={cn("border-b border-outline-variant", className)}
+      {...props}
+    />
   );
 }
 

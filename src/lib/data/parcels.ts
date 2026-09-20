@@ -1,11 +1,6 @@
 import type { County, Parcel } from "@/lib/types";
 
-function box(
-  lat: number,
-  lng: number,
-  dLat = 0.0012,
-  dLng = 0.0016,
-): [number, number][] {
+function box(lat: number, lng: number, dLat = 0.0012, dLng = 0.0016): [number, number][] {
   return [
     [lat - dLat, lng - dLng],
     [lat - dLat, lng + dLng],
@@ -52,10 +47,10 @@ export const PARCELS: Parcel[] = [
     slopePct: 3,
     historic: false,
     utilities: {
-      water: "8\" main on Market St. Cap: Available",
-      sewer: "12\" line at rear alley. Cap: Review Req.",
+      water: '8" main on Market St. Cap: Available',
+      sewer: '12" line at rear alley. Cap: Review Req.',
       electric: "Overhead along frontage. Provider: PPL",
-      gas: "4\" medium pressure line. Provider: UGI",
+      gas: '4" medium pressure line. Provider: UGI',
     },
     aadt: 18400,
     roiPct: 15.2,
@@ -103,10 +98,10 @@ export const PARCELS: Parcel[] = [
     slopePct: 4,
     historic: false,
     utilities: {
-      water: "6\" main. Cap: Available",
-      sewer: "8\" lateral. Cap: Available",
+      water: '6" main. Cap: Available',
+      sewer: '8" lateral. Cap: Available',
       electric: "Overhead. PPL",
-      gas: "2\" service. UGI",
+      gas: '2" service. UGI',
     },
     aadt: 18400,
     roiPct: 8.4,
@@ -147,10 +142,10 @@ export const PARCELS: Parcel[] = [
     slopePct: 5,
     historic: false,
     utilities: {
-      water: "6\" main. Cap: Available",
-      sewer: "8\" lateral. Cap: Available",
+      water: '6" main. Cap: Available',
+      sewer: '8" lateral. Cap: Available',
       electric: "Overhead. PPL",
-      gas: "2\" service. UGI",
+      gas: '2" service. UGI',
     },
     aadt: 16200,
     roiPct: 7.9,
@@ -191,7 +186,7 @@ export const PARCELS: Parcel[] = [
     slopePct: 2,
     historic: true,
     utilities: {
-      water: "12\" downtown loop. Cap: Available",
+      water: '12" downtown loop. Cap: Available',
       sewer: "Combined sewer. Cap: Review Req. (CSO)",
       electric: "Underground. PPL",
       gas: "UGI downtown grid",
@@ -235,10 +230,10 @@ export const PARCELS: Parcel[] = [
     slopePct: 6,
     historic: false,
     utilities: {
-      water: "12\" public. Cap: Available",
+      water: '12" public. Cap: Available',
       sewer: "Public, pump station 1,200 ft. Cap: Available",
       electric: "3-phase. Met-Ed",
-      gas: "6\" high-pressure. Columbia Gas",
+      gas: '6" high-pressure. Columbia Gas',
     },
     aadt: 31200,
     roiPct: 9.8,
@@ -367,7 +362,7 @@ export const PARCELS: Parcel[] = [
     slopePct: 2,
     historic: true,
     utilities: {
-      water: "Downtown 8\"",
+      water: 'Downtown 8"',
       sewer: "Available",
       electric: "PPL",
       gas: "UGI",
@@ -411,7 +406,7 @@ export const PARCELS: Parcel[] = [
     slopePct: 3,
     historic: false,
     utilities: {
-      water: "Derry Township 12\"",
+      water: 'Derry Township 12"',
       sewer: "Available",
       electric: "PPL",
       gas: "UGI",
@@ -499,7 +494,7 @@ export const PARCELS: Parcel[] = [
     slopePct: 1,
     historic: true,
     utilities: {
-      water: "City 8\"",
+      water: 'City 8"',
       sewer: "City",
       electric: "PPL underground",
       gas: "UGI",
@@ -543,7 +538,7 @@ export const PARCELS: Parcel[] = [
     slopePct: 9,
     historic: false,
     utilities: {
-      water: "SUEZ/Veolia 8\"",
+      water: 'SUEZ/Veolia 8"',
       sewer: "East Pennsboro. Cap: Available",
       electric: "PPL",
       gas: "UGI at Shady Lane",

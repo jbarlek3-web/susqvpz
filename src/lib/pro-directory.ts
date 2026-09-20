@@ -82,4 +82,3 @@ export const getMunicipalDocuments = createServerFn({ method: "GET" })
     const { municipalDocuments } = await import("@/lib/pro-directory.server");
     return municipalDocuments();
   });
-

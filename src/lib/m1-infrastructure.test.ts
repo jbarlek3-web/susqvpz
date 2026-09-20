@@ -10,10 +10,7 @@ import {
   type StripeEvent,
 } from "./stripe-webhook.server.ts";
 import { handleClerkWebhook } from "./clerk-webhook.server.ts";
-import {
-  StreamInputSchema,
-  streamOrdinanceAide,
-} from "./ordinance-agent.ts";
+import { StreamInputSchema, streamOrdinanceAide } from "./ordinance-agent.ts";
 
 const STRIPE_SECRET = ["whsec", "test_m1_stripe_secret_1234567890"].join("_");
 const CLERK_SECRET = `whsec_${Buffer.from("field-acq-clerk-m1-secret-32b-key!").toString("base64")}`;
@@ -78,13 +75,19 @@ test("M1-DB-1: Sql interface supports .transaction(...) and commits successfully
 
   const result = await sql.transaction(async (tx) => {
     await tx`insert into test_m1_tx (id, value) values ('tx_1', 'committed_value')`;
-    const rows = await tx<{ id: string; value: string }>`select * from test_m1_tx where id = 'tx_1'`;
+    const rows = await tx<{
+      id: string;
+      value: string;
+    }>`select * from test_m1_tx where id = 'tx_1'`;
     return rows[0]?.value;
   });
 
   assert.equal(result, "committed_value");
 
-  const verifyRows = await sql<{ id: string; value: string }>`select * from test_m1_tx where id = 'tx_1'`;
+  const verifyRows = await sql<{
+    id: string;
+    value: string;
+  }>`select * from test_m1_tx where id = 'tx_1'`;
   assert.equal(verifyRows.length, 1);
   assert.equal(verifyRows[0].value, "committed_value");
 });
@@ -124,7 +127,9 @@ test("M1-DB-3: Nested transactions execute safely without connection leaks", asy
   });
 
   assert.equal(outerResult, "inner_done");
-  const rows = await sql<{ id: string }>`select id from test_m1_tx where id in ('tx_nested_outer', 'tx_nested_inner')`;
+  const rows = await sql<{
+    id: string;
+  }>`select id from test_m1_tx where id in ('tx_nested_outer', 'tx_nested_inner')`;
   assert.equal(rows.length, 2);
 });
 
@@ -135,7 +140,7 @@ test("M1-DB-4: Concurrent transactions execute without connection pool exhaustio
   const concurrentTasks = Array.from({ length: 8 }, (_, i) => {
     return sql.transaction(async (tx) => {
       const id = `tx_concurrent_${i}`;
-      await tx`insert into test_m1_tx (id, value) values (${id}, ${'val_' + i})`;
+      await tx`insert into test_m1_tx (id, value) values (${id}, ${"val_" + i})`;
       const rows = await tx<{ id: string }>`select id from test_m1_tx where id = ${id}`;
       return rows.length === 1;
     });
@@ -181,7 +186,10 @@ test("M1-Stripe-3: Expired timestamp beyond tolerance window is rejected", () =>
 });
 
 test("M1-Stripe-4: Missing secret returns HTTP 503", async () => {
-  const req = createSignedStripeRequest({ id: "evt_nosecret", type: "customer.subscription.created" });
+  const req = createSignedStripeRequest({
+    id: "evt_nosecret",
+    type: "customer.subscription.created",
+  });
   const res = await handleStripeWebhook(req, { secret: "" });
   assert.equal(res.status, 503);
 });
@@ -348,7 +356,7 @@ test("M1-Stripe-10: checkout.session.completed enforces mutual exclusivity of us
         payment_status: "paid",
         metadata: {
           organizationId,
-        }
+        },
       },
     },
   };
@@ -356,12 +364,20 @@ test("M1-Stripe-10: checkout.session.completed enforces mutual exclusivity of us
   const res = await processStripeEvent(checkoutEvent);
   assert.equal(res.processed, true);
 
-  const rows = await sql<{ organization_id: string | null; user_id: string | null; checkout_session_id: string }>`
+  const rows = await sql<{
+    organization_id: string | null;
+    user_id: string | null;
+    checkout_session_id: string;
+  }>`
     select organization_id, user_id, checkout_session_id from stripe_entitlements where checkout_session_id = ${sessionId}
   `;
   assert.equal(rows.length, 1);
   assert.equal(rows[0].user_id, userId);
-  assert.equal(rows[0].organization_id, null, "organizationId should be cleared when client_reference_id points to a user");
+  assert.equal(
+    rows[0].organization_id,
+    null,
+    "organizationId should be cleared when client_reference_id points to a user",
+  );
 });
 
 // ===========================================================================
@@ -379,7 +395,11 @@ test("M1-Clerk-1: user.created syncs user profile into database", async () => {
       first_name: "James",
       last_name: "Barlek",
       email_addresses: [
-        { id: "email_1", email_address: "jbarlek@example.org", verification: { status: "verified" } },
+        {
+          id: "email_1",
+          email_address: "jbarlek@example.org",
+          verification: { status: "verified" },
+        },
       ],
       primary_email_address_id: "email_1",
     },
@@ -409,7 +429,9 @@ test("M1-Clerk-2: user.updated updates existing user record", async () => {
       id: organizationId,
       first_name: "Initial",
       last_name: "Name",
-      email_addresses: [{ id: "em_init", email_address: "init@example.org", verification: { status: "verified" } }],
+      email_addresses: [
+        { id: "em_init", email_address: "init@example.org", verification: { status: "verified" } },
+      ],
       primary_email_address_id: "em_init",
     },
     "user.created",
@@ -422,7 +444,9 @@ test("M1-Clerk-2: user.updated updates existing user record", async () => {
       id: organizationId,
       first_name: "Updated",
       last_name: "Name",
-      email_addresses: [{ id: "em_up", email_address: "updated@example.org", verification: { status: "verified" } }],
+      email_addresses: [
+        { id: "em_up", email_address: "updated@example.org", verification: { status: "verified" } },
+      ],
       primary_email_address_id: "em_up",
     },
     "user.updated",

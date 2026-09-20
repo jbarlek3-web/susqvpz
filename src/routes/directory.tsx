@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  Bot,
+  Box,
   Building2,
   ExternalLink,
   Loader2,
@@ -17,6 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sanitizeUrl } from "@/lib/security/threat-detector";
+import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
+import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
+import { PARCELS } from "@/lib/data/parcels";
 import {
   getProCountyDirectory,
   getMunicipalDocuments,
@@ -29,12 +35,31 @@ import {
   type MunicipalityDirectoryRecord,
 } from "@/lib/pro-directory";
 
-export const Route = createFileRoute("/directory")({ component: ProDirectories });
+export interface DirectorySearch {
+  county?: string;
+  search?: string;
+  tab?: "counties" | "municipalities" | "documents";
+}
+
+export const Route = createFileRoute("/directory")({
+  validateSearch: (search: Record<string, unknown>): DirectorySearch => ({
+    county: typeof search.county === "string" ? search.county : undefined,
+    search: typeof search.search === "string" ? search.search : undefined,
+    tab:
+      search.tab === "counties" || search.tab === "municipalities" || search.tab === "documents"
+        ? search.tab
+        : undefined,
+  }),
+  component: ProDirectories,
+});
 
 type LoadState<T> = { data: T | null; error: string | null; loading: boolean };
 
 function ProDirectories() {
-  const [activeTab, setActiveTab] = useState("counties");
+  const search = Route.useSearch();
+  const [activeTab, setActiveTab] = useState<string>(
+    () => search.tab || (search.search ? "documents" : "counties"),
+  );
   const [counties, setCounties] = useState<LoadState<CountyDirectoryPayload>>({
     data: null,
     error: null,
@@ -473,27 +498,52 @@ function EmptySearch({ label, onClear }: { label: string; onClear: () => void })
 }
 
 function MunicipalDocumentDirectory({ data }: { data: MunicipalDocumentPayload }) {
-  const [query, setQuery] = useState("");
-  
+  const search = Route.useSearch();
+  const {
+    value: query,
+    setValue: setQuery,
+    isDirty,
+    isDraftRestored,
+    lastSavedAt,
+    resetToDefault,
+  } = usePersistentDraft<string>("muni_doc_query", () => search.search || "", {
+    storage: "sessionStorage",
+    enableBeforeUnloadWarn: false,
+  });
+
+  useEffect(() => {
+    if (search.search && !query) {
+      setQuery(search.search);
+    }
+  }, [search.search, query, setQuery]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return data.records.filter(
       (record) =>
-        (!needle || `${record.Municipality} ${record.County}`.toLowerCase().includes(needle)),
+        !needle || `${record.Municipality} ${record.County}`.toLowerCase().includes(needle),
     );
   }, [data.records, query]);
 
   return (
     <section>
-      <div className="mb-4">
-        <DirectorySearch
-          id="municipal-document-search"
-          value={query}
-          onChange={setQuery}
-          placeholder="Search municipality..."
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex-1 min-w-[280px]">
+          <DirectorySearch
+            id="municipal-document-search"
+            value={query}
+            onChange={setQuery}
+            placeholder="Search municipality or county..."
+          />
+        </div>
+        <DataProtectionBadge
+          isDirty={isDirty}
+          isDraftRestored={isDraftRestored}
+          lastSavedAt={lastSavedAt}
+          onReset={resetToDefault}
         />
       </div>
-      
+
       {filtered.length ? (
         <div className="mt-4 grid gap-4 lg:grid-cols-1">
           {filtered.map((entry) => (
@@ -504,7 +554,7 @@ function MunicipalDocumentDirectory({ data }: { data: MunicipalDocumentPayload }
         <EmptySearch
           label="municipal documents"
           onClear={() => {
-            setQuery("");
+            resetToDefault();
           }}
         />
       )}
@@ -514,31 +564,44 @@ function MunicipalDocumentDirectory({ data }: { data: MunicipalDocumentPayload }
 
 function parseUrls(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.split(';').map(t => t.trim()).filter(Boolean).map(part => {
-    const match = part.match(urlRegex);
-    if (match) {
-      const url = match[0];
-      const desc = part.replace(url, '').trim().replace(/^:/, '').trim();
-      return { url, desc: desc || "Link" };
-    }
-    return { url: null, desc: part };
-  });
+  return text
+    .split(";")
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const match = part.match(urlRegex);
+      if (match) {
+        const rawUrl = match[0];
+        const validUrl = sanitizeUrl(rawUrl);
+        const desc = part.replace(rawUrl, "").trim().replace(/^:/, "").trim();
+        return { url: validUrl, desc: desc || "Link" };
+      }
+      return { url: null, desc: part };
+    });
 }
 
-function DocumentCategory({ title, content }: { title: string, content: string }) {
-  if (!content || content.toUpperCase().includes('NO MUNICIPAL DEVELOPMENT FORM VERIFIED ONLINE')) return null;
+function DocumentCategory({ title, content }: { title: string; content: string }) {
+  if (!content || content.toUpperCase().includes("NO MUNICIPAL DEVELOPMENT FORM VERIFIED ONLINE"))
+    return null;
   const items = parseUrls(content);
   return (
-    <div className="mt-3 border border-outline-variant rounded p-3">
-      <h3 className="text-sm font-semibold text-secondary">{title}</h3>
-      <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+    <div className="mt-3 rounded-lg border border-outline-variant/70 bg-card/60 p-3 shadow-xs">
+      <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
+        {title}
+      </h3>
+      <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
         {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-1">
-            <span>•</span>
+          <li key={i} className="flex items-start gap-1.5">
+            <span className="text-secondary">•</span>
             {item.url ? (
-               <a href={item.url} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                 {item.desc} <ExternalLink className="size-3" />
-               </a>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline inline-flex items-center gap-1 font-medium transition-colors hover:text-secondary"
+              >
+                {item.desc} <ExternalLink className="size-3 shrink-0" />
+              </a>
             ) : (
               <span>{item.desc}</span>
             )}
@@ -550,24 +613,68 @@ function DocumentCategory({ title, content }: { title: string, content: string }
 }
 
 function MunicipalDocumentCard({ entry }: { entry: MunicipalDocumentRecord }) {
+  const safeMuniUrl = sanitizeUrl(entry["Municipality URL"]);
   return (
-    <Card>
+    <Card className="cyber-card transition-all duration-200">
       <CardContent className="p-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-secondary">
-          {entry.County} County
-        </p>
-        <h2 className="mt-1 text-lg font-semibold">{entry.Municipality}</h2>
-        {entry["Municipality URL"] && (
-           <a href={entry["Municipality URL"]} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1 mt-2">
-             Municipality Website <ExternalLink className="size-3" />
-           </a>
-        )}
-        
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+          <div>
+            <p className="text-xs font-mono font-bold uppercase tracking-wider text-secondary">
+              {entry.County} County · Municipal Records
+            </p>
+            <h2 className="mt-0.5 text-lg font-bold tracking-tight">{entry.Municipality}</h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/aide"
+              search={{
+                county: entry.County,
+                municipality: entry.Municipality,
+                q: `What are the zoning, SALDO, and development requirements for ${entry.Municipality} in ${entry.County} County?`,
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-all active:scale-95 border border-primary/20"
+              title="Query private ordinance corpus for this municipality"
+            >
+              <Bot className="size-3.5" />
+              <span>Ask AI</span>
+            </Link>
+            <Link
+              to="/scene-3d"
+              search={{
+                parcelId: PARCELS.find(
+                  (p) => p.municipality.toLowerCase() === entry.Municipality.toLowerCase(),
+                )?.id,
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all active:scale-95 border border-secondary/20"
+              title="Open subdivision costs engine"
+            >
+              <Box className="size-3.5" />
+              <span>Costs Engine</span>
+            </Link>
+            {safeMuniUrl && (
+              <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+                <a
+                  href={safeMuniUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1"
+                >
+                  Website <ExternalLink className="size-3" />
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <DocumentCategory title="Muni Forms" content={entry["Muni Forms"]} />
           <DocumentCategory title="Municipal Code" content={entry["Municipil Code Download"]} />
           <DocumentCategory title="SALDO" content={entry["Municipal SALDO"]} />
-          <DocumentCategory title="Stormwater & Sanitary" content={entry["Multiple Stormwater & Sanitary Sewer Solutions"]} />
+          <DocumentCategory
+            title="Stormwater & Sanitary"
+            content={entry["Multiple Stormwater & Sanitary Sewer Solutions"]}
+          />
           <DocumentCategory title="Zoning Map" content={entry["Zoning Map"]} />
         </div>
       </CardContent>

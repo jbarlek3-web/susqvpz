@@ -56,7 +56,11 @@ function secure(response: Response, isHttps: boolean) {
   headers.set("x-frame-options", "SAMEORIGIN");
   headers.set("x-permitted-cross-domain-policies", "none");
   if (isHttps) headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
-  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 export default async function securityMiddleware(
@@ -67,7 +71,10 @@ export default async function securityMiddleware(
     assertProductionConfig();
   } catch (error) {
     console.error("[config] production configuration rejected", error);
-    return secure(Response.json({ error: "Service configuration is incomplete" }, { status: 503 }), true);
+    return secure(
+      Response.json({ error: "Service configuration is incomplete" }, { status: 503 }),
+      true,
+    );
   }
 
   const result = await next();

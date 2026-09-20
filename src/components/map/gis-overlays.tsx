@@ -89,7 +89,13 @@ function ParcelServiceLayer({
         }
         abort?.abort();
         abort = new AbortController();
-        const url = esriQueryUrl(service.url, bounds, map.getZoom(), service.fields, service.maxRecords);
+        const url = esriQueryUrl(
+          service.url,
+          bounds,
+          map.getZoom(),
+          service.fields,
+          service.maxRecords,
+        );
         try {
           const res = await fetch(url, { signal: abort.signal });
           if (!res.ok) throw new Error(String(res.status));

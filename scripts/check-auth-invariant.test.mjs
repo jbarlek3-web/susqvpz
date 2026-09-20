@@ -168,16 +168,20 @@ test("the build side resolves the template's shipped app-env", () => {
   assert.equal(buildAuthEnabled(projectRoot(), { VITE_AUTH_ENABLED: "true" }), true);
 });
 
-test("the CLI reports rather than silently passing when run via a symlink", { skip: process.platform === "win32" }, async () => {
-  // A check whose exit code is the whole signal must never no-op to 0 because
-  // process.argv[1] came in through a symlinked path.
-  const link = join(mkdtempSync(join(tmpdir(), "auth-invariant-link-")), "scripts");
-  symlinkSync(join(projectRoot(), "scripts"), link);
-  const error = await promisify(execFile)(process.execPath, [
-    join(link, "check-auth-invariant.mjs"),
-    "--dev-url",
-    "http://127.0.0.1:1",
-  ]).catch((err) => err);
-  assert.equal(error.code, 2);
-  assert.match(error.stderr, /could not read the dev server's resolved VITE_AUTH_ENABLED/);
-});
+test(
+  "the CLI reports rather than silently passing when run via a symlink",
+  { skip: process.platform === "win32" },
+  async () => {
+    // A check whose exit code is the whole signal must never no-op to 0 because
+    // process.argv[1] came in through a symlinked path.
+    const link = join(mkdtempSync(join(tmpdir(), "auth-invariant-link-")), "scripts");
+    symlinkSync(join(projectRoot(), "scripts"), link);
+    const error = await promisify(execFile)(process.execPath, [
+      join(link, "check-auth-invariant.mjs"),
+      "--dev-url",
+      "http://127.0.0.1:1",
+    ]).catch((err) => err);
+    assert.equal(error.code, 2);
+    assert.match(error.stderr, /could not read the dev server's resolved VITE_AUTH_ENABLED/);
+  },
+);

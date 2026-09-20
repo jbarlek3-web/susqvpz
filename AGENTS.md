@@ -66,7 +66,7 @@ Never default to a specific app — especially a game — for an ambiguous or
 numeric/one-character prompt, and never turn a question into an app unless
 asked. Unsure between (2) and (3)? "What should I build?" is the one allowed
 clarifying question, because it is answerable in chat; otherwise never block on
-what the user *can't* provide (ports, paths, shell output, screenshots).
+what the user _can't_ provide (ports, paths, shell output, screenshots).
 
 **Then decide auth and database — both are OFF by default.** This is a closed
 list, not a judgement call:
@@ -203,11 +203,11 @@ don't scaffold from stale priors — and keep each contract:
    settings**, not code changes: refuse, say where to change it, and carry on
    editing the app itself.
 5. **Auth routes only when §0.5 says accounts** — then add `src/routes/login.tsx`
-   + `src/routes/api/auth/$.ts` from the `auth` skill. Otherwise don't create
-   them, don't import `@/lib/db`, don't add migrations. **Never create
-   `src/routes/auth/popup.tsx`**: the template Vite plugin already serves
-   `/auth/popup` (`popup.server.ts`), and a React page there shows the app
-   inside the popup. Wiring: `.grok/references/data-and-auth.md`.
+   - `src/routes/api/auth/$.ts` from the `auth` skill. Otherwise don't create
+     them, don't import `@/lib/db`, don't add migrations. **Never create
+     `src/routes/auth/popup.tsx`**: the template Vite plugin already serves
+     `/auth/popup` (`popup.server.ts`), and a React page there shows the app
+     inside the popup. Wiring: `.grok/references/data-and-auth.md`.
 
 ---
 
@@ -259,7 +259,7 @@ changes. Revive, reboot-wipe and the `startup.sh` worked example:
 6. **Brand-asset pass — always a subagent.** Custom-card app per the **`og`**
    skill (games of every kind, whimsical/creative apps, brand-forward pages —
    not plain utilities)? Then, in order — unless your own task prompt says you
-   *are* the brand pass, in which case generate the assets per that skill:
+   _are_ the brand pass, in which case generate the assets per that skill:
    1. Launch it as a `task` subagent. **Never generate card art in the agent
       building the app** — inline it is minutes of pure waiting on the critical
       path.
@@ -280,10 +280,10 @@ changes. Revive, reboot-wipe and the `startup.sh` worked example:
      and
    - the **browser console has no uncaught errors** (runtime error, failed
      module/asset load, hydration mismatch).
-   If blank or any console error, fix and re-check. Never stop at "HTTP 200".
-   **Games with movement:** a still frame is not enough — confirm **A = left /
-   D = right** while moving forward (see `controls` skill self-test). Flip one
-   steer/roll sign if inverted; retest.
+     If blank or any console error, fix and re-check. Never stop at "HTTP 200".
+     **Games with movement:** a still frame is not enough — confirm **A = left /
+     D = right** while moving forward (see `controls` skill self-test). Flip one
+     steer/roll sign if inverted; retest.
 8. **Verify the PRODUCTION build, not just dev.** Dev (Vite) can render while
    the deployed Vercel build is blank. Once `npm run build` (step 5) succeeds,
    serve the built output with `npm run preview` (loopback `127.0.0.1:8081`)
@@ -309,7 +309,7 @@ You drive the browser yourself, in the sandbox, against
 ### Communication rules (avoid confusing the user)
 
 **Never** ask them to open `localhost`, a host port, Docker or any URL that only
-works on *your* network, or to run commands, check a terminal or paste
+works on _your_ network, or to run commands, check a terminal or paste
 logs/screenshots for QA. Never explain sandbox plumbing (paths, ports, the
 preview relay, tool names) unless asked, never imply they can reach
 `/workspace` or your shell, and never close with "let me know if it works"

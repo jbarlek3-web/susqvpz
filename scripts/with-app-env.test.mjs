@@ -144,16 +144,20 @@ test("a signal-killed command is never reported as success", async () => {
   );
 });
 
-test("the CLI still runs when invoked through a symlinked path", { skip: process.platform === "win32" }, async () => {
-  // node realpaths import.meta.url but not process.argv[1], so a raw comparison
-  // turns the wrapper into a no-op that exits 0 without starting anything.
-  const link = join(mkdtempSync(join(tmpdir(), "app-env-link-")), "scripts");
-  symlinkSync(join(projectRoot(), "scripts"), link);
-  const { stdout } = await execFileAsync(process.execPath, [
-    join(link, "with-app-env.mjs"),
-    process.execPath,
-    "-e",
-    PRINT_FLAG,
-  ]);
-  assert.equal(stdout, "true");
-});
+test(
+  "the CLI still runs when invoked through a symlinked path",
+  { skip: process.platform === "win32" },
+  async () => {
+    // node realpaths import.meta.url but not process.argv[1], so a raw comparison
+    // turns the wrapper into a no-op that exits 0 without starting anything.
+    const link = join(mkdtempSync(join(tmpdir(), "app-env-link-")), "scripts");
+    symlinkSync(join(projectRoot(), "scripts"), link);
+    const { stdout } = await execFileAsync(process.execPath, [
+      join(link, "with-app-env.mjs"),
+      process.execPath,
+      "-e",
+      PRINT_FLAG,
+    ]);
+    assert.equal(stdout, "true");
+  },
+);

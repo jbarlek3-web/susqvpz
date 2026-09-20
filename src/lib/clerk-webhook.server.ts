@@ -4,8 +4,7 @@ import type { WebhookEvent } from "@clerk/backend/webhooks";
 export type { WebhookEvent };
 
 let resolvedVerifyWebhook:
-  | ((req: Request, options: { signingSecret: string }) => Promise<WebhookEvent>)
-  | null = null;
+  ((req: Request, options: { signingSecret: string }) => Promise<WebhookEvent>) | null = null;
 
 async function getVerifyWebhook(): Promise<
   (req: Request, options: { signingSecret: string }) => Promise<WebhookEvent>
@@ -143,7 +142,7 @@ export const ORG_WEBHOOK_EVENTS = new Set<WebhookEvent["type"]>([
   "organization.updated",
   "organizationMembership.created",
   "organizationMembership.deleted",
-  "organizationMembership.updated"
+  "organizationMembership.updated",
 ]);
 
 export type ClerkWebhookReceipt = {
@@ -278,14 +277,20 @@ export async function handleClerkWebhook(
     const emailAddresses = Array.isArray(d.email_addresses)
       ? (d.email_addresses as Array<Record<string, unknown>>)
       : [];
-    const primaryId = typeof d.primary_email_address_id === "string" ? d.primary_email_address_id : null;
+    const primaryId =
+      typeof d.primary_email_address_id === "string" ? d.primary_email_address_id : null;
     const primaryEmailObj = emailAddresses.find((e) => e.id === primaryId) ?? emailAddresses[0];
-    const emailAddress = typeof primaryEmailObj?.email_address === "string" ? primaryEmailObj.email_address.trim() : "";
+    const emailAddress =
+      typeof primaryEmailObj?.email_address === "string"
+        ? primaryEmailObj.email_address.trim()
+        : "";
     const email = emailAddress || `${event.data.id.trim()}@user.clerk.internal`;
 
     const verificationObj = primaryEmailObj?.verification as Record<string, unknown> | undefined;
-    const verificationStatus = typeof verificationObj?.status === "string" ? verificationObj.status : "";
-    const emailVerified = verificationStatus === "verified" || verificationStatus === "transfer_verified";
+    const verificationStatus =
+      typeof verificationObj?.status === "string" ? verificationObj.status : "";
+    const emailVerified =
+      verificationStatus === "verified" || verificationStatus === "transfer_verified";
 
     const firstName = typeof d.first_name === "string" ? d.first_name.trim() : "";
     const lastName = typeof d.last_name === "string" ? d.last_name.trim() : "";
@@ -340,7 +345,8 @@ export async function handleClerkWebhook(
       try {
         const { getSql } = await import("./db.ts");
         const sql = await getSql();
-        const createdAt = typeof org.created_at === "number" ? new Date(org.created_at) : new Date();
+        const createdAt =
+          typeof org.created_at === "number" ? new Date(org.created_at) : new Date();
         await sql`
           insert into organizations (id, name, created_at)
           values (${org.id}, ${org.name as string}, ${createdAt})
@@ -354,18 +360,27 @@ export async function handleClerkWebhook(
     }
   }
 
-  if (event.type === "organizationMembership.created" || event.type === "organizationMembership.updated") {
+  if (
+    event.type === "organizationMembership.created" ||
+    event.type === "organizationMembership.updated"
+  ) {
     const mem = event.data as unknown as Record<string, unknown>;
     const orgObj = mem.organization as Record<string, unknown> | undefined;
     const puData = mem.public_user_data as Record<string, unknown> | undefined;
-    const orgId = typeof orgObj?.id === "string" ? (orgObj.id as string) : typeof mem.organization_id === "string" ? (mem.organization_id as string) : null;
+    const orgId =
+      typeof orgObj?.id === "string"
+        ? (orgObj.id as string)
+        : typeof mem.organization_id === "string"
+          ? (mem.organization_id as string)
+          : null;
     const userId = typeof puData?.user_id === "string" ? puData.user_id : null;
     if (orgId && userId) {
       try {
         const { getSql } = await import("./db.ts");
         const { logAuditEvent } = await import("./audit-log.server.ts");
         const sql = await getSql();
-        const createdAt = typeof mem.created_at === "number" ? new Date(mem.created_at) : new Date();
+        const createdAt =
+          typeof mem.created_at === "number" ? new Date(mem.created_at) : new Date();
         const role = mem.role as string;
         // Read the prior role before upserting, so we can tell "new member"
         // apart from "role changed" for the audit trail below. Clerk's
@@ -407,7 +422,12 @@ export async function handleClerkWebhook(
     const mem = event.data as unknown as Record<string, unknown>;
     const orgObj = mem.organization as Record<string, unknown> | undefined;
     const puData = mem.public_user_data as Record<string, unknown> | undefined;
-    const orgId = typeof orgObj?.id === "string" ? (orgObj.id as string) : typeof mem.organization_id === "string" ? (mem.organization_id as string) : null;
+    const orgId =
+      typeof orgObj?.id === "string"
+        ? (orgObj.id as string)
+        : typeof mem.organization_id === "string"
+          ? (mem.organization_id as string)
+          : null;
     const userId = typeof puData?.user_id === "string" ? puData.user_id : null;
     if (orgId && userId) {
       try {

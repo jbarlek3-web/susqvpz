@@ -22,19 +22,18 @@ import { createMiddleware } from "@tanstack/react-start";
  * Use this on every server function that touches
  * per-user data and scope every query by `context.organizationId`.
  */
-export const authMiddleware = createMiddleware({ type: "function" })
-  .server(async ({ next }) => {
-    // ONLY import `*.server` modules here. This file is dual client/server
-    // (bearer hook on the client). A plain `./isolation` path was renamed to
-    // `isolation.server.ts` — keep this import in sync so image `tsc` resolves
-    // it, and so Vite does not ship `@tanstack/react-start/server` to the browser.
-    const { assertSameSiteRequest } = await import("./isolation.server");
-    const { requireUser } = await import("./verify.server");
-    // Reject scripted cross-site/sibling requests before touching per-user data.
-    assertSameSiteRequest();
-    const { userId, orgId } = await requireUser();
-    return next({ context: { userId, organizationId: orgId ?? undefined } });
-  });
+export const authMiddleware = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  // ONLY import `*.server` modules here. This file is dual client/server
+  // (bearer hook on the client). A plain `./isolation` path was renamed to
+  // `isolation.server.ts` — keep this import in sync so image `tsc` resolves
+  // it, and so Vite does not ship `@tanstack/react-start/server` to the browser.
+  const { assertSameSiteRequest } = await import("./isolation.server");
+  const { requireUser } = await import("./verify.server");
+  // Reject scripted cross-site/sibling requests before touching per-user data.
+  assertSameSiteRequest();
+  const { userId, orgId } = await requireUser();
+  return next({ context: { userId, organizationId: orgId ?? undefined } });
+});
 
 /**
  * Like `authMiddleware`, but additionally requires the caller be an
@@ -42,11 +41,10 @@ export const authMiddleware = createMiddleware({ type: "function" })
  * behind an admin-only route (org billing, member management, audit log).
  * Never gate these on a client-side role check alone.
  */
-export const adminMiddleware = createMiddleware({ type: "function" })
-  .server(async ({ next }) => {
-    const { assertSameSiteRequest } = await import("./isolation.server");
-    const { requireOrgAdmin } = await import("./verify.server");
-    assertSameSiteRequest();
-    const { userId, orgId } = await requireOrgAdmin();
-    return next({ context: { userId, organizationId: orgId } });
-  });
+export const adminMiddleware = createMiddleware({ type: "function" }).server(async ({ next }) => {
+  const { assertSameSiteRequest } = await import("./isolation.server");
+  const { requireOrgAdmin } = await import("./verify.server");
+  assertSameSiteRequest();
+  const { userId, orgId } = await requireOrgAdmin();
+  return next({ context: { userId, organizationId: orgId } });
+});

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, BookOpen, Box, ContactRound, FileText, HelpCircle, Menu, Search } from "lucide-react";
+import { Bell, BookOpen, ContactRound, FileText, HelpCircle, Menu, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldAcqOrdinanceAideLogo } from "@/components/brand/field-acq-ordinance-aide-logo";
@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { getEntitlement } from "@/lib/billing";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { SignedIn, SignedOut, UserButton, OrganizationSwitcher } from "@/lib/auth/gates";
+import { FuturisticTelemetryBar, FuturisticWorkflowDock } from "@/components/layout/futuristic-hud";
+import { logSecurityEvent, analyzeInput } from "@/lib/security/threat-detector";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -58,7 +60,9 @@ export function AppShell({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         (e.key === "k" && (e.metaKey || e.ctrlKey)) ||
-        (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA")
+        (e.key === "/" &&
+          document.activeElement?.tagName !== "INPUT" &&
+          document.activeElement?.tagName !== "TEXTAREA")
       ) {
         e.preventDefault();
         searchInputRef.current?.focus();
@@ -108,8 +112,9 @@ export function AppShell({
       >
         Skip to main content
       </a>
-      <header className="fixed inset-x-0 top-0 z-40 h-16 border-b border-outline-variant/80 bg-card/85 text-on-surface shadow-[0_2px_16px_rgb(17_40_71/0.06)] backdrop-blur-xl md:h-20 transition-all">
-        <div className="mx-auto flex h-full max-w-[1400px] items-center gap-3 px-3 md:px-6">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-outline-variant/80 bg-card/90 text-on-surface shadow-[0_2px_16px_rgb(17_40_71/0.06)] backdrop-blur-xl transition-all">
+        <FuturisticTelemetryBar />
+        <div className="mx-auto flex h-14 md:h-16 max-w-[1400px] items-center gap-3 px-3 md:px-6">
           <Button
             variant="nav"
             size="icon"
@@ -119,8 +124,12 @@ export function AppShell({
           >
             <Menu />
           </Button>
-          <Link to="/" preload="intent" className="flex min-w-0 items-center transition-transform active:scale-95">
-            <FieldAcqOrdinanceAideLogo className="h-10 max-w-[150px] md:h-12 md:max-w-[190px]" />
+          <Link
+            to="/"
+            preload="intent"
+            className="flex min-w-0 items-center transition-transform active:scale-95"
+          >
+            <FieldAcqOrdinanceAideLogo className="h-9 max-w-[140px] md:h-11 md:max-w-[180px]" />
           </Link>
           <nav className="ml-3 hidden items-center gap-1 rounded-full border border-outline-variant/60 bg-surface-low/70 p-1 backdrop-blur-md lg:flex">
             {NAV.map((n) => {
@@ -157,6 +166,14 @@ export function AppShell({
                 onChange={(e) => {
                   setQ(e.target.value);
                   setSearchOpen(true);
+                  const threat = analyzeInput(e.target.value);
+                  if (threat.isThreat) {
+                    logSecurityEvent({
+                      threatType: threat.threatType || "UNKNOWN",
+                      details: threat.details || "Detected threat pattern in global search",
+                      sourceContext: "GlobalParcelSearch",
+                    });
+                  }
                 }}
                 onFocus={() => setSearchOpen(true)}
                 placeholder="Address, APN, owner…"
@@ -201,7 +218,11 @@ export function AppShell({
             </Link>
             <SignedOut>
               <Link to="/login">
-                <Button variant="ghost" size="sm" className="text-primary hover:bg-primary-fixed active:scale-95">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary hover:bg-primary-fixed active:scale-95"
+                >
                   Sign In
                 </Button>
               </Link>
@@ -261,11 +282,13 @@ export function AppShell({
         key={pathname}
         className={cn(
           "animate-page-enter",
-          fullBleed ? "pt-16 md:pt-20" : "mx-auto max-w-[1400px] px-3 pb-16 pt-20 md:px-6 md:pt-24",
+          fullBleed ? "pt-20 md:pt-24" : "mx-auto max-w-[1400px] px-3 pb-24 pt-24 md:px-6 md:pt-28",
         )}
       >
         {children}
       </main>
+
+      <FuturisticWorkflowDock />
 
       {!fullBleed && <SiteFooter />}
     </div>

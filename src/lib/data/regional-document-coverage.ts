@@ -3,5 +3,5 @@ export const REGIONAL_DOCUMENT_COVERAGE = {
   sourceRecords: 1037,
   saldoRecords: 109,
   saldoMunicipalities: 71,
-  counties: ['York', 'Cumberland', 'Dauphin', 'Lancaster'] as const,
+  counties: ["York", "Cumberland", "Dauphin", "Lancaster"] as const,
 } as const;

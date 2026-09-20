@@ -58,7 +58,11 @@ test("non-.sql entries are dropped (readdir also yields the auth/ directory)", (
 
 test("the enabled app ships the auth schema in the applied directory", () => {
   const migrationsDir = join(projectRoot(), "migrations");
-  assert.ok(pendingMigrations(readdirSync(migrationsDir), []).some((entry) => entry.name === "0001_auth.sql"));
+  assert.ok(
+    pendingMigrations(readdirSync(migrationsDir), []).some(
+      (entry) => entry.name === "0001_auth.sql",
+    ),
+  );
   assert.ok(readdirSync(join(migrationsDir, "auth")).includes("0001_auth.sql"));
 });
 

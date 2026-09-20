@@ -31,11 +31,33 @@ import type { HouseDesignSpec } from "./subdivision/types.ts";
 
 const countiesData = JSON.parse(
   readFileSync(new URL("./data/pro-directory/counties.json", import.meta.url), "utf8"),
-) as { source: string; records: Array<{ county: string; departmentName: string; countyZoningStatus: string; websiteUrl: string | null; phoneNumber: string | null; emailAddress: string | null; physicalAddress: string | null; directorOrZoningOfficer: string | null }> };
+) as {
+  source: string;
+  records: Array<{
+    county: string;
+    departmentName: string;
+    countyZoningStatus: string;
+    websiteUrl: string | null;
+    phoneNumber: string | null;
+    emailAddress: string | null;
+    physicalAddress: string | null;
+    directorOrZoningOfficer: string | null;
+  }>;
+};
 
 const municipalitiesData = JSON.parse(
   readFileSync(new URL("./data/pro-directory/municipalities.json", import.meta.url), "utf8"),
-) as { source: string; compiled: string; records: Array<{ county: string; municipality: string; municipalityWebsiteUrl: string | null; ecode360Url: string | null; countyPlanningUrl: string | null }> };
+) as {
+  source: string;
+  compiled: string;
+  records: Array<{
+    county: string;
+    municipality: string;
+    municipalityWebsiteUrl: string | null;
+    ecode360Url: string | null;
+    countyPlanningUrl: string | null;
+  }>;
+};
 
 const planningDirectory = JSON.parse(
   readFileSync(new URL("./data/pa-county-planning-directory.json", import.meta.url), "utf8"),
@@ -45,9 +67,18 @@ const _zoningSourceUrls = JSON.parse(
   readFileSync(new URL("./data/pa-county-zoning-source-urls.json", import.meta.url), "utf8"),
 ) as Array<{ county: string; sourceUrl: string; municipalityListSourceUrl?: string }>;
 
-const directoryRouteContent = readFileSync(new URL("../routes/directory.tsx", import.meta.url), "utf8");
-const proDirectoryClientModule = readFileSync(new URL("./pro-directory.ts", import.meta.url), "utf8");
-const proDirectoryServerModule = readFileSync(new URL("./pro-directory.server.ts", import.meta.url), "utf8");
+const directoryRouteContent = readFileSync(
+  new URL("../routes/directory.tsx", import.meta.url),
+  "utf8",
+);
+const proDirectoryClientModule = readFileSync(
+  new URL("./pro-directory.ts", import.meta.url),
+  "utf8",
+);
+const proDirectoryServerModule = readFileSync(
+  new URL("./pro-directory.server.ts", import.meta.url),
+  "utf8",
+);
 
 const BASE_SPEC: HouseDesignSpec = {
   stories: 2,
@@ -139,7 +170,12 @@ test("F11-T1-4: Stormwater retention pond and open space sizing conform to PA DE
 
 test("F11-T1-5: Karst sinkhole hazard classification applies geological stratification rules", () => {
   // Cumberland and Lancaster have high limestone karst sinkhole risk on low slope plains
-  const cumberlandSub = createCustomSubdivision("Cumberland Meadow", "Cumberland", "Silver Spring", 10);
+  const cumberlandSub = createCustomSubdivision(
+    "Cumberland Meadow",
+    "Cumberland",
+    "Silver Spring",
+    10,
+  );
   assert.equal(cumberlandSub.karstRisk, "High");
 
   const lancasterSub = createCustomSubdivision("Lancaster Plains", "Lancaster", "Manheim", 10);
@@ -156,9 +192,7 @@ test("F12-T1-1: PA County Planning Directory encompasses all 4 Pennsylvania coun
   const countyNames = new Set(planningDirectory.map((c) => c.county));
   assert.equal(countyNames.size, 4);
 
-  const keyCounties = [
-    "Cumberland", "Dauphin", "Lancaster", "York",
-  ];
+  const keyCounties = ["Cumberland", "Dauphin", "Lancaster", "York"];
   for (const kc of keyCounties) {
     assert.ok(countyNames.has(kc), `Missing anticipated county: ${kc}`);
   }
@@ -172,8 +206,8 @@ test("F12-T1-2: Pro Directory counties catalog verifies official contact and zon
     assert.ok(rec.departmentName.length > 0);
     assert.ok(
       rec.countyZoningStatus === "YES" ||
-      rec.countyZoningStatus === "NO" ||
-      rec.countyZoningStatus === "UNKNOWN",
+        rec.countyZoningStatus === "NO" ||
+        rec.countyZoningStatus === "UNKNOWN",
       `Invalid zoning status: ${rec.countyZoningStatus} in ${rec.county}`,
     );
   }
@@ -184,7 +218,10 @@ test("F12-T1-3: Pro Directory municipalities catalog contains 202 records mapped
 
   const validCountySet = new Set(countiesData.records.map((c) => c.county.toLowerCase()));
   for (const mun of municipalitiesData.records) {
-    assert.ok(validCountySet.has(mun.county.toLowerCase()), `Unknown county in municipality: ${mun.county}`);
+    assert.ok(
+      validCountySet.has(mun.county.toLowerCase()),
+      `Unknown county in municipality: ${mun.county}`,
+    );
     assert.ok(mun.municipality.length > 0);
   }
 });
@@ -212,9 +249,10 @@ test("F12-T1-5: County cost factor catalog covers regional economic zones with e
   assert.equal(COUNTY_COST_FACTORS.Lancaster.multiplier, 1.06);
 
   // Default fallback for unspecified counties
-  const getFactor = (c: string) => (COUNTY_COST_FACTORS as Record<string, { multiplier: number }>)[c]?.multiplier ?? 1.00;
-  assert.equal(getFactor("Allegheny"), 1.00);
-  assert.equal(getFactor("Philadelphia"), 1.00);
+  const getFactor = (c: string) =>
+    (COUNTY_COST_FACTORS as Record<string, { multiplier: number }>)[c]?.multiplier ?? 1.0;
+  assert.equal(getFactor("Allegheny"), 1.0);
+  assert.equal(getFactor("Philadelphia"), 1.0);
 });
 
 // Feature 13: Client-Server Data Partitioning & Pro Gating (R3)
@@ -241,7 +279,13 @@ test("F13-T1-2: Non-pro authenticated user without active subscription throws 40
     banned: false,
     locked: false,
     primaryEmailAddressId: "email_free_123",
-    emailAddresses: [{ id: "email_free_123", emailAddress: "free@example.com", verification: { status: "verified" } }],
+    emailAddresses: [
+      {
+        id: "email_free_123",
+        emailAddress: "free@example.com",
+        verification: { status: "verified" },
+      },
+    ],
   });
 
   const entitlement = await resolveEntitlement(
@@ -267,7 +311,9 @@ test("F13-T1-3: Pro subscriber with active Clerk plan entitlement grants access"
     banned: false,
     locked: false,
     primaryEmailAddressId: "email_pro_999",
-    emailAddresses: [{ id: "email_pro_999", emailAddress: "pro@acme.com", verification: { status: "verified" } }],
+    emailAddresses: [
+      { id: "email_pro_999", emailAddress: "pro@acme.com", verification: { status: "verified" } },
+    ],
   });
 
   const entitlement = await resolveEntitlement(
@@ -357,7 +403,12 @@ test("F11-T2-4: Micro-parcels (< 1.5 gross acres) clamp to minimum allowable dev
     ...PARCELS[0],
     id: "micro-1",
     acres: 0.25,
-    polygon: [[40, -76], [40, -75], [41, -75], [41, -76]],
+    polygon: [
+      [40, -76],
+      [40, -75],
+      [41, -75],
+      [41, -76],
+    ],
   };
 
   const sub = parcelToSubdivisionConfig(microParcel);
@@ -368,7 +419,7 @@ test("F11-T2-4: Micro-parcels (< 1.5 gross acres) clamp to minimum allowable dev
 test("F11-T2-5: Spatial coordinate bounds check validates latitude/longitude ordering and containment", () => {
   const yorkBounds = { west: -77.15, south: 39.71, east: -76.22, north: 40.23 };
   const pointInside = { lat: 39.96, lng: -76.73 };
-  const pointOutside = { lat: 41.50, lng: -75.00 };
+  const pointOutside = { lat: 41.5, lng: -75.0 };
 
   const isInside = (lat: number, lng: number, b: typeof yorkBounds) =>
     lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east;
@@ -394,11 +445,13 @@ test("F12-T2-1: Case-insensitive county lookup handles arbitrary casing cleanly"
 });
 
 test("F12-T2-2: Unlisted or out-of-state county name falls back to baseline cost factor 1.00", () => {
-  const factor = (county: string) => (COUNTY_COST_FACTORS as unknown as Record<string, { multiplier: number }>)[county]?.multiplier ?? 1.00;
+  const factor = (county: string) =>
+    (COUNTY_COST_FACTORS as unknown as Record<string, { multiplier: number }>)[county]
+      ?.multiplier ?? 1.0;
 
-  assert.equal(factor("UnknownCounty"), 1.00);
-  assert.equal(factor(""), 1.00);
-  assert.equal(factor("Camden_NJ"), 1.00);
+  assert.equal(factor("UnknownCounty"), 1.0);
+  assert.equal(factor(""), 1.0);
+  assert.equal(factor("Camden_NJ"), 1.0);
 });
 
 test("F12-T2-3: Municipality directory URL sanitization rejects non-HTTP protocols", () => {
@@ -429,7 +482,13 @@ test("F12-T2-4: Missing or null eCode360 URLs map strictly to null rather than u
 
 test("F12-T2-5: ESRI query parameter generator encodes bounding box coordinates and special query filters safely", () => {
   const bounds = { west: -77.15, south: 39.71, east: -76.22, north: 40.23 };
-  const url = esriQueryUrl("https://example.com/arcgis/rest/services/Layer", bounds, 16, "PIDN,PROPADR", 1000);
+  const url = esriQueryUrl(
+    "https://example.com/arcgis/rest/services/Layer",
+    bounds,
+    16,
+    "PIDN,PROPADR",
+    1000,
+  );
 
   assert.ok(url.startsWith("https://example.com/arcgis/rest/services/Layer/query?"));
   assert.ok(url.includes("where=1%3D1"));
@@ -468,7 +527,9 @@ test("F13-T2-2: Unverified admin email claim (verification status != 'verified')
     banned: false,
     locked: false,
     primaryEmailAddressId: "email_unverified",
-    emailAddresses: [{ id: "email_unverified", emailAddress: adminEmail, verification: { status: "unverified" } }],
+    emailAddresses: [
+      { id: "email_unverified", emailAddress: adminEmail, verification: { status: "unverified" } },
+    ],
   });
 
   const entitlement = await resolveEntitlement(
@@ -506,25 +567,31 @@ test("F13-T2-3: Rate limiter rejects requests exceeding 30 per minute threshold 
   // Execute 30 valid requests
   let currentCount = 0;
   for (let i = 1; i <= 30; i++) {
-    const res = await db.query<{ request_count: number }>(`
+    const res = await db.query<{ request_count: number }>(
+      `
       INSERT INTO rate_limits (bucket_key, window_id, request_count)
       VALUES ($1, $2, 1)
       ON CONFLICT (bucket_key, window_id)
       DO UPDATE SET request_count = rate_limits.request_count + 1, updated_at = now()
       RETURNING request_count;
-    `, [key, windowId]);
+    `,
+      [key, windowId],
+    );
     currentCount = res.rows[0].request_count;
     assert.equal(currentCount, i);
   }
 
   // 31st request triggers rate limit violation
-  const res31 = await db.query<{ request_count: number }>(`
+  const res31 = await db.query<{ request_count: number }>(
+    `
     INSERT INTO rate_limits (bucket_key, window_id, request_count)
     VALUES ($1, $2, 1)
     ON CONFLICT (bucket_key, window_id)
     DO UPDATE SET request_count = rate_limits.request_count + 1, updated_at = now()
     RETURNING request_count;
-  `, [key, windowId]);
+  `,
+    [key, windowId],
+  );
   currentCount = res31.rows[0].request_count;
   assert.equal(currentCount, 31);
   assert.ok(currentCount > max, "Request count should exceed rate limit max");
@@ -574,12 +641,7 @@ test("F13-T2-5: Malformed session object with throwing 'has' function falls thro
     },
   };
 
-  const entitlement = await resolveEntitlement(
-    brokenSession,
-    "pro",
-    adminEmail,
-    dummyGetUser,
-  );
+  const entitlement = await resolveEntitlement(brokenSession, "pro", adminEmail, dummyGetUser);
 
   assert.equal(entitlement.isPro, true);
   assert.equal(entitlement.status, "admin");
@@ -642,7 +704,7 @@ test("R3-T3-3: Pro entitlement gating + Pro directory data extraction + GIS over
   assert.ok(yorkService !== undefined);
 
   // Parcel inside York County extent
-  const parcelExtent = { west: -76.75, south: 39.95, east: -76.70, north: 40.00 };
+  const parcelExtent = { west: -76.75, south: 39.95, east: -76.7, north: 40.0 };
   assert.ok(boundsOverlap(parcelExtent, yorkService.extent));
 });
 
@@ -659,7 +721,9 @@ test("R3-T3-4: Malformed coordinate injection + ESRI URL generation + Security p
 
   // URL should be cleanly URL-encoded without raw < or > or unencoded semicolons
   assert.ok(!url.includes("<script>"));
-  assert.ok(url.includes("PIDN%2CPROPADR%3Cscript%3Ealert%281%29%3C%2Fscript%3E%3B+DROP+TABLE+users%3B"));
+  assert.ok(
+    url.includes("PIDN%2CPROPADR%3Cscript%3Ealert%281%29%3C%2Fscript%3E%3B+DROP+TABLE+users%3B"),
+  );
 });
 
 test("R3-T3-5: Query resolver fallback to custom subdivision + Grok AI jurisdiction context preparation", () => {
@@ -693,7 +757,12 @@ test("R3-T3-5: Query resolver fallback to custom subdivision + Grok AI jurisdict
 test("R3-T4-1: Multi-County Tri-Lateral Site Screening Journey: Compare parcels across York, Cumberland, and Lancaster for 24-unit subdivision", () => {
   // Scenario: Land acquisition director compares 3 target sites across 3 counties
   const siteYork = createCustomSubdivision("York Springettsbury", "York", "Springettsbury", 12.0);
-  const siteCumberland = createCustomSubdivision("Cumberland Silver Spring", "Cumberland", "Silver Spring", 12.0);
+  const siteCumberland = createCustomSubdivision(
+    "Cumberland Silver Spring",
+    "Cumberland",
+    "Silver Spring",
+    12.0,
+  );
   const siteLancaster = createCustomSubdivision("Lancaster Manheim", "Lancaster", "Manheim", 12.0);
 
   const costYork = calculateDevelopmentCost(siteYork, BASE_SPEC);

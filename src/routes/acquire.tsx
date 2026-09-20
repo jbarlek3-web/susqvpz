@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database, ExternalLink, Layers3 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Database, ExternalLink, Layers3, Bot, Box } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useHub } from "@/lib/store";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
+import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DD_GROUPS,
@@ -24,7 +28,18 @@ import { FEASIBILITY_DATA_GROUPS, FEASIBILITY_DATA_SOURCES } from "@/lib/data/fe
 import { cn } from "@/lib/utils";
 import { FeasibilityReportTab } from "@/components/feasibility/feasibility-report-tab";
 
-export const Route = createFileRoute("/acquire")({ component: Acquire });
+export interface AcquireSearch {
+  parcelId?: string;
+  tab?: string;
+}
+
+export const Route = createFileRoute("/acquire")({
+  validateSearch: (search: Record<string, unknown>): AcquireSearch => ({
+    parcelId: typeof search.parcelId === "string" ? search.parcelId : undefined,
+    tab: typeof search.tab === "string" ? search.tab : undefined,
+  }),
+  component: Acquire,
+});
 
 const TABS = ["Report", "Yield", "Offer", "Screen", "Diligence", "Data", "SALDO"] as const;
 
@@ -38,7 +53,21 @@ function money(n: number) {
 }
 
 function Acquire() {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Report");
+  const search = Route.useSearch();
+  const selectParcel = useHub((s) => s.selectParcel);
+
+  useEffect(() => {
+    if (search.parcelId) {
+      selectParcel(search.parcelId);
+    }
+  }, [search.parcelId, selectParcel]);
+
+  const [tab, setTab] = useState<(typeof TABS)[number]>(() => {
+    if (search.tab && TABS.includes(search.tab as (typeof TABS)[number])) {
+      return search.tab as (typeof TABS)[number];
+    }
+    return "Report";
+  });
   return (
     <AppShell>
       <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
@@ -108,12 +137,30 @@ function Field({
 }
 
 function YieldTab() {
-  const [gross, setGross] = useState(22);
-  const [row, setRow] = useState(DEFAULT_ROW * 100);
-  const [open, setOpen] = useState(DEFAULT_OPEN * 100);
-  const [undev, setUndev] = useState(DEFAULT_UNDEV * 100);
-  const [storm, setStorm] = useState(DEFAULT_STORM * 100);
-  const [dpa, setDpa] = useState(3.5);
+  const {
+    value: draft,
+    setValue: setDraft,
+    isDirty,
+    isDraftRestored,
+    lastSavedAt,
+    resetToDefault,
+  } = usePersistentDraft("acq_yield_tab_v1", {
+    gross: 22,
+    row: DEFAULT_ROW * 100,
+    open: DEFAULT_OPEN * 100,
+    undev: DEFAULT_UNDEV * 100,
+    storm: DEFAULT_STORM * 100,
+    dpa: 3.5,
+  });
+
+  const { gross, row, open, undev, storm, dpa } = draft;
+
+  const setGross = (v: number) => setDraft((p) => ({ ...p, gross: v }));
+  const setRow = (v: number) => setDraft((p) => ({ ...p, row: v }));
+  const setOpen = (v: number) => setDraft((p) => ({ ...p, open: v }));
+  const setUndev = (v: number) => setDraft((p) => ({ ...p, undev: v }));
+  const setStorm = (v: number) => setDraft((p) => ({ ...p, storm: v }));
+  const setDpa = (v: number) => setDraft((p) => ({ ...p, dpa: v }));
 
   const netAc = useMemo(() => {
     const take = (row + open + undev + storm) / 100;
@@ -124,9 +171,15 @@ function YieldTab() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
+      <Card className="cyber-card">
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle>Lot yield</CardTitle>
+          <DataProtectionBadge
+            isDirty={isDirty}
+            isDraftRestored={isDraftRestored}
+            lastSavedAt={lastSavedAt}
+            onReset={resetToDefault}
+          />
         </CardHeader>
         <CardContent className="grid gap-3">
           <Field label="Gross acres" value={gross} onChange={setGross} suffix="ac" />
@@ -146,7 +199,7 @@ function YieldTab() {
           </p>
         </CardContent>
       </Card>
-      <Card>
+      <Card className="cyber-card">
         <CardHeader>
           <CardTitle>Result</CardTitle>
         </CardHeader>
@@ -158,11 +211,23 @@ function YieldTab() {
           <p className="col-span-2 text-sm text-muted-foreground">
             Next: price the residual on the Offer tab using {lots} lots. Then confirm the district
             min-lot in{" "}
-            <Link to="/zoning" className="underline">
+            <Link to="/zoning" className="underline text-primary hover:text-secondary">
               Zoning
             </Link>{" "}
             so density is legal, not just geometric.
           </p>
+          <div className="col-span-2 flex flex-wrap items-center gap-2 pt-2 border-t border-border/60">
+            <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+              <Link to="/scene-3d">
+                <Box className="size-3.5 text-primary" /> Costs Engine
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+              <Link to="/aide">
+                <Bot className="size-3.5 text-cyan-600 dark:text-cyan-400" /> Ordinance AI
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -170,13 +235,32 @@ function YieldTab() {
 }
 
 function OfferTab() {
-  const [asp, setAsp] = useState(375000);
-  const [ratio, setRatio] = useState(LOT_TO_BASE * 100);
-  const [lots, setLots] = useState(48);
-  const [dev, setDev] = useState(55000);
-  const [soft, setSoft] = useState(8500);
-  const [carry, setCarry] = useState(4500);
-  const [margin, setMargin] = useState(TARGET_MARGIN * 100);
+  const {
+    value: draft,
+    setValue: setDraft,
+    isDirty,
+    isDraftRestored,
+    lastSavedAt,
+    resetToDefault,
+  } = usePersistentDraft("acq_offer_tab_v1", {
+    asp: 375000,
+    ratio: LOT_TO_BASE * 100,
+    lots: 48,
+    dev: 55000,
+    soft: 8500,
+    carry: 4500,
+    margin: TARGET_MARGIN * 100,
+  });
+
+  const { asp, ratio, lots, dev, soft, carry, margin } = draft;
+
+  const setAsp = (v: number) => setDraft((p) => ({ ...p, asp: v }));
+  const setRatio = (v: number) => setDraft((p) => ({ ...p, ratio: v }));
+  const setLots = (v: number) => setDraft((p) => ({ ...p, lots: v }));
+  const setDev = (v: number) => setDraft((p) => ({ ...p, dev: v }));
+  const setSoft = (v: number) => setDraft((p) => ({ ...p, soft: v }));
+  const setCarry = (v: number) => setDraft((p) => ({ ...p, carry: v }));
+  const setMargin = (v: number) => setDraft((p) => ({ ...p, margin: v }));
 
   const flv = asp * (ratio / 100);
   const allInLot = flv * (1 - margin / 100);
@@ -186,9 +270,15 @@ function OfferTab() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
+      <Card className="cyber-card">
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle>Development residual</CardTitle>
+          <DataProtectionBadge
+            isDirty={isDirty}
+            isDraftRestored={isDraftRestored}
+            lastSavedAt={lastSavedAt}
+            onReset={resetToDefault}
+          />
         </CardHeader>
         <CardContent className="grid gap-3">
           <Field label="Finished home ASP" value={asp} onChange={setAsp} suffix="$" />
@@ -205,7 +295,7 @@ function OfferTab() {
         </CardContent>
       </Card>
       <div className="grid gap-4">
-        <Card>
+        <Card className="cyber-card">
           <CardHeader>
             <CardTitle>Max offer</CardTitle>
           </CardHeader>

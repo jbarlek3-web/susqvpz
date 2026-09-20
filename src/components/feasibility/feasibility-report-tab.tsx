@@ -1,6 +1,9 @@
 import {
   AlertTriangle,
+  Bot,
+  Box,
   CheckCircle2,
+  Compass,
   Download,
   ExternalLink,
   FileSearch,
@@ -8,6 +11,7 @@ import {
   ShieldQuestion,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PARCELS } from "@/lib/data/parcels";
 import { generateFeasibilityReport } from "@/lib/feasibility-report";
+import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
+import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
 import {
   REPORT_SECTIONS,
   reportCoverage,
@@ -85,21 +91,85 @@ function StatusIcon({ status }: { status: "verified" | "assumption" | "missing" 
   return <ShieldQuestion className="size-4 text-amber-700" aria-hidden />;
 }
 
+interface FeasibilityDraft {
+  parcelId: string;
+  intendedUse: string;
+  askingPrice: number;
+  targetLots: number;
+  salePricePerLot: number;
+  siteworkPerLot: number;
+  softCostPercent: number;
+  carryPercent: number;
+  sellingCostPercent: number;
+  question: string;
+}
+
 export function FeasibilityReportTab() {
   const selectedIds = useHub((state) => state.selectedIds);
+  const selectParcel = useHub((state) => state.selectParcel);
   const initialId =
     selectedIds.find((id) => PARCELS.some((parcel) => parcel.id === id)) ?? PARCELS[0]?.id ?? "";
-  const [parcelId, setParcelId] = useState(initialId);
-  const parcel = PARCELS.find((item) => item.id === parcelId) ?? PARCELS[0]!;
-  const [intendedUse, setIntendedUse] = useState("Residential subdivision");
-  const [askingPrice, setAskingPrice] = useState(Math.max(parcel.assessed, 250_000));
-  const [targetLots, setTargetLots] = useState(Math.max(1, Math.floor(parcel.acres * 2.2)));
-  const [salePricePerLot, setSalePricePerLot] = useState(95_000);
-  const [siteworkPerLot, setSiteworkPerLot] = useState(55_000);
-  const [softCostPercent, setSoftCostPercent] = useState(12);
-  const [carryPercent, setCarryPercent] = useState(8);
-  const [sellingCostPercent, setSellingCostPercent] = useState(6);
-  const [question, setQuestion] = useState("");
+  const initialParcel = PARCELS.find((item) => item.id === initialId) ?? PARCELS[0]!;
+
+  const {
+    value: draft,
+    setValue: setDraft,
+    isDirty,
+    isDraftRestored,
+    lastSavedAt,
+    resetToDefault,
+  } = usePersistentDraft<FeasibilityDraft>(
+    `feasibility_underwriting_${initialId}`,
+    () => ({
+      parcelId: initialId,
+      intendedUse: "Residential subdivision",
+      askingPrice: Math.max(initialParcel.assessed, 250_000),
+      targetLots: Math.max(1, Math.floor(initialParcel.acres * 2.2)),
+      salePricePerLot: 95_000,
+      siteworkPerLot: 55_000,
+      softCostPercent: 12,
+      carryPercent: 8,
+      sellingCostPercent: 6,
+      question: "",
+    }),
+    { enableBeforeUnloadWarn: true },
+  );
+
+  const _parcel = PARCELS.find((item) => item.id === draft.parcelId) ?? PARCELS[0]!;
+
+  const {
+    parcelId,
+    intendedUse,
+    askingPrice,
+    targetLots,
+    salePricePerLot,
+    siteworkPerLot,
+    softCostPercent,
+    carryPercent,
+    sellingCostPercent,
+    question,
+  } = draft;
+
+  const setParcelId = (id: string) => {
+    const p = PARCELS.find((item) => item.id === id) ?? PARCELS[0]!;
+    setDraft((prev) => ({
+      ...prev,
+      parcelId: id,
+      askingPrice: Math.max(p.assessed, 250_000),
+      targetLots: Math.max(1, Math.floor(p.acres * 2.2)),
+    }));
+  };
+  const setIntendedUse = (v: string) => setDraft((prev) => ({ ...prev, intendedUse: v }));
+  const setAskingPrice = (v: number) => setDraft((prev) => ({ ...prev, askingPrice: v }));
+  const setTargetLots = (v: number) => setDraft((prev) => ({ ...prev, targetLots: v }));
+  const setSalePricePerLot = (v: number) => setDraft((prev) => ({ ...prev, salePricePerLot: v }));
+  const setSiteworkPerLot = (v: number) => setDraft((prev) => ({ ...prev, siteworkPerLot: v }));
+  const setSoftCostPercent = (v: number) => setDraft((prev) => ({ ...prev, softCostPercent: v }));
+  const setCarryPercent = (v: number) => setDraft((prev) => ({ ...prev, carryPercent: v }));
+  const setSellingCostPercent = (v: number) =>
+    setDraft((prev) => ({ ...prev, sellingCostPercent: v }));
+  const setQuestion = (v: string) => setDraft((prev) => ({ ...prev, question: v }));
+
   const [busy, setBusy] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [report, setReport] = useState<FeasibilityReport | null>(null);
@@ -192,6 +262,48 @@ export function FeasibilityReportTab() {
               {busy ? "Grounding report…" : "Generate source-grounded report"}
             </Button>
           </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60">
+            <DataProtectionBadge
+              isDirty={isDirty}
+              isDraftRestored={isDraftRestored}
+              lastSavedAt={lastSavedAt}
+              onReset={resetToDefault}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-mono font-medium text-muted-foreground">
+                Cross-Tool Teleport:
+              </span>
+              <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+                <Link to="/scene-3d" search={{ parcelId }}>
+                  <Box className="size-3.5 text-primary" /> Costs Engine
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+                <Link
+                  to="/aide"
+                  search={{
+                    county: _parcel.county,
+                    municipality: _parcel.municipality,
+                    q: `What are the subdivision and setback regulations for ${_parcel.municipality} (${_parcel.county} County)?`,
+                  }}
+                >
+                  <Bot className="size-3.5 text-cyan-600 dark:text-cyan-400" /> Ordinance AI
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+                <Link
+                  to="/directory"
+                  search={{
+                    search: _parcel.municipality,
+                    tab: "documents",
+                  }}
+                >
+                  <Compass className="size-3.5 text-emerald-600 dark:text-emerald-400" /> Municipal
+                  Docs
+                </Link>
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-4 pt-5 md:grid-cols-2 xl:grid-cols-4">
           <div className="md:col-span-2">
@@ -205,7 +317,10 @@ export function FeasibilityReportTab() {
               id="feasibility-parcel"
               name="feasibility-parcel"
               value={parcelId}
-              onChange={(event) => setParcelId(event.target.value)}
+              onChange={(event) => {
+                setParcelId(event.target.value);
+                selectParcel(event.target.value);
+              }}
               className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3 text-sm"
             >
               {PARCELS.map((item) => (

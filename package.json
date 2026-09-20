@@ -18,7 +18,7 @@
     "check:auth": "node scripts/check-auth-invariant.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "scan:artifacts": "node scripts/scan-secrets.mjs .vercel/output",
-    "test": "node --test scripts/*.test.mjs && node --experimental-strip-types --test src/lib/*.test.ts",
+    "test": "node --test scripts/*.test.mjs && node --experimental-strip-types --test src/lib/*.test.ts src/lib/security/*.test.ts src/lib/hooks/*.test.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

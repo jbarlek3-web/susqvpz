@@ -65,12 +65,9 @@ export function AppNotFoundComponent() {
           </Link>
         </Button>
         <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
-          <Link to="/map">
-            View regional map
-          </Link>
+          <Link to="/map">View regional map</Link>
         </Button>
       </div>
     </main>
   );
 }
-

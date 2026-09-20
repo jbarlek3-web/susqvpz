@@ -15,7 +15,9 @@ function Minutes() {
       MEETINGS.filter((m) => body === "All" || m.body === body).filter(
         (m) =>
           !q.trim() ||
-          `${m.municipality} ${m.summary} ${m.tags.join(" ")}`.toLowerCase().includes(q.toLowerCase()),
+          `${m.municipality} ${m.summary} ${m.tags.join(" ")}`
+            .toLowerCase()
+            .includes(q.toLowerCase()),
       ),
     [q, body],
   );
@@ -27,7 +29,12 @@ function Minutes() {
         key decisions.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search records" className="max-w-sm" />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search records"
+          className="max-w-sm"
+        />
         <select
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -53,7 +60,10 @@ function Minutes() {
               <p className="mt-2 text-sm text-muted-foreground">{m.summary}</p>
               <div className="mt-3 flex flex-wrap gap-1">
                 {m.tags.map((t) => (
-                  <span key={t} className="rounded-sm bg-surface-container px-2 py-0.5 text-[11px] font-semibold">
+                  <span
+                    key={t}
+                    className="rounded-sm bg-surface-container px-2 py-0.5 text-[11px] font-semibold"
+                  >
                     {t}
                   </span>
                 ))}

@@ -85,23 +85,51 @@ function computeLotInspectionDetails(
 }
 
 // Pro Forma Spreadsheet Generator (CSV)
-function generateProFormaCsv(sub: SubdivisionConfig, spec: HouseDesignSpec, cost: ReturnType<typeof calculateDevelopmentCost>): string {
+function generateProFormaCsv(
+  sub: SubdivisionConfig,
+  spec: HouseDesignSpec,
+  cost: ReturnType<typeof calculateDevelopmentCost>,
+): string {
   const lines: string[] = [];
   lines.push("Category,Line Item,Quantity,Unit,Unit Cost,Total Cost");
   const safeAddress = `"${sub.address.replace(/"/g, '""')}"`;
   lines.push(`General,Development Address,1,Site,${safeAddress},${safeAddress}`);
-  lines.push(`Acquisition,Raw Land Acquisition,${sub.grossAcres},Acres,$${cost.landCostPerAcre.toLocaleString()},$${cost.landAcquisitionCost.toLocaleString()}`);
-  lines.push(`Civil Works,Earthwork & Grading,${sub.grossAcres},Acres,Slope Grading,$${cost.earthworkGradingCost.toLocaleString()}`);
-  lines.push(`Civil Works,Stormwater Retention Pond & Basin,${sub.pondRadiusFt}ft Radius,Each,Incl Karst,$${cost.stormwaterPondCost.toLocaleString()}`);
-  lines.push(`Civil Works,Roadway Paving & Base,${sub.roadLengthLinearFt},LF,$210/LF,$${cost.roadwayPavingCost.toLocaleString()}`);
-  lines.push(`Civil Works,Concrete Curbs & Sidewalks,${sub.roadLengthLinearFt * 2},LF,$85/LF,$${cost.curbsAndSidewalksCost.toLocaleString()}`);
-  lines.push(`Civil Works,Perimeter Walking Trail,Central Basin,LF,$45/LF,$${cost.walkingTrailAndAmenitiesCost.toLocaleString()}`);
-  lines.push(`Civil Works,Wet Utilities (Water & Sewer),${sub.roadLengthLinearFt},LF,$390/LF,$${cost.waterSewerInfrastructureCost.toLocaleString()}`);
-  lines.push(`Civil Works,Dry Utilities (Electric & Telecom),${sub.roadLengthLinearFt},LF,$75/LF,$${cost.dryUtilitiesTrenchingCost.toLocaleString()}`);
-  lines.push(`Civil Works,Street Trees & Landscape,Landscape Buffer,Trees,$650/Tree,$${cost.landscapingStreetTreesCost.toLocaleString()}`);
-  lines.push(`Civil Works,Civil Engineering & SALDO Permits,${sub.totalLots},Lots,Base + $3.2k/Lot,$${cost.civilEngineeringAndPermitsCost.toLocaleString()}`);
-  lines.push(`Vertical Construction,Single Spec Home Cost,1,Home,All Tiers,$${cost.singleHomeTotalCost.toLocaleString()}`);
-  lines.push(`Vertical Construction,All Homes Spec Construction,${sub.totalLots},Homes,$${cost.singleHomeTotalCost.toLocaleString()}/Home,$${cost.allHomesVerticalCost.toLocaleString()}`);
+  lines.push(
+    `Acquisition,Raw Land Acquisition,${sub.grossAcres},Acres,$${cost.landCostPerAcre.toLocaleString()},$${cost.landAcquisitionCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Earthwork & Grading,${sub.grossAcres},Acres,Slope Grading,$${cost.earthworkGradingCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Stormwater Retention Pond & Basin,${sub.pondRadiusFt}ft Radius,Each,Incl Karst,$${cost.stormwaterPondCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Roadway Paving & Base,${sub.roadLengthLinearFt},LF,$210/LF,$${cost.roadwayPavingCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Concrete Curbs & Sidewalks,${sub.roadLengthLinearFt * 2},LF,$85/LF,$${cost.curbsAndSidewalksCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Perimeter Walking Trail,Central Basin,LF,$45/LF,$${cost.walkingTrailAndAmenitiesCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Wet Utilities (Water & Sewer),${sub.roadLengthLinearFt},LF,$390/LF,$${cost.waterSewerInfrastructureCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Dry Utilities (Electric & Telecom),${sub.roadLengthLinearFt},LF,$75/LF,$${cost.dryUtilitiesTrenchingCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Street Trees & Landscape,Landscape Buffer,Trees,$650/Tree,$${cost.landscapingStreetTreesCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Civil Works,Civil Engineering & SALDO Permits,${sub.totalLots},Lots,Base + $3.2k/Lot,$${cost.civilEngineeringAndPermitsCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Vertical Construction,Single Spec Home Cost,1,Home,All Tiers,$${cost.singleHomeTotalCost.toLocaleString()}`,
+  );
+  lines.push(
+    `Vertical Construction,All Homes Spec Construction,${sub.totalLots},Homes,$${cost.singleHomeTotalCost.toLocaleString()}/Home,$${cost.allHomesVerticalCost.toLocaleString()}`,
+  );
   lines.push("");
   lines.push("Key Financial Performance Metric,Value");
   lines.push(`Projected Sale Price per Home,$${cost.projectedSalePricePerHome.toLocaleString()}`);
@@ -116,20 +144,63 @@ function generateProFormaCsv(sub: SubdivisionConfig, spec: HouseDesignSpec, cost
 }
 
 // Pro Forma PDF Generator
-async function generateProFormaPdf(sub: SubdivisionConfig, spec: HouseDesignSpec, cost: ReturnType<typeof calculateDevelopmentCost>): Promise<Uint8Array> {
+async function generateProFormaPdf(
+  sub: SubdivisionConfig,
+  spec: HouseDesignSpec,
+  cost: ReturnType<typeof calculateDevelopmentCost>,
+): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const page = doc.addPage([612, 792]); // Letter standard size
-  page.drawText(`SUBDIVISION DEVELOPMENT PRO FORMA: ${sub.name.toUpperCase()}`, { x: 50, y: 740, size: 14 });
-  page.drawText(`Jurisdiction: ${sub.municipality}, ${sub.county} County, PA`, { x: 50, y: 720, size: 10 });
-  page.drawText(`Gross Acreage: ${sub.grossAcres} Acres | Total Platted Lots: ${sub.totalLots} Lots`, { x: 50, y: 705, size: 10 });
-  page.drawText("-----------------------------------------------------------------------------------------------------", { x: 50, y: 690, size: 10 });
-  page.drawText(`Total Development Cost (TDC): $${cost.totalDevelopmentCost.toLocaleString()}`, { x: 50, y: 660, size: 12 });
-  page.drawText(`Gross Development Value (GDV): $${cost.grossDevelopmentValue.toLocaleString()}`, { x: 50, y: 640, size: 12 });
-  page.drawText(`Net Developer Profit: $${cost.netDeveloperProfit.toLocaleString()} (${cost.developerMarginPct}% Margin)`, { x: 50, y: 620, size: 12 });
-  page.drawText(`Return on Cost (ROC): ${cost.returnOnCostPct}% | Breakeven Price: $${cost.breakevenPricePerHome.toLocaleString()}/home`, { x: 50, y: 600, size: 11 });
-  page.drawText(`Horizontal Infrastructure Total: $${cost.totalHorizontalCost.toLocaleString()}`, { x: 50, y: 570, size: 10 });
-  page.drawText(`Vertical Spec Construction Total: $${cost.allHomesVerticalCost.toLocaleString()}`, { x: 50, y: 550, size: 10 });
-  page.drawText(`Land Acquisition Cost: $${cost.landAcquisitionCost.toLocaleString()}`, { x: 50, y: 530, size: 10 });
+  page.drawText(`SUBDIVISION DEVELOPMENT PRO FORMA: ${sub.name.toUpperCase()}`, {
+    x: 50,
+    y: 740,
+    size: 14,
+  });
+  page.drawText(`Jurisdiction: ${sub.municipality}, ${sub.county} County, PA`, {
+    x: 50,
+    y: 720,
+    size: 10,
+  });
+  page.drawText(
+    `Gross Acreage: ${sub.grossAcres} Acres | Total Platted Lots: ${sub.totalLots} Lots`,
+    { x: 50, y: 705, size: 10 },
+  );
+  page.drawText(
+    "-----------------------------------------------------------------------------------------------------",
+    { x: 50, y: 690, size: 10 },
+  );
+  page.drawText(`Total Development Cost (TDC): $${cost.totalDevelopmentCost.toLocaleString()}`, {
+    x: 50,
+    y: 660,
+    size: 12,
+  });
+  page.drawText(`Gross Development Value (GDV): $${cost.grossDevelopmentValue.toLocaleString()}`, {
+    x: 50,
+    y: 640,
+    size: 12,
+  });
+  page.drawText(
+    `Net Developer Profit: $${cost.netDeveloperProfit.toLocaleString()} (${cost.developerMarginPct}% Margin)`,
+    { x: 50, y: 620, size: 12 },
+  );
+  page.drawText(
+    `Return on Cost (ROC): ${cost.returnOnCostPct}% | Breakeven Price: $${cost.breakevenPricePerHome.toLocaleString()}/home`,
+    { x: 50, y: 600, size: 11 },
+  );
+  page.drawText(`Horizontal Infrastructure Total: $${cost.totalHorizontalCost.toLocaleString()}`, {
+    x: 50,
+    y: 570,
+    size: 10,
+  });
+  page.drawText(
+    `Vertical Spec Construction Total: $${cost.allHomesVerticalCost.toLocaleString()}`,
+    { x: 50, y: 550, size: 10 },
+  );
+  page.drawText(`Land Acquisition Cost: $${cost.landAcquisitionCost.toLocaleString()}`, {
+    x: 50,
+    y: 530,
+    size: 10,
+  });
   return doc.save();
 }
 
@@ -157,10 +228,7 @@ function disposeThreeHierarchy(root: THREE.Object3D) {
 // Feature 6: Interactive Raycasting Lot Picking & Overlay (R2)
 test("F06-T1-1: Raycaster identifies lotNumber from intersecting parcel geometry", () => {
   const root = new THREE.Group();
-  const lotBox = new THREE.Mesh(
-    new THREE.BoxGeometry(20, 2, 20),
-    new THREE.MeshBasicMaterial(),
-  );
+  const lotBox = new THREE.Mesh(new THREE.BoxGeometry(20, 2, 20), new THREE.MeshBasicMaterial());
   lotBox.position.set(0, 0, 0);
   lotBox.userData = { lotNumber: 7, styleIdx: 1 };
   root.add(lotBox);
@@ -232,7 +300,12 @@ test("F06-T1-5: Procedural subdivision places platted lots across all four quadr
 
 // Feature 7: In-Place Architectural Customizer (R2)
 test("F07-T1-1: Architectural customizer builds 4 distinct elevation styles", () => {
-  const styles: Array<HouseDesignSpec["style"]> = ["craftsman", "colonial", "modernFarmhouse", "contemporary"];
+  const styles: Array<HouseDesignSpec["style"]> = [
+    "craftsman",
+    "colonial",
+    "modernFarmhouse",
+    "contemporary",
+  ];
   for (const style of styles) {
     const spec: HouseDesignSpec = { ...BASE_SPEC, style };
     const model = buildHouseStudioModel(spec);
@@ -242,7 +315,12 @@ test("F07-T1-1: Architectural customizer builds 4 distinct elevation styles", ()
 });
 
 test("F07-T1-2: Architectural customizer supports all 4 styles with distinct configurations", () => {
-  const styles: Array<HouseDesignSpec["style"]> = ["colonial", "craftsman", "modernFarmhouse", "contemporary"];
+  const styles: Array<HouseDesignSpec["style"]> = [
+    "colonial",
+    "craftsman",
+    "modernFarmhouse",
+    "contemporary",
+  ];
   const meshCounts: number[] = [];
   for (const style of styles) {
     const spec: HouseDesignSpec = { ...BASE_SPEC, style };
@@ -324,7 +402,8 @@ test("F07-T1-5: Architectural finish additions (porch, patio, balcony, turret) a
 test("F08-T1-1: Total Development Cost reconciles mathematically to Land + Horizontal + Vertical", () => {
   const sub = createCustomSubdivision("Audit Subdivision", "York", "York Twp", 14);
   const cost = calculateDevelopmentCost(sub, BASE_SPEC);
-  const expectedTdc = cost.landAcquisitionCost + cost.totalHorizontalCost + cost.allHomesVerticalCost;
+  const expectedTdc =
+    cost.landAcquisitionCost + cost.totalHorizontalCost + cost.allHomesVerticalCost;
   assert.equal(cost.totalDevelopmentCost, expectedTdc);
 });
 
@@ -334,7 +413,9 @@ test("F08-T1-2: Gross Development Value and Net Profit reconcile to ASP and marg
 
   assert.equal(cost.grossDevelopmentValue, cost.projectedSalePricePerHome * sub.totalLots);
   assert.equal(cost.netDeveloperProfit, cost.grossDevelopmentValue - cost.totalDevelopmentCost);
-  const expectedMargin = Number(((cost.netDeveloperProfit / cost.grossDevelopmentValue) * 100).toFixed(1));
+  const expectedMargin = Number(
+    ((cost.netDeveloperProfit / cost.grossDevelopmentValue) * 100).toFixed(1),
+  );
   assert.equal(cost.developerMarginPct, expectedMargin);
 });
 
@@ -433,10 +514,16 @@ test("F09-T1-5: Spreadsheet financial summary totals match computed underwriting
   const cost = calculateDevelopmentCost(sub, BASE_SPEC);
   const csv = generateProFormaCsv(sub, BASE_SPEC, cost);
 
-  assert.ok(csv.includes(`Total Development Cost (TDC),$${cost.totalDevelopmentCost.toLocaleString()}`));
-  assert.ok(csv.includes(`Gross Development Value (GDV),$${cost.grossDevelopmentValue.toLocaleString()}`));
+  assert.ok(
+    csv.includes(`Total Development Cost (TDC),$${cost.totalDevelopmentCost.toLocaleString()}`),
+  );
+  assert.ok(
+    csv.includes(`Gross Development Value (GDV),$${cost.grossDevelopmentValue.toLocaleString()}`),
+  );
   assert.ok(csv.includes(`Net Developer Profit,$${cost.netDeveloperProfit.toLocaleString()}`));
-  assert.ok(csv.includes(`Breakeven Price per Home,$${cost.breakevenPricePerHome.toLocaleString()}`));
+  assert.ok(
+    csv.includes(`Breakeven Price per Home,$${cost.breakevenPricePerHome.toLocaleString()}`),
+  );
 });
 
 // Feature 10: 3D WebGL 60fps & Context Recovery (R2)
@@ -597,7 +684,12 @@ test("F07-T2-2: 4-Story building height (51.8ft) flags zoning variance requireme
 });
 
 test("F07-T2-3: Footprint dimensions exceeding buildable envelope trigger setback encroachment warning", () => {
-  const checkEncroachment = (houseWidth: number, houseDepth: number, envWidth: number, envDepth: number) => {
+  const checkEncroachment = (
+    houseWidth: number,
+    houseDepth: number,
+    envWidth: number,
+    envDepth: number,
+  ) => {
     return houseWidth > envWidth || houseDepth > envDepth;
   };
 
@@ -674,7 +766,8 @@ test("F08-T2-5: Extreme finish tier scaling (Standard vs Luxury) adds $28/SF wit
   const stdCost = calculateDevelopmentCost(sub, BASE_SPEC, { customFinishTier: "standard" });
   const luxCost = calculateDevelopmentCost(sub, BASE_SPEC, { customFinishTier: "luxury" });
 
-  const diffPerHome = luxCost.singleHomeInteriorFinishesCost - stdCost.singleHomeInteriorFinishesCost;
+  const diffPerHome =
+    luxCost.singleHomeInteriorFinishesCost - stdCost.singleHomeInteriorFinishesCost;
   // Dauphin loc multiplier is 1.02
   const expectedDiff = Math.round(BASE_SPEC.totalSqft * 28 * 1.02);
   assert.equal(diffPerHome, expectedDiff);
@@ -711,7 +804,10 @@ test("F09-T2-4: Multi-million dollar values format with standard comma thousand-
 });
 
 test("F09-T2-5: Export spec validation catches missing or non-numeric cost values", () => {
-  const validateCostNumbers = (cost: { totalDevelopmentCost: number; grossDevelopmentValue: number }) => {
+  const validateCostNumbers = (cost: {
+    totalDevelopmentCost: number;
+    grossDevelopmentValue: number;
+  }) => {
     return (
       typeof cost.totalDevelopmentCost === "number" &&
       !isNaN(cost.totalDevelopmentCost) &&
@@ -720,8 +816,14 @@ test("F09-T2-5: Export spec validation catches missing or non-numeric cost value
     );
   };
 
-  assert.equal(validateCostNumbers({ totalDevelopmentCost: 5000000, grossDevelopmentValue: 7000000 }), true);
-  assert.equal(validateCostNumbers({ totalDevelopmentCost: NaN, grossDevelopmentValue: 7000000 }), false);
+  assert.equal(
+    validateCostNumbers({ totalDevelopmentCost: 5000000, grossDevelopmentValue: 7000000 }),
+    true,
+  );
+  assert.equal(
+    validateCostNumbers({ totalDevelopmentCost: NaN, grossDevelopmentValue: 7000000 }),
+    false,
+  );
 });
 
 // Feature 10 Boundaries: 3D WebGL Performance & Recovery
@@ -825,7 +927,9 @@ test("R2-T3-4: Underwriting pro forma overrides are reflected synchronously in P
   const cost = calculateDevelopmentCost(sub, BASE_SPEC, { customTargetSalePrice: customASP });
 
   const csv = generateProFormaCsv(sub, BASE_SPEC, cost);
-  assert.ok(csv.includes(`Gross Development Value (GDV),$${(customASP * sub.totalLots).toLocaleString()}`));
+  assert.ok(
+    csv.includes(`Gross Development Value (GDV),$${(customASP * sub.totalLots).toLocaleString()}`),
+  );
 
   const pdfBytes = await generateProFormaPdf(sub, BASE_SPEC, cost);
   const doc = await PDFDocument.load(pdfBytes);
@@ -891,7 +995,12 @@ test("R2-T4-2: Difficult Site Underwriting Assessment: 12-acre parcel with 16% s
   subFlat.slopePct = 4;
   subFlat.karstRisk = "Low";
 
-  const subDifficult = createCustomSubdivision("Hampden Karst Bluff", "Cumberland", "Hampden", 12.0);
+  const subDifficult = createCustomSubdivision(
+    "Hampden Karst Bluff",
+    "Cumberland",
+    "Hampden",
+    12.0,
+  );
   subDifficult.slopePct = 16.5; // Steep slope (> 15%)
   subDifficult.karstRisk = "High"; // High limestone sinkhole hazard
 
@@ -907,5 +1016,8 @@ test("R2-T4-2: Difficult Site Underwriting Assessment: 12-acre parcel with 16% s
 
   // Verify Breakeven price reflects site difficulties
   assert.ok(costDiff.breakevenPricePerHome > 400_000);
-  assert.equal(costDiff.breakevenPricePerHome, Math.round(costDiff.totalDevelopmentCost / subDifficult.totalLots));
+  assert.equal(
+    costDiff.breakevenPricePerHome,
+    Math.round(costDiff.totalDevelopmentCost / subDifficult.totalLots),
+  );
 });

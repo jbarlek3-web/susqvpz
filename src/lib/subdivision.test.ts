@@ -179,22 +179,19 @@ test("cost estimator calculates multi-story vertical construction variations fro
   // Total Development Cost reconciles exactly: Land + Horizontal + All Homes Vertical
   assert.equal(
     cost2F.totalDevelopmentCost,
-    cost2F.landAcquisitionCost + cost2F.totalHorizontalCost + cost2F.allHomesVerticalCost
+    cost2F.landAcquisitionCost + cost2F.totalHorizontalCost + cost2F.allHomesVerticalCost,
   );
   // Gross Development Value reconciles exactly: Projected ASP * Lots
-  assert.equal(
-    cost2F.grossDevelopmentValue,
-    cost2F.projectedSalePricePerHome * sub.totalLots
-  );
+  assert.equal(cost2F.grossDevelopmentValue, cost2F.projectedSalePricePerHome * sub.totalLots);
   // Net Developer Profit reconciles exactly: GDV - TDC
   assert.equal(
     cost2F.netDeveloperProfit,
-    cost2F.grossDevelopmentValue - cost2F.totalDevelopmentCost
+    cost2F.grossDevelopmentValue - cost2F.totalDevelopmentCost,
   );
   // Breakeven price per home
   assert.equal(
     cost2F.breakevenPricePerHome,
-    Math.round(cost2F.totalDevelopmentCost / sub.totalLots)
+    Math.round(cost2F.totalDevelopmentCost / sub.totalLots),
   );
 });
 
@@ -214,14 +211,8 @@ test("cost estimator respects custom target sale price and land cost overrides",
   assert.notEqual(overriddenCost.projectedSalePricePerHome, defaultCost.projectedSalePricePerHome);
   assert.equal(overriddenCost.projectedSalePricePerHome, customTargetPrice);
   assert.equal(overriddenCost.landCostPerAcre, customLandPerAcre);
-  assert.equal(
-    overriddenCost.landAcquisitionCost,
-    Math.round(sub.grossAcres * customLandPerAcre)
-  );
-  assert.equal(
-    overriddenCost.grossDevelopmentValue,
-    customTargetPrice * sub.totalLots
-  );
+  assert.equal(overriddenCost.landAcquisitionCost, Math.round(sub.grossAcres * customLandPerAcre));
+  assert.equal(overriddenCost.grossDevelopmentValue, customTargetPrice * sub.totalLots);
 });
 
 test("finish tiers adjust vertical spec interior cost appropriately", () => {
@@ -231,6 +222,10 @@ test("finish tiers adjust vertical spec interior cost appropriately", () => {
   const upgradedCost = calculateDevelopmentCost(sub, BASE_SPEC, { customFinishTier: "upgraded" });
   const luxuryCost = calculateDevelopmentCost(sub, BASE_SPEC, { customFinishTier: "luxury" });
 
-  assert.ok(standardCost.singleHomeInteriorFinishesCost < upgradedCost.singleHomeInteriorFinishesCost);
-  assert.ok(upgradedCost.singleHomeInteriorFinishesCost < luxuryCost.singleHomeInteriorFinishesCost);
+  assert.ok(
+    standardCost.singleHomeInteriorFinishesCost < upgradedCost.singleHomeInteriorFinishesCost,
+  );
+  assert.ok(
+    upgradedCost.singleHomeInteriorFinishesCost < luxuryCost.singleHomeInteriorFinishesCost,
+  );
 });

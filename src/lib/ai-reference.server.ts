@@ -253,7 +253,11 @@ function scoreChunk(
     if (/saldo|subdivision/i.test(title)) score += 25;
   }
 
-  if (topic === "permits" || queryTokens.includes("permit") || queryTokens.includes("application")) {
+  if (
+    topic === "permits" ||
+    queryTokens.includes("permit") ||
+    queryTokens.includes("application")
+  ) {
     if (/application|checklist|submittal\s*requirements|certificate\s*of\s*occupancy/i.test(text))
       score += 15;
     if (/permit|application/i.test(title)) score += 25;

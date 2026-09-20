@@ -3,11 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import {
-  MAX_CARD_BYTES,
-  computeBrandWarnings,
-  siteDeclaresOgTypeGame,
-} from "./brand-check.mjs";
+import { MAX_CARD_BYTES, computeBrandWarnings, siteDeclaresOgTypeGame } from "./brand-check.mjs";
 
 const GAME_SITE = JSON.stringify({ title: "Wild Race", type: "x:game", card: "custom" });
 const UTILITY_SITE = JSON.stringify({ title: "Invoice" });
@@ -127,10 +123,7 @@ test("__root.tsx og:type no longer satisfies the canvas gate", () => {
     narrowFile: "x-banner.jpg",
   });
   mkdirSync(join(root, "src/routes"), { recursive: true });
-  writeFileSync(
-    join(root, "src/routes/__root.tsx"),
-    '{ property: "og:type", content: "x:game" }',
-  );
+  writeFileSync(join(root, "src/routes/__root.tsx"), '{ property: "og:type", content: "x:game" }');
   const warnings = computeBrandWarnings({ hasCanvas: true, workspaceRoot: root });
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /x:game/);

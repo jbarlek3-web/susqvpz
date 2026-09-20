@@ -80,10 +80,10 @@ function createFallbackPdf(report: FeasibilityReport): Buffer {
     `Executive summary: ${clean(report.executiveSummary)}`,
     "Municipal and county reference documents are not attached or delivered with this report; use the official-source links or contact the issuing agency.",
   ];
-  const streamBody = textLines
-    .map((line, i) => `BT /F1 10 Tf 50 ${750 - i * 20} Td (${line.replace(/[()\\]/g, "")}) Tj ET`)
-    .join("\n") +
-    `\n% Padding for document compliance\n% ${"0".repeat(2400)}\n`;
+  const streamBody =
+    textLines
+      .map((line, i) => `BT /F1 10 Tf 50 ${750 - i * 20} Td (${line.replace(/[()\\]/g, "")}) Tj ET`)
+      .join("\n") + `\n% Padding for document compliance\n% ${"0".repeat(2400)}\n`;
   const streamLen = Buffer.byteLength(streamBody);
 
   const pdf = [

@@ -31,7 +31,11 @@ function esc(value: unknown) {
 }
 
 function popupHtml(props: Record<string, string | number | null>) {
-  const d = findDistrict(String(props.MUNI_NAME ?? ""), String(props.ZCODE ?? ""), String(props.JOIN_FIELD ?? ""));
+  const d = findDistrict(
+    String(props.MUNI_NAME ?? ""),
+    String(props.ZCODE ?? ""),
+    String(props.JOIN_FIELD ?? ""),
+  );
   const muni = prettyMuni(String(props.MUNI_NAME ?? ""));
   const uses = d
     ? [
@@ -133,7 +137,11 @@ export function YorkZoningLayer() {
           layer.clearLayers();
           layer.addData(json as GeoJSON.FeatureCollection);
           const n = json.features?.length ?? 0;
-          setHint(n ? `${n.toLocaleString()} York zoning polygons in view` : "No zoning polygons in this view");
+          setHint(
+            n
+              ? `${n.toLocaleString()} York zoning polygons in view`
+              : "No zoning polygons in this view",
+          );
         } catch (err) {
           if ((err as { name?: string }).name === "AbortError") return;
           setHint("York County zoning service is unavailable");

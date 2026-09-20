@@ -39,9 +39,9 @@ function checkWebGLSupport(): boolean {
     const canvas = document.createElement("canvas");
     return Boolean(
       window.WebGLRenderingContext &&
-        (canvas.getContext("webgl2") ||
-          canvas.getContext("webgl") ||
-          canvas.getContext("experimental-webgl")),
+      (canvas.getContext("webgl2") ||
+        canvas.getContext("webgl") ||
+        canvas.getContext("experimental-webgl")),
     );
   } catch {
     return false;
@@ -480,7 +480,7 @@ export function HouseModelViewer({
           color: isHeightViolated ? 0xef4444 : 0x38bdf8,
           transparent: true,
           opacity: 0.65,
-        })
+        }),
       );
       envLine.position.set(0, maxHMeters / 2, 0);
       zoningGroup.add(envLine);
@@ -504,7 +504,7 @@ export function HouseModelViewer({
           dashSize: 0.5,
           gapSize: 0.25,
           linewidth: 2,
-        })
+        }),
       );
       lotLine.computeLineDistances();
       zoningGroup.add(lotLine);
@@ -722,7 +722,7 @@ export function HouseModelViewer({
       (error) => {
         console.error("GLTF Export Error:", error);
       },
-      { binary: true }
+      { binary: true },
     );
   };
 
@@ -742,10 +742,7 @@ export function HouseModelViewer({
   return (
     <div className="relative flex flex-col w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-border bg-card shadow-xl">
       {/* 3D Canvas Mount Point */}
-      <div
-        ref={mountRef}
-        className="relative flex-1 w-full h-full"
-      >
+      <div ref={mountRef} className="relative flex-1 w-full h-full">
         <div
           ref={canvasMountRef}
           role="region"
@@ -758,7 +755,8 @@ export function HouseModelViewer({
           className="absolute inset-0 h-full w-full cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           <span className="sr-only">
-            Interactive 3D viewport. Use the controls above to change camera angle and lighting, or use the tabs below for complete tabulated zoning specs and underwriting pro forma data.
+            Interactive 3D viewport. Use the controls above to change camera angle and lighting, or
+            use the tabs below for complete tabulated zoning specs and underwriting pro forma data.
           </span>
         </div>
         {/* WebGL Unsupported Fallback */}
@@ -768,9 +766,7 @@ export function HouseModelViewer({
               <AlertTriangle className="size-8" />
             </div>
             <h3 className="text-base font-semibold text-foreground">3D Graphics Unavailable</h3>
-            <p className="max-w-md text-xs text-muted-foreground mt-1 mb-4">
-              {webglError}
-            </p>
+            <p className="max-w-md text-xs text-muted-foreground mt-1 mb-4">{webglError}</p>
             <Button
               size="sm"
               variant="outline"
@@ -791,9 +787,12 @@ export function HouseModelViewer({
             <div className="rounded-full bg-amber-500/10 p-3 text-amber-500 mb-3">
               <AlertTriangle className="size-8" />
             </div>
-            <h3 className="text-base font-semibold text-foreground">3D Graphics Context Interrupted</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              3D Graphics Context Interrupted
+            </h3>
             <p className="max-w-md text-xs text-muted-foreground mt-1 mb-4">
-              The WebGL hardware graphics context was temporarily lost. Click below to restore the 3D scene.
+              The WebGL hardware graphics context was temporarily lost. Click below to restore the
+              3D scene.
             </p>
             <Button
               size="sm"
@@ -1119,15 +1118,23 @@ export function HouseModelViewer({
           <div>• Scroll: Zoom In / Out</div>
           {currentMode === "subdivision" ? (
             <div className="mt-1 pt-1 border-t border-border flex flex-col gap-0.5">
-              <span className="text-sky-500 font-medium">--- Central Stormwater Pond & Fountain</span>
-              <span className="text-emerald-500 font-medium">--- Topographic Elevation Contours</span>
-              <span className="text-amber-500 font-medium">--- Platted Residential Parcels & Roads</span>
+              <span className="text-sky-500 font-medium">
+                --- Central Stormwater Pond & Fountain
+              </span>
+              <span className="text-emerald-500 font-medium">
+                --- Topographic Elevation Contours
+              </span>
+              <span className="text-amber-500 font-medium">
+                --- Platted Residential Parcels & Roads
+              </span>
             </div>
           ) : (
             showZoningEnvelope && (
               <div className="mt-1 pt-1 border-t border-border flex flex-col gap-0.5">
                 <span className="text-amber-500 font-medium">--- Front / Rear Setback Lines</span>
-                <span className="text-sky-400 font-medium">▢ Height Limit Envelope (35&apos; max)</span>
+                <span className="text-sky-400 font-medium">
+                  ▢ Height Limit Envelope (35&apos; max)
+                </span>
               </div>
             )
           )}

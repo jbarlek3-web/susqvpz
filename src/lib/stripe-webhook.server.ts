@@ -47,7 +47,9 @@ export function verifyStripeSignature(
   }
 
   const signedPayload = `${timestamp}.${rawBody}`;
-  const expectedSignature = createHmac("sha256", secret).update(signedPayload, "utf8").digest("hex");
+  const expectedSignature = createHmac("sha256", secret)
+    .update(signedPayload, "utf8")
+    .digest("hex");
   const expectedBuf = Buffer.from(expectedSignature, "utf8");
 
   for (const sig of signatures) {
@@ -98,10 +100,17 @@ export async function processStripeEvent(
           : typeof obj.subscription?.id === "string"
             ? obj.subscription.id
             : null;
-      const clientRefId = typeof obj.client_reference_id === "string" ? obj.client_reference_id.trim() : null;
-      let organizationId = typeof obj.metadata?.organizationId === "string" && obj.metadata.organizationId.trim() ? obj.metadata.organizationId.trim() : null;
-      let userId = typeof obj.metadata?.userId === "string" && obj.metadata.userId.trim() ? obj.metadata.userId.trim() : null;
-      
+      const clientRefId =
+        typeof obj.client_reference_id === "string" ? obj.client_reference_id.trim() : null;
+      let organizationId =
+        typeof obj.metadata?.organizationId === "string" && obj.metadata.organizationId.trim()
+          ? obj.metadata.organizationId.trim()
+          : null;
+      let userId =
+        typeof obj.metadata?.userId === "string" && obj.metadata.userId.trim()
+          ? obj.metadata.userId.trim()
+          : null;
+
       if (clientRefId) {
         if (clientRefId.startsWith("org_")) {
           organizationId = organizationId || clientRefId;
@@ -171,9 +180,7 @@ export async function processStripeEvent(
       }
       const status = typeof obj.status === "string" ? obj.status : "active";
       const currentPeriodEnd =
-        typeof obj.current_period_end === "number"
-          ? new Date(obj.current_period_end * 1000)
-          : null;
+        typeof obj.current_period_end === "number" ? new Date(obj.current_period_end * 1000) : null;
       const productId =
         typeof obj.items?.data?.[0]?.price?.product === "string"
           ? obj.items.data[0].price.product
@@ -221,9 +228,7 @@ export async function processStripeEvent(
             ? obj.customer.id
             : null;
       const currentPeriodEnd =
-        typeof obj.current_period_end === "number"
-          ? new Date(obj.current_period_end * 1000)
-          : null;
+        typeof obj.current_period_end === "number" ? new Date(obj.current_period_end * 1000) : null;
 
       const existing = await tx<{ id: number }>`
         select id from stripe_entitlements

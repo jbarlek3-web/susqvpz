@@ -24,11 +24,16 @@ test("the committed environment template contains names only", () => {
 });
 
 test("every required production variable is documented", () => {
-  const requiredBlock = productionConfig.match(/REQUIRED_PRODUCTION_ENV = \[([\s\S]*?)\] as const/)?.[1];
+  const requiredBlock = productionConfig.match(
+    /REQUIRED_PRODUCTION_ENV = \[([\s\S]*?)\] as const/,
+  )?.[1];
   assert.ok(requiredBlock, "required production environment list was not found");
-  const requiredNames = [...requiredBlock.matchAll(/"([A-Z][A-Z0-9_]*)"/g)].map((match) => match[1]);
+  const requiredNames = [...requiredBlock.matchAll(/"([A-Z][A-Z0-9_]*)"/g)].map(
+    (match) => match[1],
+  );
   assert.ok(requiredNames.length > 0);
-  for (const name of requiredNames) assert.ok(entries.has(name), `${name} is missing from .env.example`);
+  for (const name of requiredNames)
+    assert.ok(entries.has(name), `${name} is missing from .env.example`);
 });
 
 test("the safe environment template is explicitly tracked", () => {

@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/app-shell";
 import { DEFAULT_HOUSE_SPEC } from "@/components/scene-3d/HouseModelViewer";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
 import {
+  Bot,
   Building2,
   CheckCircle2,
   AlertTriangle,
@@ -11,6 +11,7 @@ import {
   Waves,
   Home,
   DollarSign,
+  FileSpreadsheet,
   FileText,
   Download,
   Mountain,
@@ -18,13 +19,16 @@ import {
   HardHat,
   Palette,
   Sliders,
-  RotateCcw,
+  Compass,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
+import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
+import { useHub } from "@/lib/store";
 import { PARCELS } from "@/lib/data/parcels";
 import { calculateDevelopmentCost } from "@/lib/subdivision/cost-estimator";
 import { resolveAddressOrParcel } from "@/lib/subdivision/address-resolver";
@@ -63,11 +67,23 @@ function money(n: number) {
 
 function Scene3DPage() {
   const search = Route.useSearch();
+  const selectParcel = useHub((s) => s.selectParcel);
+  const selectedIds = useHub((s) => s.selectedIds);
+  const activeHubParcelId =
+    selectedIds.find((id) => PARCELS.some((p) => p.id === id)) ?? "p-hampden";
+
   // 1. Location & Parcel Selection State
   const [selectedParcelId, setSelectedParcelId] = useState<string>(
-    () => search.parcelId || "p-hampden",
+    () => search.parcelId || activeHubParcelId,
   );
   const [customAddressQuery, setCustomAddressQuery] = useState<string>("");
+
+  useEffect(() => {
+    if (search.parcelId && search.parcelId !== selectedParcelId) {
+      setSelectedParcelId(search.parcelId);
+      selectParcel(search.parcelId);
+    }
+  }, [search.parcelId, selectedParcelId, selectParcel]);
 
   const activeProfile = useMemo(() => {
     return resolveAddressOrParcel(customAddressQuery.trim() || selectedParcelId);
@@ -116,12 +132,38 @@ function Scene3DPage() {
     });
   };
 
-  // 4. Cost Estimator & Pro Forma State
-  const [customFinishTier, setCustomFinishTier] = useState<"standard" | "upgraded" | "luxury">(
-    "upgraded"
+  // 4. Cost Estimator & Pro Forma State with Accidental Data Loss Prevention (Per-Parcel Enclave)
+  const {
+    value: underwriteDraft,
+    setValue: setUnderwriteDraft,
+    isDirty: isUnderwriteDirty,
+    isDraftRestored: isUnderwriteRestored,
+    lastSavedAt: underwriteLastSavedAt,
+    resetToDefault: resetUnderwriteDraft,
+  } = usePersistentDraft<{
+    finishTier: "standard" | "upgraded" | "luxury";
+    targetSalePrice: number;
+    landCostPerAcre: number;
+  }>(
+    `scene3d_underwriting_v1_${selectedParcelId}`,
+    {
+      finishTier: "upgraded",
+      targetSalePrice: 0,
+      landCostPerAcre: 0,
+    },
+    { enableBeforeUnloadWarn: true },
   );
-  const [customTargetSalePrice, setCustomTargetSalePrice] = useState<number>(0);
-  const [customLandCostPerAcre, setCustomLandCostPerAcre] = useState<number>(0);
+
+  const customFinishTier = underwriteDraft.finishTier;
+  const customTargetSalePrice = underwriteDraft.targetSalePrice;
+  const customLandCostPerAcre = underwriteDraft.landCostPerAcre;
+
+  const setCustomFinishTier = (tier: "standard" | "upgraded" | "luxury") =>
+    setUnderwriteDraft((prev) => ({ ...prev, finishTier: tier }));
+  const setCustomTargetSalePrice = (price: number) =>
+    setUnderwriteDraft((prev) => ({ ...prev, targetSalePrice: price }));
+  const setCustomLandCostPerAcre = (cost: number) =>
+    setUnderwriteDraft((prev) => ({ ...prev, landCostPerAcre: cost }));
 
   const costBreakdown: CostBreakdown = useMemo(() => {
     return calculateDevelopmentCost(subdivisionConfig, houseSpec, {
@@ -129,7 +171,13 @@ function Scene3DPage() {
       customRawLandCost: customLandCostPerAcre > 0 ? customLandCostPerAcre : undefined,
       customFinishTier,
     });
-  }, [subdivisionConfig, houseSpec, customFinishTier, customTargetSalePrice, customLandCostPerAcre]);
+  }, [
+    subdivisionConfig,
+    houseSpec,
+    customFinishTier,
+    customTargetSalePrice,
+    customLandCostPerAcre,
+  ]);
 
   // Height & Zoning Checks
   const isHeightExceeded = houseSpec.heightFt > subdivisionConfig.maxZoningHeight;
@@ -285,7 +333,47 @@ function Scene3DPage() {
                 />
               </div>
 
-              
+              <DataProtectionBadge
+                isDirty={isUnderwriteDirty}
+                isDraftRestored={isUnderwriteRestored}
+                lastSavedAt={underwriteLastSavedAt}
+                onReset={resetUnderwriteDraft}
+              />
+
+              <div className="flex items-center gap-1.5 ml-auto">
+                <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
+                  <Link
+                    to="/acquire"
+                    search={{ parcelId: subdivisionConfig.parcelId, tab: "Report" }}
+                  >
+                    <FileSpreadsheet className="size-3.5 text-primary" /> Feasibility
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
+                  <Link
+                    to="/aide"
+                    search={{
+                      county: subdivisionConfig.county,
+                      municipality: subdivisionConfig.municipality,
+                      q: `What are the setbacks and subdivision standards in ${subdivisionConfig.municipality} (${subdivisionConfig.county} County)?`,
+                    }}
+                  >
+                    <Bot className="size-3.5 text-cyan-600 dark:text-cyan-400" /> Ask AI
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
+                  <Link
+                    to="/directory"
+                    search={{
+                      search: subdivisionConfig.municipality,
+                      tab: "documents",
+                    }}
+                  >
+                    <Compass className="size-3.5 text-emerald-600 dark:text-emerald-400" />{" "}
+                    Municipal Docs
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -296,7 +384,9 @@ function Scene3DPage() {
             <div className="flex items-center gap-1.5 font-medium text-foreground">
               <span className="text-muted-foreground">Location:</span>
               <span>{subdivisionConfig.address}</span>
-              <span className="text-muted-foreground">({subdivisionConfig.municipality}, {subdivisionConfig.county} Co.)</span>
+              <span className="text-muted-foreground">
+                ({subdivisionConfig.municipality}, {subdivisionConfig.county} Co.)
+              </span>
             </div>
             <span>•</span>
             <div className="flex items-center gap-1.5">
@@ -340,14 +430,10 @@ function Scene3DPage() {
 
         {/* Main Workspace Area */}
         <div className="flex-1 p-3 md:p-6 flex flex-col gap-6">
-          
-
           {/* Sub-Workspaces & Tools Tabs */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
               <div className="flex items-center gap-2">
-                
-
                 <button
                   onClick={() => setActiveTab("Studio3D")}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -608,7 +694,9 @@ function Scene3DPage() {
                       </span>
                       <div className="grid grid-cols-2 gap-1.5">
                         <button
-                          onClick={() => setHouseSpec((prev) => ({ ...prev, hasPorch: !prev.hasPorch }))}
+                          onClick={() =>
+                            setHouseSpec((prev) => ({ ...prev, hasPorch: !prev.hasPorch }))
+                          }
                           className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
                             houseSpec.hasPorch
                               ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
@@ -618,7 +706,9 @@ function Scene3DPage() {
                           {houseSpec.hasPorch ? "✓ Porch" : "+ Porch"}
                         </button>
                         <button
-                          onClick={() => setHouseSpec((prev) => ({ ...prev, hasPatio: !prev.hasPatio }))}
+                          onClick={() =>
+                            setHouseSpec((prev) => ({ ...prev, hasPatio: !prev.hasPatio }))
+                          }
                           className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
                             houseSpec.hasPatio
                               ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
@@ -639,10 +729,14 @@ function Scene3DPage() {
                               : "bg-muted/40 border-border text-muted-foreground"
                           } ${houseSpec.stories < 2 ? "opacity-40 cursor-not-allowed" : ""}`}
                         >
-                          {houseSpec.hasBalcony && houseSpec.stories >= 2 ? "✓ Balcony" : "+ Balcony (2F+)"}
+                          {houseSpec.hasBalcony && houseSpec.stories >= 2
+                            ? "✓ Balcony"
+                            : "+ Balcony (2F+)"}
                         </button>
                         <button
-                          onClick={() => setHouseSpec((prev) => ({ ...prev, hasBayTurret: !prev.hasBayTurret }))}
+                          onClick={() =>
+                            setHouseSpec((prev) => ({ ...prev, hasBayTurret: !prev.hasBayTurret }))
+                          }
                           className={`py-1 px-2 rounded border text-center font-semibold transition-all ${
                             houseSpec.hasBayTurret
                               ? "bg-orange-500/30 text-orange-300 border-orange-500/50 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.35)]"
@@ -743,7 +837,8 @@ function Scene3DPage() {
                     <div className="flex justify-between py-1 border-b border-border">
                       <span className="text-muted-foreground">Stormwater Pond:</span>
                       <span className="font-semibold text-sky-600">
-                        {subdivisionConfig.pondAcreage} Ac ({subdivisionConfig.pondRadiusFt}&apos; rad)
+                        {subdivisionConfig.pondAcreage} Ac ({subdivisionConfig.pondRadiusFt}&apos;
+                        rad)
                       </span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border">
@@ -862,8 +957,8 @@ function Scene3DPage() {
                         {subdivisionConfig.slopePct > 15
                           ? "Steep Slope (>15% Conservation)"
                           : subdivisionConfig.slopePct > 8
-                          ? "Moderate Slope (8-15%)"
-                          : "Gentle / Favorable (0-8%)"}
+                            ? "Moderate Slope (8-15%)"
+                            : "Gentle / Favorable (0-8%)"}
                       </span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-border">
@@ -968,7 +1063,8 @@ function Scene3DPage() {
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
                         <span className="text-muted-foreground block">Building Footprint:</span>
                         <span className="font-bold text-sm">
-                          {houseSpec.footprintWidthFt}&apos; W × {houseSpec.footprintDepthFt}&apos; D
+                          {houseSpec.footprintWidthFt}&apos; W × {houseSpec.footprintDepthFt}&apos;
+                          D
                         </span>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
@@ -985,7 +1081,9 @@ function Scene3DPage() {
                       </div>
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
                         <span className="text-muted-foreground block">Ridge Peak Elevation:</span>
-                        <span className="font-bold text-sm">{houseSpec.heightFt}&apos; Above Grade</span>
+                        <span className="font-bold text-sm">
+                          {houseSpec.heightFt}&apos; Above Grade
+                        </span>
                       </div>
                     </div>
 
@@ -1025,7 +1123,9 @@ function Scene3DPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
                         <span className="text-muted-foreground block">Gross Parcel Tract:</span>
-                        <span className="font-bold text-sm">{subdivisionConfig.grossAcres} Acres</span>
+                        <span className="font-bold text-sm">
+                          {subdivisionConfig.grossAcres} Acres
+                        </span>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
                         <span className="text-muted-foreground block">Platted Lot Count:</span>
@@ -1036,7 +1136,8 @@ function Scene3DPage() {
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
                         <span className="text-muted-foreground block">Central Pond Basin:</span>
                         <span className="font-bold text-sm text-primary">
-                          {subdivisionConfig.pondAcreage} Ac / {subdivisionConfig.pondRadiusFt}&apos;
+                          {subdivisionConfig.pondAcreage} Ac / {subdivisionConfig.pondRadiusFt}
+                          &apos;
                         </span>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
@@ -1051,12 +1152,15 @@ function Scene3DPage() {
                       <div className="flex justify-between py-1 border-b border-border">
                         <span className="text-muted-foreground">Paved Street Network:</span>
                         <span className="font-semibold">
-                          {subdivisionConfig.roadLengthLinearFt.toLocaleString()} LF (28&apos; Curb to Curb)
+                          {subdivisionConfig.roadLengthLinearFt.toLocaleString()} LF (28&apos; Curb
+                          to Curb)
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
                         <span className="text-muted-foreground">Sidewalks & Trails:</span>
-                        <span className="font-semibold">5&apos; Concrete + Pond Perimeter Loop</span>
+                        <span className="font-semibold">
+                          5&apos; Concrete + Pond Perimeter Loop
+                        </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
                         <span className="text-muted-foreground">Stormwater Management:</span>
@@ -1066,7 +1170,9 @@ function Scene3DPage() {
                       </div>
                       <div className="flex justify-between py-1">
                         <span className="text-muted-foreground">Community Amenities:</span>
-                        <span className="font-semibold">Aeration Fountain, Park Benches & Trail</span>
+                        <span className="font-semibold">
+                          Aeration Fountain, Park Benches & Trail
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -1244,7 +1350,8 @@ function Scene3DPage() {
                             Raw Land Acquisition:
                           </span>
                           <span className="text-[11px] text-muted-foreground">
-                            {subdivisionConfig.grossAcres} Acres @ {money(costBreakdown.landCostPerAcre)} / Ac
+                            {subdivisionConfig.grossAcres} Acres @{" "}
+                            {money(costBreakdown.landCostPerAcre)} / Ac
                           </span>
                         </div>
                         <span className="font-bold text-sm text-foreground">
@@ -1253,22 +1360,34 @@ function Scene3DPage() {
                       </div>
 
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Clearing, Earthwork & Grading:</span>
-                        <span className="font-semibold">{money(costBreakdown.earthworkGradingCost)}</span>
+                        <span className="text-muted-foreground">
+                          Clearing, Earthwork & Grading:
+                        </span>
+                        <span className="font-semibold">
+                          {money(costBreakdown.earthworkGradingCost)}
+                        </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Central Retention Pond & Fountain:</span>
+                        <span className="text-muted-foreground">
+                          Central Retention Pond & Fountain:
+                        </span>
                         <span className="font-semibold text-sky-600">
                           {money(costBreakdown.stormwaterPondCost)}
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Paved Streets & Asphalt Topping:</span>
-                        <span className="font-semibold">{money(costBreakdown.roadwayPavingCost)}</span>
+                        <span className="text-muted-foreground">
+                          Paved Streets & Asphalt Topping:
+                        </span>
+                        <span className="font-semibold">
+                          {money(costBreakdown.roadwayPavingCost)}
+                        </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
                         <span className="text-muted-foreground">Concrete Curbs & Sidewalks:</span>
-                        <span className="font-semibold">{money(costBreakdown.curbsAndSidewalksCost)}</span>
+                        <span className="font-semibold">
+                          {money(costBreakdown.curbsAndSidewalksCost)}
+                        </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
                         <span className="text-muted-foreground">Walking Trail Around Pond:</span>
@@ -1277,19 +1396,25 @@ function Scene3DPage() {
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Water, Sewer & Storm Infrastructure:</span>
+                        <span className="text-muted-foreground">
+                          Water, Sewer & Storm Infrastructure:
+                        </span>
                         <span className="font-semibold">
                           {money(costBreakdown.waterSewerInfrastructureCost)}
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Dry Utilities (Electric/Gas/Fiber):</span>
+                        <span className="text-muted-foreground">
+                          Dry Utilities (Electric/Gas/Fiber):
+                        </span>
                         <span className="font-semibold">
                           {money(costBreakdown.dryUtilitiesTrenchingCost)}
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Street Trees & Open Space Landscaping:</span>
+                        <span className="text-muted-foreground">
+                          Street Trees & Open Space Landscaping:
+                        </span>
                         <span className="font-semibold">
                           {money(costBreakdown.landscapingStreetTreesCost)}
                         </span>
@@ -1301,7 +1426,10 @@ function Scene3DPage() {
 
                       <div className="pt-2 flex justify-between py-1 font-semibold text-sky-600">
                         <span>Horizontal Civil Subtotal ({subdivisionConfig.totalLots} Lots):</span>
-                        <span>{money(costBreakdown.totalHorizontalCost)} ({money(costBreakdown.horizontalCostPerLot)}/lot)</span>
+                        <span>
+                          {money(costBreakdown.totalHorizontalCost)} (
+                          {money(costBreakdown.horizontalCostPerLot)}/lot)
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -1341,8 +1469,12 @@ function Scene3DPage() {
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Framing & Structural Envelope:</span>
-                        <span className="font-semibold">{money(costBreakdown.singleHomeFramingCost)}</span>
+                        <span className="text-muted-foreground">
+                          Framing & Structural Envelope:
+                        </span>
+                        <span className="font-semibold">
+                          {money(costBreakdown.singleHomeFramingCost)}
+                        </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
                         <span className="text-muted-foreground">Exterior Facade & Roofing:</span>
@@ -1357,8 +1489,12 @@ function Scene3DPage() {
                         </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Plumbing, HVAC & Electrical (MEP):</span>
-                        <span className="font-semibold">{money(costBreakdown.singleHomeMEPCost)}</span>
+                        <span className="text-muted-foreground">
+                          Plumbing, HVAC & Electrical (MEP):
+                        </span>
+                        <span className="font-semibold">
+                          {money(costBreakdown.singleHomeMEPCost)}
+                        </span>
                       </div>
 
                       <div className="pt-2 border-t border-border flex justify-between py-1 font-semibold text-foreground">

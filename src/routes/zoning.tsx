@@ -16,13 +16,29 @@ import {
 } from "@/lib/data/york-zoning";
 import type { County } from "@/lib/types";
 
-export const Route = createFileRoute("/zoning")({ component: Zoning });
+export interface ZoningSearch {
+  county?: string;
+  muni?: string;
+  q?: string;
+}
+
+export const Route = createFileRoute("/zoning")({
+  validateSearch: (search: Record<string, unknown>): ZoningSearch => ({
+    county: typeof search.county === "string" ? search.county : undefined,
+    muni: typeof search.muni === "string" ? search.muni : undefined,
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
+  component: Zoning,
+});
 
 function Zoning() {
-  const [q, setQ] = useState("");
-  const [muni, setMuni] = useState("All");
+  const search = Route.useSearch();
+  const [q, setQ] = useState(() => search.q || "");
+  const [muni, setMuni] = useState(() => search.muni || "All");
   const [gcode, setGcode] = useState("All");
-  const [county, setCounty] = useState<"All" | County>("York");
+  const [county, setCounty] = useState<"All" | County>(
+    () => (search.county as "All" | County) || "York",
+  );
 
   const gcodes = useMemo(() => {
     const set = new Set(YORK_ZONING_DISTRICTS.map((d) => d.gcode).filter(Boolean));

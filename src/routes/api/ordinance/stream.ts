@@ -24,15 +24,26 @@ export const Route = createFileRoute("/api/ordinance/stream")({
 
           return await streamOrdinanceAide(parsed.data, account);
         } catch (error: unknown) {
-          const err = error as { status?: number; name?: string; message?: string; retryAfterSeconds?: number };
+          const err = error as {
+            status?: number;
+            name?: string;
+            message?: string;
+            retryAfterSeconds?: number;
+          };
           if (err?.status === 401 || err?.name === "UnauthorizedError") {
             return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
           }
           if (err?.status === 402 || err?.name === "ProRequiredError") {
-            return Response.json({ ok: false, error: "A Pro subscription is required" }, { status: 402 });
+            return Response.json(
+              { ok: false, error: "A Pro subscription is required" },
+              { status: 402 },
+            );
           }
           if (err?.status === 403 || err?.name === "CrossSiteRequestError") {
-            return Response.json({ ok: false, error: "Forbidden: cross-site request blocked" }, { status: 403 });
+            return Response.json(
+              { ok: false, error: "Forbidden: cross-site request blocked" },
+              { status: 403 },
+            );
           }
           if (err?.status === 429 || err?.name === "RateLimitError") {
             return Response.json(

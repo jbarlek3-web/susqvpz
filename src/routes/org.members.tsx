@@ -74,9 +74,7 @@ function OrgMembers() {
                 {members.map((m) => (
                   <li key={m.userId} className="flex items-center justify-between py-2">
                     <span className="font-mono text-xs">{m.userId}</span>
-                    <Badge variant={m.role === "org:admin" ? "default" : "outline"}>
-                      {m.role}
-                    </Badge>
+                    <Badge variant={m.role === "org:admin" ? "default" : "outline"}>{m.role}</Badge>
                   </li>
                 ))}
               </ul>

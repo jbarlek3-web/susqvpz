@@ -1,15 +1,6 @@
 export type County = "York" | "Cumberland" | "Dauphin" | "Lancaster";
 
-export type ZoneCode =
-  | "C-1"
-  | "C-2"
-  | "R-1"
-  | "R-2"
-  | "I-1"
-  | "I-2"
-  | "A-1"
-  | "MU"
-  | "TOD";
+export type ZoneCode = "C-1" | "C-2" | "R-1" | "R-2" | "I-1" | "I-2" | "A-1" | "MU" | "TOD";
 
 export type ProjectStatus = "Lead" | "Due Diligence" | "Permitting" | "Approved";
 

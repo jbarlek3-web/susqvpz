@@ -27,7 +27,11 @@ function popupHtml(props: Record<string, string | number | null>) {
   const acres = typeof props.ACRES === "number" ? props.ACRES.toFixed(3) : esc(props.ACRES);
   const value =
     typeof props.APRTOTAL === "number"
-      ? props.APRTOTAL.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+      ? props.APRTOTAL.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        })
       : esc(props.APRTOTAL);
   return `
     <div class="min-w-48">

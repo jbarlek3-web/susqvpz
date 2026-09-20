@@ -11,6 +11,8 @@ try {
 } catch (error) {
   const message = error instanceof Error ? error.message : "Invalid production configuration";
   console.error(`[config] production build blocked: ${message}`);
-  console.error("[config] add the named variables in Vercel Settings → Environment Variables, then redeploy");
+  console.error(
+    "[config] add the named variables in Vercel Settings → Environment Variables, then redeploy",
+  );
   process.exit(1);
 }

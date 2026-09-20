@@ -31,8 +31,7 @@ export const YORK_ZONING = {
   source: "York County Planning Commission",
   layerUrl: "https://arcweb1.ycpc.org/server/rest/services/OPEN_DATA/Zoning/FeatureServer/0",
   mapUrl: "https://arcweb1.ycpc.org/server/rest/services/OPEN_DATA/Zoning/MapServer/0",
-  pasdaUrl:
-    "https://mapservices.pasda.psu.edu/server/rest/services/pasda/YorkCounty/MapServer/36",
+  pasdaUrl: "https://mapservices.pasda.psu.edu/server/rest/services/pasda/YorkCounty/MapServer/36",
   hubUrl: "https://york-county-pa-gis-portal-yorkcountypa.hub.arcgis.com/",
   minZoom: 12,
   fields: "MUNI_NAME,DISTRICT,ZCODE,ZNAME,ZTYPE,GEN_ZCODE,GEN_ZNAME,JOIN_FIELD,HTML_COLOR",

@@ -22,6 +22,7 @@ import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { lookupYorkAddress } from "@/lib/york-lookup";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { PARCELS } from "@/lib/data/parcels";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -39,6 +40,10 @@ function Home() {
         {/* Ambient top glow */}
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-[650px] rounded-full bg-gradient-to-b from-brand-lime/15 via-secondary/10 to-transparent blur-3xl" />
         <div className="relative mx-auto max-w-3xl text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-mono font-semibold text-cyan-700 dark:text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.15)]">
+            <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
+            <span>ENTERPRISE SAAS ENCLAVE · 4-COUNTY INTEL ACTIVE</span>
+          </div>
           <FieldAcqOrdinanceAideLogo className="mx-auto h-20 max-w-[300px]" />
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-secondary">
             Field intelligence for land and ordinance research
@@ -145,11 +150,11 @@ function Home() {
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Feature
             icon={Box}
-            title="3D Hyperrealistic Parcel Model"
-            badge="Live WebGL"
-            body="Inspect photorealistic 3D residential structures with architectural day/night lighting, real material textures, and measurement calipers."
+            title="Subdivision Underwriting & Costs Engine"
+            badge="Pro Forma"
+            body="Compute site improvements, earthwork, stormwater detention, and multi-story architectural spec costs with location-tied underwriting."
             href="/scene-3d"
-            cta="Launch 3D Viewer"
+            cta="Launch Costs Engine"
           />
           <Feature
             icon={Layers}
@@ -227,7 +232,9 @@ function Home() {
             </div>
             <p className="mt-1 text-sm text-muted-foreground">Billed annually at $120/year.</p>
             <Button asChild className="mt-4 w-full active-press">
-              <Link to="/subscription" preload="intent">Subscribe Now</Link>
+              <Link to="/subscription" preload="intent">
+                Subscribe Now
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -247,18 +254,62 @@ function Stat({ n, l }: { n: string; l: string }) {
 
 function CountyCard({ name, blurb, to }: { name: string; blurb: string; to: string }) {
   const setCounty = useHub((s) => s.setCounty);
+  const countyCode = name.toUpperCase().slice(0, 3);
   return (
-    <Link
-      to={to}
-      preload="intent"
-      onClick={() => setCounty(name as County)}
-      className="interactive-card active-press block rounded-xl border border-outline-variant/80 bg-card/90 p-4 transition-all hover:border-brand-teal hover:shadow-md"
-    >
-      <div className="flex items-center gap-2 font-semibold">
-        <MapIcon className="size-4 text-primary" /> {name}
+    <div className="cyber-card group p-4 flex flex-col justify-between transition-all hover:border-cyan-500/50">
+      <div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-foreground">
+            <MapIcon className="size-4 text-cyan-600 dark:text-cyan-400" />
+            <span>{name} County</span>
+          </div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+            {countyCode} · INTEL
+          </span>
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{blurb}</p>
       </div>
-      <p className="mt-2 text-sm leading-snug text-muted-foreground">{blurb}</p>
-    </Link>
+
+      <div className="mt-4 flex flex-wrap items-center gap-1.5 pt-3 border-t border-border/50">
+        <Link
+          to={to}
+          preload="intent"
+          onClick={() => setCounty(name as County)}
+          className="px-2 py-1 rounded text-[11px] font-semibold bg-muted hover:bg-primary hover:text-primary-foreground transition-all active:scale-95"
+        >
+          GIS Map
+        </Link>
+        <Link
+          to="/scene-3d"
+          preload="intent"
+          search={{
+            parcelId: PARCELS.find((p) => p.county.toLowerCase() === name.toLowerCase())?.id,
+          }}
+          onClick={() => setCounty(name as County)}
+          className="px-2 py-1 rounded text-[11px] font-semibold bg-muted hover:bg-secondary hover:text-secondary-foreground transition-all active:scale-95"
+        >
+          Costs
+        </Link>
+        <Link
+          to="/aide"
+          preload="intent"
+          search={{ county: name }}
+          onClick={() => setCounty(name as County)}
+          className="px-2 py-1 rounded text-[11px] font-semibold bg-muted hover:bg-primary-container hover:text-white transition-all active:scale-95"
+        >
+          AI
+        </Link>
+        <Link
+          to="/directory"
+          preload="intent"
+          search={{ county: name, tab: "counties" }}
+          onClick={() => setCounty(name as County)}
+          className="px-2 py-1 rounded text-[11px] font-semibold bg-muted hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
+        >
+          Docs
+        </Link>
+      </div>
+    </div>
   );
 }
 

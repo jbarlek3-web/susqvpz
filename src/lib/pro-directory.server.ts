@@ -44,6 +44,6 @@ export function municipalityDirectory(): MunicipalityDirectoryPayload {
 export function municipalDocuments(): MunicipalDocumentPayload {
   return {
     source: "Field ACQ Ordinance Aide",
-    records: municipalDocumentRows as unknown as MunicipalDocumentPayload["records"]
+    records: municipalDocumentRows as unknown as MunicipalDocumentPayload["records"],
   };
 }

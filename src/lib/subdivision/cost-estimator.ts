@@ -48,7 +48,7 @@ export function calculateDevelopmentCost(
     customRawLandCost?: number;
     customTargetSalePrice?: number;
     customFinishTier?: "standard" | "upgraded" | "luxury";
-  }
+  },
 ): CostBreakdown {
   const countyInfo = COUNTY_COST_FACTORS[subdivision.county] ?? COUNTY_COST_FACTORS.York;
   const loc = countyInfo.multiplier;
@@ -73,17 +73,17 @@ export function calculateDevelopmentCost(
     subdivision.karstRisk === "High"
       ? 95_000
       : subdivision.karstRisk === "Moderate"
-      ? 55_000
-      : 18_000;
+        ? 55_000
+        : 18_000;
 
   // 4. Horizontal Civil Site Work Costs
   const earthworkGradingCost = Math.round(
-    subdivision.grossAcres * 11_500 * slopeEarthworkMultiplier * loc
+    subdivision.grossAcres * 11_500 * slopeEarthworkMultiplier * loc,
   );
 
   // Central Stormwater Retention Pond (Excavation, liner, concrete spillway, aerator fountain, littoral shelf)
   const basePondCost = Math.round(
-    (subdivision.pondAcreage * 125_000 + karstLinerCost + 28_000) * loc
+    (subdivision.pondAcreage * 125_000 + karstLinerCost + 28_000) * loc,
   );
   const stormwaterPondCost = Math.max(135_000, basePondCost);
 
@@ -97,12 +97,12 @@ export function calculateDevelopmentCost(
 
   // Central Walking Trail circling the pond + Park Benches + Overlook Deck
   const walkingTrailAndAmenitiesCost = Math.round(
-    (subdivision.pondRadiusFt * 2 * Math.PI * 45 + 32_000) * loc
+    (subdivision.pondRadiusFt * 2 * Math.PI * 45 + 32_000) * loc,
   );
 
   // Wet Utilities: Water distribution main ($95/LF) + Sanitary sewer ($140/LF) + Storm drainage RC pipe ($155/LF)
   const waterSewerInfrastructureCost = Math.round(
-    subdivision.roadLengthLinearFt * (95 + 140 + 155) * loc
+    subdivision.roadLengthLinearFt * (95 + 140 + 155) * loc,
   );
 
   // Dry Utilities: Underground electric (PPL/Met-Ed), gas (UGI/Columbia), telecom fiber ($75/LF)
@@ -111,12 +111,12 @@ export function calculateDevelopmentCost(
   // Landscaping: Street trees (1 per 40ft per PA SALDO), sodding, pond emergent wetland plants, perimeter buffer
   const streetTreeCount = Math.max(12, Math.round(subdivision.roadLengthLinearFt / 40));
   const landscapingStreetTreesCost = Math.round(
-    (streetTreeCount * 650 + subdivision.grossAcres * 4_200 + 25_000) * loc
+    (streetTreeCount * 650 + subdivision.grossAcres * 4_200 + 25_000) * loc,
   );
 
   // Civil Engineering, PA DEP NPDES Phase II, E&S plan, PennDOT HOP, and municipal escrow
   const civilEngineeringAndPermitsCost = Math.round(
-    (85_000 + subdivision.totalLots * 3_200) * countyInfo.permitFeeFactor * loc
+    (85_000 + subdivision.totalLots * 3_200) * countyInfo.permitFeeFactor * loc,
   );
 
   const totalHorizontalCost =
@@ -135,9 +135,12 @@ export function calculateDevelopmentCost(
   // 5. Vertical Spec Home Construction
   // Base cost per sqft by story count
   let baseSqftCost = 155;
-  if (spec.stories === 1) baseSqftCost = 168; // High roof-to-floor ratio
-  else if (spec.stories === 2) baseSqftCost = 152; // Optimum two-story framing efficiency
-  else if (spec.stories === 3) baseSqftCost = 172; // Structural reinforcement, upper hoisting
+  if (spec.stories === 1)
+    baseSqftCost = 168; // High roof-to-floor ratio
+  else if (spec.stories === 2)
+    baseSqftCost = 152; // Optimum two-story framing efficiency
+  else if (spec.stories === 3)
+    baseSqftCost = 172; // Structural reinforcement, upper hoisting
   else if (spec.stories === 4) baseSqftCost = 192; // Engineered timber/steel headers, high-load MEP
 
   // Exterior facade adders
@@ -171,15 +174,18 @@ export function calculateDevelopmentCost(
   const _netSqftRate = Math.round((baseSqftCost + facadeAdder + roofAdder + interiorAdder) * loc);
 
   const singleHomeFoundationCost = Math.round(
-    (spec.sqftPerStory * 38 + (spec.stories > 2 ? 8_000 : 0)) * loc
+    (spec.sqftPerStory * 38 + (spec.stories > 2 ? 8_000 : 0)) * loc,
   );
   const singleHomeFramingCost = Math.round(spec.totalSqft * 48 * loc);
   const singleHomeExteriorFinishesCost = Math.round(
-    (spec.totalSqft * (22 + facadeAdder + roofAdder) + garageCost + porchCost + balconyCost + turretCost) * loc
+    (spec.totalSqft * (22 + facadeAdder + roofAdder) +
+      garageCost +
+      porchCost +
+      balconyCost +
+      turretCost) *
+      loc,
   );
-  const singleHomeInteriorFinishesCost = Math.round(
-    spec.totalSqft * (32 + interiorAdder) * loc
-  );
+  const singleHomeInteriorFinishesCost = Math.round(spec.totalSqft * (32 + interiorAdder) * loc);
   const singleHomeMEPCost = Math.round(spec.totalSqft * 34 * loc);
 
   const singleHomeTotalCost =
@@ -207,25 +213,27 @@ export function calculateDevelopmentCost(
     const finishBonus = tier === "luxury" ? 55_000 : tier === "upgraded" ? 22_000 : 0;
     const pondViewBonus = 25_000; // Premium for central subdivision retention pond views
     projectedSalePricePerHome = Math.round(
-      baselineComp + sqftAdjustment + storyBonus + finishBonus + pondViewBonus
+      baselineComp + sqftAdjustment + storyBonus + finishBonus + pondViewBonus,
     );
   }
 
   const grossDevelopmentValue = projectedSalePricePerHome * subdivision.totalLots;
   const netDeveloperProfit = grossDevelopmentValue - totalDevelopmentCost;
   const developerMarginPct = Number(
-    ((netDeveloperProfit / Math.max(1, grossDevelopmentValue)) * 100).toFixed(1)
+    ((netDeveloperProfit / Math.max(1, grossDevelopmentValue)) * 100).toFixed(1),
   );
   const returnOnCostPct = Number(
-    ((netDeveloperProfit / Math.max(1, totalDevelopmentCost)) * 100).toFixed(1)
+    ((netDeveloperProfit / Math.max(1, totalDevelopmentCost)) * 100).toFixed(1),
   );
 
   // Standard underwriting: 65% Construction Loan-to-Cost (LTC), 35% Equity
   const equityRequired = Math.round(totalDevelopmentCost * 0.35);
   const equityMultiple = Number(
-    ((netDeveloperProfit + equityRequired) / Math.max(1, equityRequired)).toFixed(2)
+    ((netDeveloperProfit + equityRequired) / Math.max(1, equityRequired)).toFixed(2),
   );
-  const breakevenPricePerHome = Math.round(totalDevelopmentCost / Math.max(1, subdivision.totalLots));
+  const breakevenPricePerHome = Math.round(
+    totalDevelopmentCost / Math.max(1, subdivision.totalLots),
+  );
 
   return {
     locationFactor: loc,

@@ -17,7 +17,12 @@ class MockPGlite {
       const key = `${userId}:${periodStart}`;
       const existing = this.usage.get(key);
       if (!existing) {
-        const row = { user_id: userId, period_start: periodStart, included_used: 1, purchased_used: 0 };
+        const row = {
+          user_id: userId,
+          period_start: periodStart,
+          included_used: 1,
+          purchased_used: 0,
+        };
         this.usage.set(key, row);
         return { rows: [{ included_used: 1 }] };
       }
@@ -30,7 +35,8 @@ class MockPGlite {
     if (s.startsWith("insert into ai_credit_accounts")) {
       const [userId, balanceParam] = params;
       const match = s.match(/values\s*\(\s*\$1\s*,\s*(\d+)\s*\)/i);
-      const balance = balanceParam !== undefined ? Number(balanceParam) : (match ? Number(match[1]) : 1);
+      const balance =
+        balanceParam !== undefined ? Number(balanceParam) : match ? Number(match[1]) : 1;
       this.accounts.set(userId, { user_id: userId, purchased_balance: balance });
       return { rows: [] };
     }
@@ -44,13 +50,20 @@ class MockPGlite {
       const key = `${userId}:${periodStart}`;
       let usageRow = this.usage.get(key);
       if (!usageRow) {
-        usageRow = { user_id: userId, period_start: periodStart, included_used: 0, purchased_used: 1 };
+        usageRow = {
+          user_id: userId,
+          period_start: periodStart,
+          included_used: 0,
+          purchased_used: 1,
+        };
         this.usage.set(key, usageRow);
       } else {
         usageRow.purchased_used += 1;
       }
       return {
-        rows: [{ included_used: usageRow.included_used, purchased_balance: account.purchased_balance }],
+        rows: [
+          { included_used: usageRow.included_used, purchased_balance: account.purchased_balance },
+        ],
       };
     }
     if (s.includes("update ai_credit_accounts") && s.includes("purchased_balance + 1")) {
@@ -84,7 +97,9 @@ class MockPGlite {
       const [userId] = params;
       for (const row of this.usage.values()) {
         if (row.user_id === userId) {
-          return { rows: [{ included_used: row.included_used, purchased_used: row.purchased_used }] };
+          return {
+            rows: [{ included_used: row.included_used, purchased_used: row.purchased_used }],
+          };
         }
       }
       return { rows: [] };

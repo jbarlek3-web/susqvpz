@@ -15,7 +15,10 @@ test("dynamic responses override upstream caching with no-store", () => {
   assert.ok(secureFunction, "secure response function was not found");
   assert.match(secureFunction, /headers\.set\("cache-control", "no-store"\)/);
   assert.match(secureFunction, /headers\.set\("x-content-type-options", "nosniff"\)/);
-  assert.match(secureFunction, /headers\.set\("strict-transport-security", "max-age=31536000; includeSubDomains"\)/);
+  assert.match(
+    secureFunction,
+    /headers\.set\("strict-transport-security", "max-age=31536000; includeSubDomains"\)/,
+  );
 });
 
 test("CSP permits reviewed GIS and Clerk Billing origins without a broad connect allowlist", () => {

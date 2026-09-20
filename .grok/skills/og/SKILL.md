@@ -39,7 +39,7 @@ replaces them — and dropping the favicon link ships a blank tab icon that
 ## Decide: which card this app gets
 
 **Default: a custom card** from the app's own art — games of every kind and
-rendering tech (Canvas/WebGL *and* DOM board, card, word, puzzle, quiz: a
+rendering tech (Canvas/WebGL _and_ DOM board, card, word, puzzle, quiz: a
 tic-tac-toe grid of divs is still a game), whimsical and toy apps, creative tools,
 content- and brand-forward pages. **When in doubt, make the custom card.**
 
@@ -87,7 +87,7 @@ user is art-directing or the art to reuse doesn't exist yet.
   never invent a manifest just to have icons): `references/favicon-and-icons.md`.
 
 Regenerate the card when the visual identity materially changes, and on rename — the
-title is baked into the pixels *and* into `site.json`, so update `APP_NAME`,
+title is baked into the pixels _and_ into `site.json`, so update `APP_NAME`,
 `site.json` `title`, and regenerate (a titleless card survives a rename). With neither
 `imagine_text_to_image` nor the xAI Images API available, fall back to the `og.grok.me`
 card; never ship a missing or broken `og:image` URL.

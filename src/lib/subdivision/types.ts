@@ -1,6 +1,7 @@
 import type { County } from "../types.ts";
 
-export type ArchitectureStyle = "craftsman" | "colonial" | "modernFarmhouse" | "contemporary" | "european";
+export type ArchitectureStyle =
+  "craftsman" | "colonial" | "modernFarmhouse" | "contemporary" | "european";
 export type FacadeMaterial = "brick" | "stone" | "siding" | "boardAndBatten" | "stucco";
 export type RoofMaterial = "shingle" | "slate" | "standingSeam";
 export type InteriorFlooring = "oak" | "herringbone" | "walnut" | "tile" | "lvp";

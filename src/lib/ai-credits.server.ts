@@ -1,7 +1,8 @@
 import { getAiUsagePeriod, parseAiMonthlyAllowance } from "@/lib/ai-credit-policy";
 import { getSql } from "@/lib/db";
 
-export type AiDebitSource = "included" | "purchased" | "org-included" | "org-purchased" | "user-included" | "user-purchased";
+export type AiDebitSource =
+  "included" | "purchased" | "org-included" | "org-purchased" | "user-included" | "user-purchased";
 
 export type AiUsage = {
   includedLimit: number;
@@ -40,13 +41,20 @@ function usageView(row: UsageRow, resetsAt: string, debitedSource?: AiDebitSourc
   };
 }
 
-async function getUsageForId(id: string, isOrg: boolean, periodStart: string, resetsAt: string): Promise<AiUsage> {
+async function getUsageForId(
+  id: string,
+  isOrg: boolean,
+  periodStart: string,
+  resetsAt: string,
+): Promise<AiUsage> {
   const sql = await getSql();
-  const rows = isOrg ? await sql<UsageRow>`
+  const rows = isOrg
+    ? await sql<UsageRow>`
     select
       coalesce((select included_used from ai_usage_periods where organization_id = ${id} and period_start = ${periodStart}::date), 0)::integer as included_used,
       coalesce((select purchased_balance from ai_credit_accounts where organization_id = ${id}), 0)::integer as purchased_balance
-  ` : await sql<UsageRow>`
+  `
+    : await sql<UsageRow>`
     select
       coalesce((select included_used from ai_usage_periods where user_id = ${id} and period_start = ${periodStart}::date), 0)::integer as included_used,
       coalesce((select purchased_balance from ai_credit_accounts where user_id = ${id}), 0)::integer as purchased_balance
@@ -68,18 +76,25 @@ export async function getAiUsage(account: AccountId): Promise<AiUsage> {
   return getUsageForId(account.userId, false, periodStart, resetsAt);
 }
 
-async function consumeSingle(id: string, isOrg: boolean, periodStart: string, resetsAt: string): Promise<AiUsage | null> {
+async function consumeSingle(
+  id: string,
+  isOrg: boolean,
+  periodStart: string,
+  resetsAt: string,
+): Promise<AiUsage | null> {
   const includedLimit = monthlyLimit();
   const sql = await getSql();
 
-  const included = isOrg ? await sql<{ included_used: number }>`
+  const included = isOrg
+    ? await sql<{ included_used: number }>`
     insert into ai_usage_periods (organization_id, period_start, included_used)
     values (${id}, ${periodStart}::date, 1)
     on conflict (organization_id, period_start)
     do update set included_used = ai_usage_periods.included_used + 1, updated_at = now()
     where ai_usage_periods.included_used < ${includedLimit}
     returning included_used
-  ` : await sql<{ included_used: number }>`
+  `
+    : await sql<{ included_used: number }>`
     insert into ai_usage_periods (user_id, period_start, included_used)
     values (${id}, ${periodStart}::date, 1)
     on conflict (user_id, period_start)
@@ -88,9 +103,11 @@ async function consumeSingle(id: string, isOrg: boolean, periodStart: string, re
     returning included_used
   `;
   if (included[0]) {
-    const credits = isOrg ? await sql<{ purchased_balance: number }>`
+    const credits = isOrg
+      ? await sql<{ purchased_balance: number }>`
       select purchased_balance from ai_credit_accounts where organization_id = ${id}
-    ` : await sql<{ purchased_balance: number }>`
+    `
+      : await sql<{ purchased_balance: number }>`
       select purchased_balance from ai_credit_accounts where user_id = ${id}
     `;
     return usageView(
@@ -103,7 +120,8 @@ async function consumeSingle(id: string, isOrg: boolean, periodStart: string, re
     );
   }
 
-  const purchased = isOrg ? await sql<UsageRow>`
+  const purchased = isOrg
+    ? await sql<UsageRow>`
     with debit as (
       update ai_credit_accounts
       set purchased_balance = purchased_balance - 1, updated_at = now()
@@ -117,7 +135,8 @@ async function consumeSingle(id: string, isOrg: boolean, periodStart: string, re
       returning included_used
     )
     select usage.included_used, debit.purchased_balance from usage cross join debit
-  ` : await sql<UsageRow>`
+  `
+    : await sql<UsageRow>`
     with debit as (
       update ai_credit_accounts
       set purchased_balance = purchased_balance - 1, updated_at = now()
@@ -132,7 +151,9 @@ async function consumeSingle(id: string, isOrg: boolean, periodStart: string, re
     )
     select usage.included_used, debit.purchased_balance from usage cross join debit
   `;
-  return purchased[0] ? usageView(purchased[0], resetsAt, isOrg ? "org-purchased" : "user-purchased") : null;
+  return purchased[0]
+    ? usageView(purchased[0], resetsAt, isOrg ? "org-purchased" : "user-purchased")
+    : null;
 }
 
 export async function consumeAiQuestion(account: AccountId): Promise<AiUsage | null> {
@@ -142,7 +163,7 @@ export async function consumeAiQuestion(account: AccountId): Promise<AiUsage | n
     const orgResult = await consumeSingle(account.organizationId, true, periodStart, resetsAt);
     if (orgResult) return orgResult;
   }
-  
+
   return consumeSingle(account.userId, false, periodStart, resetsAt);
 }
 
@@ -167,8 +188,14 @@ export async function refundAiQuestion(
     isOrg = !!account.organizationId;
   }
 
-  const isPurchased = debitedSource === "purchased" || debitedSource === "org-purchased" || debitedSource === "user-purchased";
-  const isIncluded = debitedSource === "included" || debitedSource === "org-included" || debitedSource === "user-included";
+  const isPurchased =
+    debitedSource === "purchased" ||
+    debitedSource === "org-purchased" ||
+    debitedSource === "user-purchased";
+  const isIncluded =
+    debitedSource === "included" ||
+    debitedSource === "org-included" ||
+    debitedSource === "user-included";
 
   if (isPurchased) {
     if (isOrg) {
@@ -215,10 +242,12 @@ export async function refundAiQuestion(
   }
 
   // Fallback when debitedSource is not supplied: determine whether purchased was consumed
-  const rows = isOrg ? await sql<{ included_used: number; purchased_used: number }>`
+  const rows = isOrg
+    ? await sql<{ included_used: number; purchased_used: number }>`
     select included_used, purchased_used from ai_usage_periods
     where organization_id = ${id} and period_start = ${periodStart}::date
-  ` : await sql<{ included_used: number; purchased_used: number }>`
+  `
+    : await sql<{ included_used: number; purchased_used: number }>`
     select included_used, purchased_used from ai_usage_periods
     where user_id = ${id} and period_start = ${periodStart}::date
   `;

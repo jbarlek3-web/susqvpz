@@ -2,14 +2,33 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/app-shell";
 import { MapPanel, MapToolbar } from "@/components/map/map-panel";
 import { ParcelMap } from "@/components/map/parcel-map";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
+import { useHub } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/map")({ component: MapPage });
+export interface MapSearch {
+  parcelId?: string;
+}
+
+export const Route = createFileRoute("/map")({
+  validateSearch: (search: Record<string, unknown>): MapSearch => ({
+    parcelId: typeof search.parcelId === "string" ? search.parcelId : undefined,
+  }),
+  component: MapPage,
+});
 
 function MapPage() {
+  const search = Route.useSearch();
+  const selectParcel = useHub((s) => s.selectParcel);
+
+  useEffect(() => {
+    if (search.parcelId) {
+      selectParcel(search.parcelId);
+    }
+  }, [search.parcelId, selectParcel]);
+
   const [panel, setPanel] = useState(true);
   return (
     <AppShell fullBleed>

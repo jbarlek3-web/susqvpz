@@ -49,11 +49,12 @@ export function assertProductionConfig() {
     "GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY",
   ] as const;
   const configuredDriveVariables = driveVariables.filter((key) => process.env[key]?.trim());
-  if (configuredDriveVariables.length > 0 && configuredDriveVariables.length < driveVariables.length) {
+  if (
+    configuredDriveVariables.length > 0 &&
+    configuredDriveVariables.length < driveVariables.length
+  ) {
     const missingDriveVariables = driveVariables.filter((key) => !process.env[key]?.trim());
-    throw new Error(
-      `Incomplete Google Drive configuration: ${missingDriveVariables.join(", ")}`,
-    );
+    throw new Error(`Incomplete Google Drive configuration: ${missingDriveVariables.join(", ")}`);
   }
   if (configuredDriveVariables.length === driveVariables.length) {
     const driveKey = process.env.GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY!;

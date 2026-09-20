@@ -113,7 +113,8 @@ export const ZONING_CODES = [
     county: "Dauphin" as const,
     municipality: "Derry Township",
     section: "§ 225-14 — C-1 Neighborhood Commercial",
-    summary: "Small-scale retail serving adjacent residential. Hours of operation limited after 10 p.m.",
+    summary:
+      "Small-scale retail serving adjacent residential. Hours of operation limited after 10 p.m.",
     height: 35,
     minLot: 15000,
     front: 30,
