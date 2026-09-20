@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateDevelopmentCost } from "./subdivision/cost-estimator.ts";
+import { calculateDevelopmentCost, calculateRenovationCost } from "./subdivision/cost-estimator.ts";
 import {
   createCustomSubdivision,
   parcelToSubdivisionConfig,
@@ -229,3 +229,50 @@ test("finish tiers adjust vertical spec interior cost appropriately", () => {
     upgradedCost.singleHomeInteriorFinishesCost < luxuryCost.singleHomeInteriorFinishesCost,
   );
 });
+
+test("builder tiers model public production SEC 10-K bulk advantages vs custom builders", () => {
+  const sub = createCustomSubdivision("Builder Tier Tract", "Cumberland", "Hampden", 10);
+
+  const publicCost = calculateDevelopmentCost(sub, BASE_SPEC, { builderTier: "publicProduction" });
+  const regionalCost = calculateDevelopmentCost(sub, BASE_SPEC, { builderTier: "regionalSemiCustom" });
+  const customCost = calculateDevelopmentCost(sub, BASE_SPEC, { builderTier: "customArchitectural" });
+
+  // Public production should be lowest hard cost due to 15-25% mill discounts and panelized plant prefabrication
+  assert.ok(publicCost.singleHomeTotalCost < regionalCost.singleHomeTotalCost);
+  assert.ok(regionalCost.singleHomeTotalCost < customCost.singleHomeTotalCost);
+
+  // Per sqft hard costs align with SEC 10-K benchmarks ($75-$95 for public vs $210+ for custom)
+  assert.ok(publicCost.singleHomeCostPerSqft < regionalCost.singleHomeCostPerSqft);
+  assert.ok(regionalCost.singleHomeCostPerSqft < customCost.singleHomeCostPerSqft);
+
+  // Equity multiple and margins adjust realistically
+  assert.ok(publicCost.totalDevelopmentCost < customCost.totalDevelopmentCost);
+});
+
+test("renovation cost engine accurately computes trade breakdowns across scopes and counties", () => {
+  const cosmetic = calculateRenovationCost(2000, "York", "cosmetic");
+  const moderate = calculateRenovationCost(2000, "York", "moderate");
+  const fullGut = calculateRenovationCost(2000, "York", "fullGut");
+
+  // Scopes escalate logically
+  assert.ok(cosmetic.costPerSqft < moderate.costPerSqft);
+  assert.ok(moderate.costPerSqft < fullGut.costPerSqft);
+  assert.ok(cosmetic.totalRenovationCost < moderate.totalRenovationCost);
+  assert.ok(moderate.totalRenovationCost < fullGut.totalRenovationCost);
+
+  // Trade breakdown items must sum up to the total renovation cost (within rounding tolerance)
+  const sumTrades =
+    moderate.demolitionCost +
+    moderate.mechanicalElectricalPlumbingCost +
+    moderate.drywallAndInsulationCost +
+    moderate.finishesAndFlooringCost +
+    moderate.kitchenAndBathCost +
+    moderate.permitsAndContingencyCost;
+  assert.ok(Math.abs(sumTrades - moderate.totalRenovationCost) <= 6);
+
+  // Regional county cost index scaling
+  const yorkGut = calculateRenovationCost(2500, "York", "fullGut");
+  const lancasterGut = calculateRenovationCost(2500, "Lancaster", "fullGut");
+  assert.ok(lancasterGut.totalRenovationCost > yorkGut.totalRenovationCost);
+});
+

@@ -82,9 +82,29 @@ export interface SubdivisionConfig {
   };
 }
 
+export type BuilderTier = "publicProduction" | "regionalSemiCustom" | "customArchitectural";
+
+export type RenovationScope = "cosmetic" | "moderate" | "fullGut";
+
+export interface RenovationBreakdown {
+  scope: RenovationScope;
+  scopeName: string;
+  costPerSqft: number;
+  totalRenovationCost: number;
+  demolitionCost: number;
+  mechanicalElectricalPlumbingCost: number;
+  drywallAndInsulationCost: number;
+  finishesAndFlooringCost: number;
+  kitchenAndBathCost: number;
+  permitsAndContingencyCost: number;
+}
+
 export interface CostBreakdown {
   locationFactor: number;
   locationName: string;
+  builderTier?: BuilderTier;
+  builderTierName?: string;
+  renovation?: RenovationBreakdown;
   // Land
   landAcquisitionCost: number;
   landCostPerAcre: number;

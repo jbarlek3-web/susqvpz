@@ -20,6 +20,9 @@ import {
   Palette,
   Sliders,
   Compass,
+  Hammer,
+  Sparkles,
+  Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,15 +34,22 @@ import { usePersistentDraft } from "@/lib/hooks/use-persistent-draft";
 import { DataProtectionBadge } from "@/components/ui/data-protection-badge";
 import { useHub } from "@/lib/store";
 import { PARCELS } from "@/lib/data/parcels";
-import { calculateDevelopmentCost } from "@/lib/subdivision/cost-estimator";
+import {
+  BUILDER_TIER_DETAILS,
+  calculateDevelopmentCost,
+  calculateRenovationCost,
+} from "@/lib/subdivision/cost-estimator";
 import { resolveAddressOrParcel } from "@/lib/subdivision/address-resolver";
 import type {
   ArchitectureStyle,
+  BuilderTier,
   CostBreakdown,
   FacadeMaterial,
   HouseDesignSpec,
   InteriorFlooring,
   InteriorWallColor,
+  RenovationBreakdown,
+  RenovationScope,
   RoofMaterial,
   StudioViewLevel,
 } from "@/lib/subdivision/types";
@@ -143,42 +153,74 @@ function Scene3DPage() {
     resetToDefault: resetUnderwriteDraft,
   } = usePersistentDraft<{
     finishTier: "standard" | "upgraded" | "luxury";
+    builderTier: BuilderTier;
     targetSalePrice: number;
     landCostPerAcre: number;
+    projectCostMode: "subdivision" | "renovation";
+    renovationScope: RenovationScope;
+    renovationSqft: number;
   }>(
-    `scene3d_underwriting_v1_${selectedParcelId}`,
+    `scene3d_underwriting_v2_${selectedParcelId}`,
     {
       finishTier: "upgraded",
+      builderTier: "regionalSemiCustom",
       targetSalePrice: 0,
       landCostPerAcre: 0,
+      projectCostMode: "subdivision",
+      renovationScope: "moderate",
+      renovationSqft: 2400,
     },
     { enableBeforeUnloadWarn: true },
   );
 
-  const customFinishTier = underwriteDraft.finishTier;
-  const customTargetSalePrice = underwriteDraft.targetSalePrice;
-  const customLandCostPerAcre = underwriteDraft.landCostPerAcre;
+  const customFinishTier = underwriteDraft.finishTier ?? "upgraded";
+  const customBuilderTier = underwriteDraft.builderTier ?? "regionalSemiCustom";
+  const customTargetSalePrice = underwriteDraft.targetSalePrice ?? 0;
+  const customLandCostPerAcre = underwriteDraft.landCostPerAcre ?? 0;
+  const projectCostMode = underwriteDraft.projectCostMode ?? "subdivision";
+  const renovationScope = underwriteDraft.renovationScope ?? "moderate";
+  const renovationSqft = underwriteDraft.renovationSqft ?? 2400;
 
   const setCustomFinishTier = (tier: "standard" | "upgraded" | "luxury") =>
     setUnderwriteDraft((prev) => ({ ...prev, finishTier: tier }));
+  const setCustomBuilderTier = (tier: BuilderTier) =>
+    setUnderwriteDraft((prev) => ({ ...prev, builderTier: tier }));
   const setCustomTargetSalePrice = (price: number) =>
     setUnderwriteDraft((prev) => ({ ...prev, targetSalePrice: price }));
   const setCustomLandCostPerAcre = (cost: number) =>
     setUnderwriteDraft((prev) => ({ ...prev, landCostPerAcre: cost }));
+  const setProjectCostMode = (mode: "subdivision" | "renovation") =>
+    setUnderwriteDraft((prev) => ({ ...prev, projectCostMode: mode }));
+  const setRenovationScope = (scope: RenovationScope) =>
+    setUnderwriteDraft((prev) => ({ ...prev, renovationScope: scope }));
+  const setRenovationSqft = (sqft: number) =>
+    setUnderwriteDraft((prev) => ({ ...prev, renovationSqft: sqft }));
 
   const costBreakdown: CostBreakdown = useMemo(() => {
     return calculateDevelopmentCost(subdivisionConfig, houseSpec, {
       customTargetSalePrice: customTargetSalePrice > 0 ? customTargetSalePrice : undefined,
       customRawLandCost: customLandCostPerAcre > 0 ? customLandCostPerAcre : undefined,
       customFinishTier,
+      builderTier: customBuilderTier,
+      renovationScope,
     });
   }, [
     subdivisionConfig,
     houseSpec,
     customFinishTier,
+    customBuilderTier,
+    renovationScope,
     customTargetSalePrice,
     customLandCostPerAcre,
   ]);
+
+  const renovationBreakdown: RenovationBreakdown = useMemo(() => {
+    return calculateRenovationCost(
+      renovationSqft > 0 ? renovationSqft : houseSpec.totalSqft,
+      subdivisionConfig.county,
+      renovationScope,
+    );
+  }, [renovationSqft, houseSpec.totalSqft, subdivisionConfig.county, renovationScope]);
 
   // Height & Zoning Checks
   const isHeightExceeded = houseSpec.heightFt > subdivisionConfig.maxZoningHeight;
@@ -221,7 +263,11 @@ function Scene3DPage() {
         interiorFlooring: houseSpec.flooring,
         interiorWallPalette: houseSpec.wallColor,
       },
-      underwritingAndCostEngine: costBreakdown,
+      underwritingAndCostEngine: {
+        ...costBreakdown,
+        builderTier: customBuilderTier,
+        renovationEstimator: renovationBreakdown,
+      },
     };
 
     const blob = new Blob([JSON.stringify(reportData, null, 2)], {
@@ -1196,347 +1242,751 @@ function Scene3DPage() {
             {/* TAB 4: COST ESTIMATOR & UNDERWRITING ENGINE */}
             {activeTab === "UnderwritingCost" && (
               <div className="flex flex-col gap-4">
+                {/* Mode Selector & Location Banner */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-xl bg-card border border-border">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setProjectCostMode("subdivision")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
+                        projectCostMode === "subdivision"
+                          ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                          : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-orange-400" />
+                      <span>New Subdivision Land Development</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setProjectCostMode("renovation")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
+                        projectCostMode === "renovation"
+                          ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                          : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Hammer className="w-3.5 h-3.5 text-orange-400" />
+                      <span>Existing Home Renovation & Remodel</span>
+                    </button>
+                  </div>
+
+                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                    {costBreakdown.locationName}
+                  </Badge>
+                </div>
+
                 {/* Underwriting Sensitivity & Assumptions Panel */}
                 <Card className="shadow-sm border-primary/20 bg-card/60 backdrop-blur-sm">
                   <CardHeader className="pb-2.5">
                     <CardTitle className="text-sm flex items-center justify-between">
                       <span className="flex items-center gap-1.5 text-primary">
                         <Sliders className="w-4 h-4" />
-                        Underwriting Assumptions & Sensitivity Model
+                        Underwriting Assumptions & Cost Models
                       </span>
-                      <Badge variant="outline" className="text-xs text-muted-foreground">
-                        {costBreakdown.locationName}
-                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        SEC Form 10-K & Regional Subcontractor Benchmarks
+                      </span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 text-xs">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <span className="text-muted-foreground font-medium block mb-1">
-                          Finish Quality Tier:
+                  <CardContent className="space-y-3.5 text-xs">
+                    {/* Builder Class / Procurement Tier Selector */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-muted-foreground font-semibold">
+                          Builder Tier & Procurement Scale (SEC 10-K Benchmarks):
                         </span>
-                        <div className="grid grid-cols-3 gap-1">
-                          {(["standard", "upgraded", "luxury"] as const).map((tier) => (
-                            <button
-                              key={tier}
-                              onClick={() => setCustomFinishTier(tier)}
-                              className={cn(
-                                "py-1.5 px-2 rounded-full border text-center font-semibold capitalize transition-all",
-                                customFinishTier === tier
-                                  ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                                  : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                              )}
-                            >
-                              {tier}
-                            </button>
-                          ))}
-                        </div>
+                        <span className="text-primary font-bold">
+                          {BUILDER_TIER_DETAILS[customBuilderTier].targetHardCostPerSqft} direct hard cost
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        {(
+                          [
+                            {
+                              id: "publicProduction" as const,
+                              label: "Public Production Builder",
+                              peers: "Ryan Homes (NVR), D.R. Horton, Lennar",
+                              hardCost: "$75 - $95 / SF",
+                            },
+                            {
+                              id: "regionalSemiCustom" as const,
+                              label: "Regional Semi-Custom",
+                              peers: "Landmark, EGStoltzfus, Keystone Custom",
+                              hardCost: "$130 - $165 / SF",
+                            },
+                            {
+                              id: "customArchitectural" as const,
+                              label: "Custom Architectural",
+                              peers: "Musser, Custom Creations, Ironstone",
+                              hardCost: "$210 - $295+ / SF",
+                            },
+                          ] as const
+                        ).map((tier) => (
+                          <button
+                            key={tier.id}
+                            type="button"
+                            onClick={() => setCustomBuilderTier(tier.id)}
+                            className={cn(
+                              "p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1",
+                              customBuilderTier === tier.id
+                                ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-xs text-foreground">{tier.label}</span>
+                              <span className="text-[11px] font-bold text-primary">{tier.hardCost}</span>
+                            </div>
+                            <span className="text-[10px] text-muted-foreground line-clamp-1">
+                              {tier.peers}
+                            </span>
+                          </button>
+                        ))}
                       </div>
 
-                      <div>
-                        <span className="text-muted-foreground font-medium block mb-1">
-                          Target Sale Price (ASP) / Home:
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            type="number"
-                            placeholder={`${costBreakdown.projectedSalePricePerHome}`}
-                            value={customTargetSalePrice || ""}
-                            onChange={(e) => setCustomTargetSalePrice(Number(e.target.value))}
-                            className="h-8 text-xs bg-background"
-                          />
-                          {customTargetSalePrice > 0 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setCustomTargetSalePrice(0)}
-                              className="h-8 px-2 text-xs text-muted-foreground"
-                            >
-                              Reset
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="text-muted-foreground font-medium block mb-1">
-                          Land Acquisition Cost ($/Acre):
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <Input
-                            type="number"
-                            placeholder={`${costBreakdown.landCostPerAcre}`}
-                            value={customLandCostPerAcre || ""}
-                            onChange={(e) => setCustomLandCostPerAcre(Number(e.target.value))}
-                            className="h-8 text-xs bg-background"
-                          />
-                          {customLandCostPerAcre > 0 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setCustomLandCostPerAcre(0)}
-                              className="h-8 px-2 text-xs text-muted-foreground"
-                            >
-                              Reset
-                            </Button>
-                          )}
+                      <div className="mt-2 p-2.5 rounded-lg bg-muted/40 border border-border flex items-start gap-2 text-[11px]">
+                        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        <div className="space-y-0.5">
+                          <span className="font-medium text-foreground block">
+                            {BUILDER_TIER_DETAILS[customBuilderTier].name}:{" "}
+                            <span className="text-muted-foreground font-normal">
+                              {BUILDER_TIER_DETAILS[customBuilderTier].description}
+                            </span>
+                          </span>
+                          <span className="text-muted-foreground block">
+                            <strong className="text-foreground">Supply Chain Advantage:</strong>{" "}
+                            {BUILDER_TIER_DETAILS[customBuilderTier].procurementAdvantage}
+                          </span>
                         </div>
                       </div>
                     </div>
+
+                    {projectCostMode === "subdivision" ? (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-border">
+                        <div>
+                          <span className="text-muted-foreground font-medium block mb-1">
+                            Finish Quality Tier:
+                          </span>
+                          <div className="grid grid-cols-3 gap-1">
+                            {(["standard", "upgraded", "luxury"] as const).map((tier) => (
+                              <button
+                                key={tier}
+                                type="button"
+                                onClick={() => setCustomFinishTier(tier)}
+                                className={cn(
+                                  "py-1.5 px-2 rounded-full border text-center font-semibold capitalize transition-all",
+                                  customFinishTier === tier
+                                    ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                    : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                                )}
+                              >
+                                {tier}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-muted-foreground font-medium block mb-1">
+                            Target Sale Price (ASP) / Home:
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              placeholder={`${costBreakdown.projectedSalePricePerHome}`}
+                              value={customTargetSalePrice || ""}
+                              onChange={(e) => setCustomTargetSalePrice(Number(e.target.value))}
+                              className="h-8 text-xs bg-background"
+                            />
+                            {customTargetSalePrice > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setCustomTargetSalePrice(0)}
+                                className="h-8 px-2 text-xs text-muted-foreground"
+                              >
+                                Reset
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-muted-foreground font-medium block mb-1">
+                            Land Acquisition Cost ($/Acre):
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              placeholder={`${costBreakdown.landCostPerAcre}`}
+                              value={customLandCostPerAcre || ""}
+                              onChange={(e) => setCustomLandCostPerAcre(Number(e.target.value))}
+                              className="h-8 text-xs bg-background"
+                            />
+                            {customLandCostPerAcre > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setCustomLandCostPerAcre(0)}
+                                className="h-8 px-2 text-xs text-muted-foreground"
+                              >
+                                Reset
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Renovation Inputs */
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-border">
+                        <div className="md:col-span-2">
+                          <span className="text-muted-foreground font-medium block mb-1">
+                            Renovation Scope of Work:
+                          </span>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {(
+                              [
+                                { id: "cosmetic" as const, label: "Cosmetic Refresh", range: "$38 - $75/SF" },
+                                { id: "moderate" as const, label: "Moderate Remodel", range: "$80 - $160/SF" },
+                                { id: "fullGut" as const, label: "Full Gut to Studs", range: "$130 - $235/SF" },
+                              ] as const
+                            ).map((s) => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => setRenovationScope(s.id)}
+                                className={cn(
+                                  "py-1.5 px-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center",
+                                  renovationScope === s.id
+                                    ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                    : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                                )}
+                              >
+                                <span className="font-semibold text-xs leading-tight">{s.label}</span>
+                                <span className="text-[10px] text-muted-foreground mt-0.5">{s.range}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-muted-foreground font-medium block mb-1">
+                            Existing Home Total Sq. Ft.:
+                          </span>
+                          <Input
+                            type="number"
+                            value={renovationSqft || ""}
+                            onChange={(e) => setRenovationSqft(Number(e.target.value))}
+                            className="h-8 text-xs bg-background"
+                            placeholder="2400"
+                          />
+                          <span className="text-[10px] text-muted-foreground mt-1 block">
+                            Living area requiring renovation in {subdivisionConfig.county} County.
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                {/* Executive Underwriting Pro Forma KPI Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
-                    <span className="text-xs font-medium text-muted-foreground block">
-                      Total Development Cost (TDC)
-                    </span>
-                    <div className="text-xl font-bold text-foreground mt-1">
-                      {money(costBreakdown.totalDevelopmentCost)}
-                    </div>
-                    <span className="text-[11px] text-muted-foreground">
-                      {money(costBreakdown.breakevenPricePerHome)} per lot all-in
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
-                    <span className="text-xs font-medium text-muted-foreground block">
-                      Gross Development Value (GDV)
-                    </span>
-                    <div className="text-xl font-bold text-sky-600 dark:text-sky-400 mt-1">
-                      {money(costBreakdown.grossDevelopmentValue)}
-                    </div>
-                    <span className="text-[11px] text-muted-foreground">
-                      {costBreakdown.projectedSalePricePerHome.toLocaleString("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                        maximumFractionDigits: 0,
-                      })}{" "}
-                      avg. ASP
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
-                    <span className="text-xs font-medium text-muted-foreground block">
-                      Net Developer Profit
-                    </span>
-                    <div className="text-xl font-bold text-emerald-600 mt-1">
-                      {money(costBreakdown.netDeveloperProfit)}
-                    </div>
-                    <span className="text-[11px] font-semibold text-emerald-600">
-                      {costBreakdown.developerMarginPct}% Gross Margin
-                    </span>
-                  </div>
-
-                  <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
-                    <span className="text-xs font-medium text-muted-foreground block">
-                      Return on Cost (ROC) & Multiple
-                    </span>
-                    <div className="text-xl font-bold text-primary mt-1">
-                      {costBreakdown.returnOnCostPct}% ROC
-                    </div>
-                    <span className="text-[11px] font-semibold text-foreground">
-                      {costBreakdown.equityMultiple}x Equity Multiple
-                    </span>
-                  </div>
-                </div>
-
-                {/* Detailed Itemized Development Cost Tables */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Horizontal Civil Work */}
-                  <Card className="shadow-sm">
-                    <CardHeader className="pb-2.5">
-                      <CardTitle className="text-sm flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <HardHat className="w-4 h-4 text-sky-600" />
-                          Horizontal Civil & Site Development
+                {/* PROJECT MODE: SUBDIVISION LAND DEVELOPMENT */}
+                {projectCostMode === "subdivision" ? (
+                  <>
+                    {/* Executive Underwriting Pro Forma KPI Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Total Development Cost (TDC)
                         </span>
-                        <Badge variant="outline" className="text-xs">
-                          {money(costBreakdown.totalHorizontalCost)} Civil Works
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-xs">
-                      <div className="p-2.5 rounded-lg bg-muted/40 border border-border flex justify-between items-center mb-1">
-                        <div>
-                          <span className="font-semibold block text-foreground">
-                            Raw Land Acquisition:
-                          </span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {subdivisionConfig.grossAcres} Acres @{" "}
-                            {money(costBreakdown.landCostPerAcre)} / Ac
-                          </span>
+                        <div className="text-xl font-bold text-foreground mt-1">
+                          {money(costBreakdown.totalDevelopmentCost)}
                         </div>
-                        <span className="font-bold text-sm text-foreground">
-                          {money(costBreakdown.landAcquisitionCost)}
+                        <span className="text-[11px] text-muted-foreground">
+                          {money(costBreakdown.breakevenPricePerHome)} per lot all-in
                         </span>
                       </div>
 
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Clearing, Earthwork & Grading:
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Gross Development Value (GDV)
                         </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.earthworkGradingCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Central Retention Pond & Fountain:
-                        </span>
-                        <span className="font-semibold text-sky-600">
-                          {money(costBreakdown.stormwaterPondCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Paved Streets & Asphalt Topping:
-                        </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.roadwayPavingCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Concrete Curbs & Sidewalks:</span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.curbsAndSidewalksCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Walking Trail Around Pond:</span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.walkingTrailAndAmenitiesCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Water, Sewer & Storm Infrastructure:
-                        </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.waterSewerInfrastructureCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Dry Utilities (Electric/Gas/Fiber):
-                        </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.dryUtilitiesTrenchingCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Street Trees & Open Space Landscaping:
-                        </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.landscapingStreetTreesCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border font-semibold text-foreground">
-                        <span>Civil Engineering, NPDES & Permitting:</span>
-                        <span>{money(costBreakdown.civilEngineeringAndPermitsCost)}</span>
-                      </div>
-
-                      <div className="pt-2 flex justify-between py-1 font-semibold text-sky-600">
-                        <span>Horizontal Civil Subtotal ({subdivisionConfig.totalLots} Lots):</span>
-                        <span>
-                          {money(costBreakdown.totalHorizontalCost)} (
-                          {money(costBreakdown.horizontalCostPerLot)}/lot)
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Vertical Construction & Pro Forma */}
-                  <Card className="shadow-sm">
-                    <CardHeader className="pb-2.5">
-                      <CardTitle className="text-sm flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <Building2 className="w-4 h-4 text-primary" />
-                          Vertical Spec House Build-out
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          {money(costBreakdown.allHomesVerticalCost)}
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-xs">
-                      <div className="p-2.5 rounded-lg bg-muted/40 border border-border flex justify-between items-center mb-2">
-                        <div>
-                          <span className="font-semibold block text-foreground">
-                            Per Single Spec Home Cost:
-                          </span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {costBreakdown.singleHomeCostPerSqft} / SF ({houseSpec.totalSqft} SF)
-                          </span>
+                        <div className="text-xl font-bold text-sky-600 dark:text-sky-400 mt-1">
+                          {money(costBreakdown.grossDevelopmentValue)}
                         </div>
-                        <span className="font-bold text-sm text-primary">
-                          {money(costBreakdown.singleHomeTotalCost)}
+                        <span className="text-[11px] text-muted-foreground">
+                          {costBreakdown.projectedSalePricePerHome.toLocaleString("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                            maximumFractionDigits: 0,
+                          })}{" "}
+                          avg. ASP
                         </span>
                       </div>
 
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Excavation & Foundation:</span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.singleHomeFoundationCost)}
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Net Developer Profit
                         </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Framing & Structural Envelope:
-                        </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.singleHomeFramingCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Exterior Facade & Roofing:</span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.singleHomeExteriorFinishesCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Interior Drywall & Finishes:</span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.singleHomeInteriorFinishesCost)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">
-                          Plumbing, HVAC & Electrical (MEP):
-                        </span>
-                        <span className="font-semibold">
-                          {money(costBreakdown.singleHomeMEPCost)}
-                        </span>
-                      </div>
-
-                      <div className="pt-2 border-t border-border flex justify-between py-1 font-semibold text-foreground">
-                        <span>Total Vertical ({subdivisionConfig.totalLots} Homes):</span>
-                        <span>{money(costBreakdown.allHomesVerticalCost)}</span>
-                      </div>
-
-                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mt-2 space-y-1">
-                        <div className="flex justify-between font-semibold text-primary">
-                          <span>Required Equity (35%):</span>
-                          <span>{money(costBreakdown.equityRequired)}</span>
+                        <div className="text-xl font-bold text-emerald-600 mt-1">
+                          {money(costBreakdown.netDeveloperProfit)}
                         </div>
-                        <div className="flex justify-between text-muted-foreground text-[11px]">
-                          <span>Construction Financing (65% LTC):</span>
-                          <span>{money(costBreakdown.totalDevelopmentCost * 0.65)}</span>
-                        </div>
+                        <span className="text-[11px] font-semibold text-emerald-600">
+                          {costBreakdown.developerMarginPct}% Gross Margin
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Return on Cost (ROC) & Multiple
+                        </span>
+                        <div className="text-xl font-bold text-primary mt-1">
+                          {costBreakdown.returnOnCostPct}% ROC
+                        </div>
+                        <span className="text-[11px] font-semibold text-foreground">
+                          {costBreakdown.equityMultiple}x Equity Multiple
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Detailed Itemized Development Cost Tables */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Horizontal Civil Work */}
+                      <Card className="shadow-sm">
+                        <CardHeader className="pb-2.5">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <HardHat className="w-4 h-4 text-sky-600" />
+                              Horizontal Civil & Site Development
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {money(costBreakdown.totalHorizontalCost)} Civil Works
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-xs">
+                          <div className="p-2.5 rounded-lg bg-muted/40 border border-border flex justify-between items-center mb-1">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Raw Land Acquisition:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {subdivisionConfig.grossAcres} Acres @{" "}
+                                {money(costBreakdown.landCostPerAcre)} / Ac
+                              </span>
+                            </div>
+                            <span className="font-bold text-sm text-foreground">
+                              {money(costBreakdown.landAcquisitionCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Clearing, Earthwork & Grading:
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.earthworkGradingCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Central Retention Pond & Fountain:
+                            </span>
+                            <span className="font-semibold text-sky-600">
+                              {money(costBreakdown.stormwaterPondCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Paved Streets & Asphalt Topping:
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.roadwayPavingCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">Concrete Curbs & Sidewalks:</span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.curbsAndSidewalksCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">Walking Trail Around Pond:</span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.walkingTrailAndAmenitiesCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Water, Sewer & Storm Infrastructure:
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.waterSewerInfrastructureCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Dry Utilities (Electric/Gas/Fiber):
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.dryUtilitiesTrenchingCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Street Trees & Open Space Landscaping:
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.landscapingStreetTreesCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border font-semibold text-foreground">
+                            <span>Civil Engineering, NPDES & Permitting:</span>
+                            <span>{money(costBreakdown.civilEngineeringAndPermitsCost)}</span>
+                          </div>
+
+                          <div className="pt-2 flex justify-between py-1 font-semibold text-sky-600">
+                            <span>Horizontal Civil Subtotal ({subdivisionConfig.totalLots} Lots):</span>
+                            <span>
+                              {money(costBreakdown.totalHorizontalCost)} (
+                              {money(costBreakdown.horizontalCostPerLot)}/lot)
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Vertical Construction & Pro Forma */}
+                      <Card className="shadow-sm">
+                        <CardHeader className="pb-2.5">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <Building2 className="w-4 h-4 text-primary" />
+                              Vertical Spec House Build-out
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {money(costBreakdown.allHomesVerticalCost)}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-xs">
+                          <div className="p-2.5 rounded-lg bg-muted/40 border border-border flex justify-between items-center mb-2">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Per Single Spec Home Cost:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {costBreakdown.singleHomeCostPerSqft} / SF ({houseSpec.totalSqft} SF · {BUILDER_TIER_DETAILS[customBuilderTier].name})
+                              </span>
+                            </div>
+                            <span className="font-bold text-sm text-primary">
+                              {money(costBreakdown.singleHomeTotalCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">Excavation & Foundation:</span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.singleHomeFoundationCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Framing & Structural Envelope:
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.singleHomeFramingCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">Exterior Facade & Roofing:</span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.singleHomeExteriorFinishesCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">Interior Drywall & Finishes:</span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.singleHomeInteriorFinishesCost)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-border">
+                            <span className="text-muted-foreground">
+                              Plumbing, HVAC & Electrical (MEP):
+                            </span>
+                            <span className="font-semibold">
+                              {money(costBreakdown.singleHomeMEPCost)}
+                            </span>
+                          </div>
+
+                          <div className="pt-2 border-t border-border flex justify-between py-1 font-semibold text-foreground">
+                            <span>Total Vertical ({subdivisionConfig.totalLots} Homes):</span>
+                            <span>{money(costBreakdown.allHomesVerticalCost)}</span>
+                          </div>
+
+                          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mt-2 space-y-1">
+                            <div className="flex justify-between font-semibold text-primary">
+                              <span>Required Equity (35%):</span>
+                              <span>{money(costBreakdown.equityRequired)}</span>
+                            </div>
+                            <div className="flex justify-between text-muted-foreground text-[11px]">
+                              <span>Construction Financing (65% LTC):</span>
+                              <span>{money(costBreakdown.totalDevelopmentCost * 0.65)}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </>
+                ) : (
+                  /* PROJECT MODE: EXISTING HOME RENOVATION & REMODEL */
+                  <>
+                    {/* Executive Renovation KPI Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Total Renovation Investment
+                        </span>
+                        <div className="text-xl font-bold text-foreground mt-1">
+                          {money(renovationBreakdown.totalRenovationCost)}
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">
+                          {renovationSqft.toLocaleString()} SF @ {renovationBreakdown.costPerSqft} / SF
+                        </span>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Average Cost Per Square Foot
+                        </span>
+                        <div className="text-xl font-bold text-sky-600 dark:text-sky-400 mt-1">
+                          ${renovationBreakdown.costPerSqft} / SF
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">
+                          {subdivisionConfig.county} County benchmark
+                        </span>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Subcontractor Direct Trades
+                        </span>
+                        <div className="text-xl font-bold text-emerald-600 mt-1">
+                          {money(
+                            renovationBreakdown.totalRenovationCost -
+                              renovationBreakdown.permitsAndContingencyCost,
+                          )}
+                        </div>
+                        <span className="text-[11px] font-semibold text-emerald-600">
+                          Hard trade labor & material costs
+                        </span>
+                      </div>
+
+                      <div className="p-4 rounded-xl border border-border bg-card shadow-sm">
+                        <span className="text-xs font-medium text-muted-foreground block">
+                          Permits & Contingency Reserve
+                        </span>
+                        <div className="text-xl font-bold text-primary mt-1">
+                          {money(renovationBreakdown.permitsAndContingencyCost)}
+                        </div>
+                        <span className="text-[11px] font-semibold text-foreground">
+                          PA UCC permits & unexpected latent conditions
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Itemized Trade Breakdown & Strategic Insights */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Trade-by-Trade Cost Breakdown */}
+                      <Card className="shadow-sm">
+                        <CardHeader className="pb-2.5">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <Hammer className="w-4 h-4 text-orange-500" />
+                              Trade-by-Trade Renovation Scope
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {renovationBreakdown.scopeName}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-xs">
+                          <div className="flex justify-between py-1.5 border-b border-border">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Demolition, Hauling & Abatement:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                Debris roll-off containers, plaster/drywall removal, fixtures
+                              </span>
+                            </div>
+                            <span className="font-semibold text-foreground">
+                              {money(renovationBreakdown.demolitionCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1.5 border-b border-border">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Mechanical, Electrical & Plumbing (MEP):
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                200A service upgrade, AFCI/GFCI rewire, PEX re-plumb, heat pump HVAC
+                              </span>
+                            </div>
+                            <span className="font-semibold text-sky-600">
+                              {money(renovationBreakdown.mechanicalElectricalPlumbingCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1.5 border-b border-border">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Framing, Insulation & Drywall:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                Sistered joists, R-38 attic & R-21 wall insulation, Level 4 drywall
+                              </span>
+                            </div>
+                            <span className="font-semibold text-foreground">
+                              {money(renovationBreakdown.drywallAndInsulationCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1.5 border-b border-border">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Kitchen & Bath Modernization:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                Plywood soft-close cabinetry, quartz countertops, tile showers
+                              </span>
+                            </div>
+                            <span className="font-semibold text-primary">
+                              {money(renovationBreakdown.kitchenAndBathCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1.5 border-b border-border">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                Architectural Finishes & Flooring:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                Luxury vinyl plank / hardwood, casing/baseboards, Sherwin-Williams paint
+                              </span>
+                            </div>
+                            <span className="font-semibold text-foreground">
+                              {money(renovationBreakdown.finishesAndFlooringCost)}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between py-1.5 border-b border-border">
+                            <div>
+                              <span className="font-semibold block text-foreground">
+                                PA UCC Permitting & Contingency:
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                Municipal code review, third-party inspections, latent condition reserve
+                              </span>
+                            </div>
+                            <span className="font-semibold text-foreground">
+                              {money(renovationBreakdown.permitsAndContingencyCost)}
+                            </span>
+                          </div>
+
+                          <div className="pt-2 flex justify-between py-1 font-bold text-sm text-foreground">
+                            <span>Total Estimated Renovation Cost:</span>
+                            <span className="text-primary">{money(renovationBreakdown.totalRenovationCost)}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Strategic Renovation & Code Insights */}
+                      <Card className="shadow-sm">
+                        <CardHeader className="pb-2.5">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <Sparkles className="w-4 h-4 text-primary" />
+                              Regional Remodel Economics & Code
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {subdivisionConfig.county} County
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-xs">
+                          <div className="p-2.5 rounded-lg bg-muted/40 border border-border space-y-1">
+                            <div className="flex justify-between font-semibold">
+                              <span>Renovation vs. New Build Economics:</span>
+                              <span className="text-emerald-600">30% - 45% Capital Savings</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Renovating an existing structure preserves horizontal site development (curbs,
+                              roadway paving, public water/sewer tap-in fees) saving $65,000–$110,000 per lot
+                              compared to raw ground development.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex justify-between py-1 border-b border-border">
+                              <span className="text-muted-foreground">Location Multiplier:</span>
+                              <span className="font-semibold text-foreground">
+                                {costBreakdown.locationName}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border">
+                              <span className="text-muted-foreground">Typical Remodel Duration:</span>
+                              <span className="font-semibold text-foreground">
+                                {renovationScope === "cosmetic"
+                                  ? "3 - 6 Weeks"
+                                  : renovationScope === "moderate"
+                                    ? "10 - 16 Weeks"
+                                    : "20 - 28 Weeks"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border">
+                              <span className="text-muted-foreground">PA Uniform Construction Code:</span>
+                              <span className="font-semibold text-foreground">
+                                2018 PA UCC (IRC Existing Building Provisions)
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border">
+                              <span className="text-muted-foreground">Electrical / Smoke Code Trigger:</span>
+                              <span className="font-semibold text-foreground">
+                                Hardwired interconnected smoke & CO alarms required
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-1">
+                            <span className="font-semibold text-primary block">
+                              Builder Class Impact on Renovation:
+                            </span>
+                            <p className="text-[11px] text-muted-foreground">
+                              {customBuilderTier === "publicProduction"
+                                ? "Production-focused contractors achieve lowest price through standardized cabinet lines and bulk vinyl plank flooring."
+                                : customBuilderTier === "regionalSemiCustom"
+                                  ? "Regional semi-custom general contractors balance high durability cabinetry, quartz counters, and licensed trade subs."
+                                  : "Architectural custom builders utilize master carpenters, custom site-built built-ins, and premium tile setters."}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
 
           {/* Bottom Scroll Clearance Buffer */}
-          <div className="h-16 md:h-24 shrink-0" aria-hidden="true" />
+          <div className="h-28 md:h-40 shrink-0" aria-hidden="true" />
         </div>
       </div>
     </AppShell>
   );
 }
+
