@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { getEntitlement } from "@/lib/billing";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { SignedIn, SignedOut, UserButton, OrganizationSwitcher } from "@/lib/auth/gates";
-import { FuturisticTelemetryBar, FuturisticWorkflowDock } from "@/components/layout/futuristic-hud";
+import { FuturisticTelemetryBar } from "@/components/layout/futuristic-hud";
 import { logSecurityEvent, analyzeInput } from "@/lib/security/threat-detector";
 
 const NAV = [
@@ -295,8 +295,6 @@ export function AppShell({
       >
         {children}
       </main>
-
-      <FuturisticWorkflowDock />
 
       {!fullBleed && <SiteFooter />}
     </div>

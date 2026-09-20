@@ -481,60 +481,44 @@ export function MapToolbar() {
   const setSatellite = useHub((s) => s.setSatellite);
   const layers = useHub((s) => s.layers);
   const toggleLayer = useHub((s) => s.toggleLayer);
+
+  const getPillClass = (active: boolean) =>
+    cn(
+      "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 border",
+      active
+        ? "bg-transparent text-on-surface font-bold border-orange-500/60 shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+        : "bg-transparent text-muted-foreground hover:text-foreground border-border/60 hover:border-border",
+    );
+
   return (
-    <div className="pointer-events-auto absolute right-3 top-3 z-[400] flex flex-col gap-1 rounded-md bg-card/95 p-1 shadow-md">
+    <div className="pointer-events-auto absolute right-3 top-3 z-[400] flex flex-col gap-1.5 rounded-2xl border border-outline-variant/70 bg-card/90 p-1.5 shadow-lg backdrop-blur-md">
       <button
         onClick={() => setSatellite(false)}
-        className={cn(
-          "flex items-center gap-1 rounded-sm px-2 py-1.5 text-xs font-semibold",
-          !satellite
-            ? "border border-orange-500/50 bg-orange-500/30 text-orange-300 backdrop-blur-md shadow-[0_0_8px_rgba(249,115,22,0.3)]"
-            : "hover:bg-surface-low",
-        )}
+        className={getPillClass(!satellite)}
       >
-        <Grid3x3 className="size-3.5 text-orange-400" /> Base
+        <Grid3x3 className="size-3.5 text-orange-500" /> Base
       </button>
       <button
         onClick={() => setSatellite(true)}
-        className={cn(
-          "flex items-center gap-1 rounded-sm px-2 py-1.5 text-xs font-semibold",
-          satellite
-            ? "border border-orange-500/50 bg-orange-500/30 text-orange-300 backdrop-blur-md shadow-[0_0_8px_rgba(249,115,22,0.3)]"
-            : "hover:bg-surface-low",
-        )}
+        className={getPillClass(satellite)}
       >
         Satellite
       </button>
       <button
         onClick={() => toggleLayer("parcels")}
-        className={cn(
-          "flex items-center gap-1 rounded-sm px-2 py-1.5 text-xs font-semibold",
-          (layers.parcels ?? layers.yorkParcels) !== false
-            ? "border border-orange-500/50 bg-orange-500/30 text-orange-300 backdrop-blur-md shadow-[0_0_8px_rgba(249,115,22,0.3)]"
-            : "hover:bg-surface-low",
-        )}
+        className={getPillClass((layers.parcels ?? layers.yorkParcels) !== false)}
       >
         Parcels
       </button>
       <button
         onClick={() => toggleLayer("yorkZoning")}
-        className={cn(
-          "flex items-center gap-1 rounded-sm px-2 py-1.5 text-xs font-semibold",
-          layers.yorkZoning !== false
-            ? "border border-orange-500/50 bg-orange-500/30 text-orange-300 backdrop-blur-md shadow-[0_0_8px_rgba(249,115,22,0.3)]"
-            : "hover:bg-surface-low",
-        )}
+        className={getPillClass(layers.yorkZoning !== false)}
       >
         York zoning
       </button>
       <button
         onClick={() => toggleLayer("zoning")}
-        className={cn(
-          "flex items-center gap-1 rounded-sm px-2 py-1.5 text-xs font-semibold",
-          layers.zoning
-            ? "border border-orange-500/50 bg-orange-500/30 text-orange-300 backdrop-blur-md shadow-[0_0_8px_rgba(249,115,22,0.3)]"
-            : "hover:bg-surface-low",
-        )}
+        className={getPillClass(Boolean(layers.zoning))}
       >
         Zoning
       </button>
