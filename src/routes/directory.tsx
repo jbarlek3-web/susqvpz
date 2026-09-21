@@ -77,74 +77,69 @@ function ProDirectories() {
   const [countyDocs, setCountyDocs] = useState<LoadState<CountyDocumentPayload>>({
     data: null,
     error: null,
-    loading: false,
+    loading: true,
   });
   const [municipalDocs, setMunicipalDocs] = useState<LoadState<MunicipalDocPayload>>({
     data: null,
     error: null,
-    loading: false,
+    loading: true,
   });
 
   useEffect(() => {
-    let current = true;
+    let unmounted = false;
+
     void getProCountyDirectory()
       .then((data) => {
-        if (current) setCounties({ data, error: null, loading: false });
+        if (!unmounted) setCounties({ data, error: null, loading: false });
       })
-      .catch(() => {
-        if (current)
-          setCounties({
-            data: null,
-            error: "The county contact directory could not be loaded.",
-            loading: false,
-          });
+      .catch((err: any) => {
+        if (!unmounted) {
+          const errorMsg =
+            err?.status === 401
+              ? "Please sign in to access the county directory."
+              : err?.status === 402
+                ? "A Pro subscription is required to access this directory."
+                : "The county contact directory could not be loaded.";
+          setCounties({ data: null, error: errorMsg, loading: false });
+        }
       });
-    return () => {
-      current = false;
-    };
-  }, []);
 
-  useEffect(() => {
-    if (activeTab !== "county-docs" || countyDocs.data || countyDocs.loading) return;
-    let current = true;
-    setCountyDocs((state) => ({ ...state, error: null, loading: true }));
     void getProCountyDocumentLinks()
       .then((data) => {
-        if (current) setCountyDocs({ data, error: null, loading: false });
+        if (!unmounted) setCountyDocs({ data, error: null, loading: false });
       })
-      .catch(() => {
-        if (current)
-          setCountyDocs({
-            data: null,
-            error: "The county document links could not be loaded.",
-            loading: false,
-          });
+      .catch((err: any) => {
+        if (!unmounted) {
+          const errorMsg =
+            err?.status === 401
+              ? "Please sign in to access county document links."
+              : err?.status === 402
+                ? "A Pro subscription is required to access official document links."
+                : "The county document links could not be loaded.";
+          setCountyDocs({ data: null, error: errorMsg, loading: false });
+        }
       });
-    return () => {
-      current = false;
-    };
-  }, [activeTab, countyDocs.data, countyDocs.loading]);
 
-  useEffect(() => {
-    if (activeTab !== "municipal-docs" || municipalDocs.data || municipalDocs.loading) return;
-    let current = true;
-    setMunicipalDocs((state) => ({ ...state, error: null, loading: true }));
     void getProMunicipalDocumentLinks()
       .then((data) => {
-        if (current) setMunicipalDocs({ data, error: null, loading: false });
+        if (!unmounted) setMunicipalDocs({ data, error: null, loading: false });
       })
-      .catch(() => {
-        if (current)
-          setMunicipalDocs({
-            data: null,
-            error: "The municipal document links could not be loaded.",
-            loading: false,
-          });
+      .catch((err: any) => {
+        if (!unmounted) {
+          const errorMsg =
+            err?.status === 401
+              ? "Please sign in to access municipal document links."
+              : err?.status === 402
+                ? "A Pro subscription is required to access official document links."
+                : "The municipal document links could not be loaded.";
+          setMunicipalDocs({ data: null, error: errorMsg, loading: false });
+        }
       });
+
     return () => {
-      current = false;
+      unmounted = true;
     };
-  }, [activeTab, municipalDocs.data, municipalDocs.loading]);
+  }, []);
 
   return (
     <AppShell>
