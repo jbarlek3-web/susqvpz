@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bookmark, BookmarkCheck, Box, Share2, Sparkles } from "lucide-react";
+import { Bookmark, BookmarkCheck, DollarSign, Share2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/app-shell";
@@ -56,7 +56,7 @@ function ParcelReport() {
         <div className="flex flex-wrap gap-2">
           <Button variant="default" size="sm" asChild>
             <Link to="/scene-3d" search={{ parcelId: parcel.id }}>
-              <Box className="size-3.5 mr-1" /> 3D Model
+              <DollarSign className="size-3.5 mr-1" /> Costs Engine
             </Link>
           </Button>
           <Button

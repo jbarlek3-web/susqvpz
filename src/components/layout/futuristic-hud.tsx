@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import {
   Activity,
   Bot,
-  Box,
   Compass,
+  DollarSign,
   FileSpreadsheet,
   FolderArchive,
   Layers,
@@ -29,9 +29,9 @@ const WORKFLOW_TOOLS = [
     to: "/scene-3d",
     label: "Costs Engine",
     code: "COSTS",
-    icon: Box,
+    icon: DollarSign,
     shortcut: "2",
-    desc: "3D Underwriting & Subdivision",
+    desc: "Underwriting & Cost Feasibility",
   },
   {
     to: "/aide",

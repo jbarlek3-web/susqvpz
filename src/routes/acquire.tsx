@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database, ExternalLink, Layers3, Bot, Box } from "lucide-react";
+import { Database, ExternalLink, Layers3, Bot, DollarSign } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useHub } from "@/lib/store";
 import { AppShell } from "@/components/layout/app-shell";
@@ -219,7 +219,7 @@ function YieldTab() {
           <div className="col-span-2 flex flex-wrap items-center gap-2 pt-2 border-t border-border/60">
             <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
               <Link to="/scene-3d">
-                <Box className="size-3.5 text-primary" /> Costs Engine
+                <DollarSign className="size-3.5 text-primary" /> Costs Engine
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">

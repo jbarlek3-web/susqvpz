@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Bot,
-  Box,
   Compass,
+  DollarSign,
   FileSpreadsheet,
   Gauge,
   Loader2,
@@ -416,7 +416,7 @@ function OrdinanceAide() {
                       )?.id,
                     }}
                   >
-                    <Box className="size-3.5 text-primary" /> Costs Engine
+                    <DollarSign className="size-3.5 text-primary" /> Costs Engine
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/app-shell";
-import { DEFAULT_HOUSE_SPEC } from "@/components/scene-3d/HouseModelViewer";
+import { DEFAULT_HOUSE_SPEC } from "@/lib/subdivision/types";
 import {
   Bot,
   Building2,
@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   MapPin,
   Waves,
-  Home,
   DollarSign,
   FileSpreadsheet,
   FileText,
@@ -17,7 +16,6 @@ import {
   Mountain,
   Droplets,
   HardHat,
-  Palette,
   Sliders,
   Compass,
   Hammer,
@@ -51,7 +49,6 @@ import type {
   RenovationBreakdown,
   RenovationScope,
   RoofMaterial,
-  StudioViewLevel,
 } from "@/lib/subdivision/types";
 
 export interface Scene3DSearch {
@@ -65,7 +62,7 @@ export const Route = createFileRoute("/scene-3d")({
   component: Scene3DPage,
 });
 
-type ActiveTab = "Studio3D" | "ZoningRestrictions" | "SpecDesign" | "UnderwritingCost";
+type ActiveTab = "UnderwritingCost" | "ZoningRestrictions" | "SpecDesign";
 
 function money(n: number) {
   if (!Number.isFinite(n)) return "—";
@@ -104,7 +101,7 @@ function Scene3DPage() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("UnderwritingCost");
 
-  // 3. 3D House Design Spec State
+  // 2. House Design Spec State
   const [houseSpec, setHouseSpec] = useState<HouseDesignSpec>({
     ...DEFAULT_HOUSE_SPEC,
     stories: 2,
@@ -127,20 +124,13 @@ function Scene3DPage() {
       sqft = 5100;
       height = 51.8;
     }
-    setHouseSpec((prev) => {
-      let viewLevel = prev.viewLevel;
-      if (viewLevel === "story4" && stories < 4) viewLevel = "exterior";
-      if (viewLevel === "story3" && stories < 3) viewLevel = "exterior";
-      if (viewLevel === "story2" && stories < 2) viewLevel = "exterior";
-      return {
-        ...prev,
-        stories,
-        totalSqft: sqft,
-        sqftPerStory: Math.round(sqft / stories),
-        heightFt: height,
-        viewLevel,
-      };
-    });
+    setHouseSpec((prev) => ({
+      ...prev,
+      stories,
+      totalSqft: sqft,
+      sqftPerStory: Math.round(sqft / stories),
+      heightFt: height,
+    }));
   };
 
   // 4. Cost Estimator & Pro Forma State with Accidental Data Loss Prevention (Per-Parcel Enclave)
@@ -294,7 +284,7 @@ function Scene3DPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-base md:text-lg font-bold tracking-tight text-foreground">
-                    Subdivision Master Plan & 3D Design Studio
+                    Subdivision & Residential Cost Engine
                   </h1>
                   <Badge
                     variant="outline"
@@ -318,9 +308,8 @@ function Scene3DPage() {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Full subdivision layout with central retention pond, multi-story architectural
-                  design studio, zoning & topography restriction analysis, and location-tied
-                  underwriting.
+                  Civil infrastructure estimating, SEC 10-K public homebuilder benchmarks, zoning &
+                  topography analysis, and location-tied underwriting.
                 </p>
               </div>
             </div>
@@ -482,16 +471,16 @@ function Scene3DPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setActiveTab("Studio3D")}
+                  onClick={() => setActiveTab("UnderwritingCost")}
                   className={cn(
                     "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
-                    activeTab === "Studio3D"
+                    activeTab === "UnderwritingCost"
                       ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
                       : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
                   )}
                 >
-                  <Home className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Design Studio Controls</span>
+                  <DollarSign className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Cost Estimator & Underwriting</span>
                 </button>
 
                 <button
@@ -519,19 +508,6 @@ function Scene3DPage() {
                   <FileText className="w-3.5 h-3.5 text-orange-400" />
                   <span>Spec Design Sheet</span>
                 </button>
-
-                <button
-                  onClick={() => setActiveTab("UnderwritingCost")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
-                    activeTab === "UnderwritingCost"
-                      ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                      : "bg-transparent text-muted-foreground hover:text-foreground border-transparent hover:border-border/60",
-                  )}
-                >
-                  <DollarSign className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Cost Estimator & Underwriting</span>
-                </button>
               </div>
 
               <div className="flex items-center gap-2">
@@ -546,387 +522,6 @@ function Scene3DPage() {
                 </Button>
               </div>
             </div>
-
-            {/* TAB 1: 3D DESIGN STUDIO CONTROLS */}
-            {activeTab === "Studio3D" && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* 1. Multi-Story Builder */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2.5">
-                    <CardTitle className="text-sm flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Building2 className="w-4 h-4 text-primary" />
-                        Multi-Story Builder
-                      </span>
-                      <Badge variant="outline" className="text-[10px]">
-                        {houseSpec.stories} {houseSpec.stories === 1 ? "Story" : "Stories"}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-xs">
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[1, 2, 3, 4].map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => handleSetStories(s as 1 | 2 | 3 | 4)}
-                          className={cn(
-                            "py-2 text-center rounded-md font-bold transition-all border",
-                            houseSpec.stories === s
-                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                              : "bg-transparent hover:bg-muted/30 text-muted-foreground hover:text-foreground border-border/60",
-                          )}
-                        >
-                          {s}F
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="space-y-1.5 pt-1 border-t border-border">
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Total Living Area:</span>
-                        <span className="font-semibold text-foreground">
-                          {houseSpec.totalSqft.toLocaleString()} SF
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-muted-foreground">
-                        <span>Height to Peak:</span>
-                        <span
-                          className={`font-semibold ${
-                            isHeightExceeded ? "text-red-500" : "text-emerald-600"
-                          }`}
-                        >
-                          {houseSpec.heightFt}&apos; / {subdivisionConfig.maxZoningHeight}&apos; Max
-                        </span>
-                      </div>
-                      {isHeightExceeded && (
-                        <div className="p-2 rounded bg-red-500/10 text-red-600 border border-red-500/20 text-[11px] flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                          <span>Exceeds zoning max height! Variance required.</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* View Level / Cutaway Selector */}
-                    <div className="pt-2 border-t border-border space-y-1.5">
-                      <span className="text-muted-foreground font-semibold block">
-                        Cutaway & Floor Mode:
-                      </span>
-                      <select
-                        aria-label="Select cutaway and floor view level"
-                        value={houseSpec.viewLevel}
-                        onChange={(e) =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            viewLevel: e.target.value as StudioViewLevel,
-                          }))
-                        }
-                        className="w-full p-1.5 rounded border border-border bg-background text-foreground"
-                      >
-                        <option value="exterior">Full Exterior Shell</option>
-                        <option value="dollhouse">Dollhouse Open Cutaway</option>
-                        <option value="story1">Level 1 Interior Floor Plan</option>
-                        {houseSpec.stories >= 2 && (
-                          <option value="story2">Level 2 Interior Floor Plan</option>
-                        )}
-                        {houseSpec.stories >= 3 && (
-                          <option value="story3">Level 3 Bonus / Loft Floor Plan</option>
-                        )}
-                        {houseSpec.stories >= 4 && (
-                          <option value="story4">Level 4 Sky Lounge Floor Plan</option>
-                        )}
-                      </select>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* 2. Exterior Facade & Materials */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2.5">
-                    <CardTitle className="text-sm flex items-center gap-1.5">
-                      <Palette className="w-4 h-4 text-primary" />
-                      Exterior Finishes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-xs">
-                    <div>
-                      <span className="text-muted-foreground font-medium block mb-1">
-                        Architectural Style:
-                      </span>
-                      <select
-                        aria-label="Select architectural style"
-                        value={houseSpec.style}
-                        onChange={(e) =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            style: e.target.value as ArchitectureStyle,
-                          }))
-                        }
-                        className="w-full p-1.5 rounded border border-border bg-background text-foreground capitalize"
-                      >
-                        <option value="craftsman">Craftsman Style</option>
-                        <option value="colonial">Colonial Revival</option>
-                        <option value="modernFarmhouse">Modern Farmhouse</option>
-                        <option value="contemporary">Contemporary Minimalist</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <span className="text-muted-foreground font-medium block mb-1">
-                        Facade Masonry / Siding:
-                      </span>
-                      <select
-                        aria-label="Select facade masonry or siding material"
-                        value={houseSpec.facadeMaterial}
-                        onChange={(e) =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            facadeMaterial: e.target.value as FacadeMaterial,
-                          }))
-                        }
-                        className="w-full p-1.5 rounded border border-border bg-background text-foreground"
-                      >
-                        <option value="brick">Running Bond Red-Brown Brick</option>
-                        <option value="stone">Pennsylvania Fieldstone Masonry</option>
-                        <option value="siding">Horizontal Cream Lap Siding</option>
-                        <option value="boardAndBatten">Modern Board & Batten</option>
-                        <option value="stucco">Contemporary Greige Stucco</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <span className="text-muted-foreground font-medium block mb-1">
-                        Roof Material:
-                      </span>
-                      <select
-                        aria-label="Select roof material"
-                        value={houseSpec.roofMaterial}
-                        onChange={(e) =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            roofMaterial: e.target.value as RoofMaterial,
-                          }))
-                        }
-                        className="w-full p-1.5 rounded border border-border bg-background text-foreground"
-                      >
-                        <option value="shingle">Weathered Dark Charcoal Shingle</option>
-                        <option value="slate">Architectural Welsh Slate</option>
-                        <option value="standingSeam">Standing Seam Metal Roof</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <span className="text-muted-foreground font-medium block mb-1">
-                        Garage Bays:
-                      </span>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {[1, 2, 3].map((g) => (
-                          <button
-                            key={g}
-                            onClick={() =>
-                              setHouseSpec((prev) => ({
-                                ...prev,
-                                garageBays: g as 1 | 2 | 3,
-                              }))
-                            }
-                            className={cn(
-                              "py-1 rounded-full border text-center font-semibold transition-all",
-                              houseSpec.garageBays === g
-                                ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                                : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                            )}
-                          >
-                            {g} Car
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-border space-y-1.5">
-                      <span className="text-muted-foreground font-medium block">
-                        Architectural Additions:
-                      </span>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <button
-                          onClick={() =>
-                            setHouseSpec((prev) => ({ ...prev, hasPorch: !prev.hasPorch }))
-                          }
-                          className={cn(
-                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
-                            houseSpec.hasPorch
-                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                          )}
-                        >
-                          {houseSpec.hasPorch ? "✓ Porch" : "+ Porch"}
-                        </button>
-                        <button
-                          onClick={() =>
-                            setHouseSpec((prev) => ({ ...prev, hasPatio: !prev.hasPatio }))
-                          }
-                          className={cn(
-                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
-                            houseSpec.hasPatio
-                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                          )}
-                        >
-                          {houseSpec.hasPatio ? "✓ Patio" : "+ Patio"}
-                        </button>
-                        <button
-                          onClick={() =>
-                            houseSpec.stories >= 2 &&
-                            setHouseSpec((prev) => ({ ...prev, hasBalcony: !prev.hasBalcony }))
-                          }
-                          disabled={houseSpec.stories < 2}
-                          className={cn(
-                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
-                            houseSpec.hasBalcony && houseSpec.stories >= 2
-                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                            houseSpec.stories < 2 && "opacity-40 cursor-not-allowed",
-                          )}
-                        >
-                          {houseSpec.hasBalcony && houseSpec.stories >= 2
-                            ? "✓ Balcony"
-                            : "+ Balcony (2F+)"}
-                        </button>
-                        <button
-                          onClick={() =>
-                            setHouseSpec((prev) => ({ ...prev, hasBayTurret: !prev.hasBayTurret }))
-                          }
-                          className={cn(
-                            "py-1 px-2 rounded-full border text-center font-semibold transition-all",
-                            houseSpec.hasBayTurret
-                              ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                              : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                          )}
-                        >
-                          {houseSpec.hasBayTurret ? "✓ Turret" : "+ Turret"}
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* 3. Interior Finishes & Furniture */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2.5">
-                    <CardTitle className="text-sm flex items-center gap-1.5">
-                      <Home className="w-4 h-4 text-primary" />
-                      Interior Finishes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-xs">
-                    <div>
-                      <span className="text-muted-foreground font-medium block mb-1">
-                        Flooring Finish:
-                      </span>
-                      <select
-                        aria-label="Select interior flooring finish"
-                        value={houseSpec.flooring}
-                        onChange={(e) =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            flooring: e.target.value as InteriorFlooring,
-                          }))
-                        }
-                        className="w-full p-1.5 rounded border border-border bg-background text-foreground"
-                      >
-                        <option value="oak">White Oak Hardwood Plank</option>
-                        <option value="herringbone">European Herringbone Parquet</option>
-                        <option value="walnut">Rich Dark American Walnut</option>
-                        <option value="tile">Porcelain Marble Slab Tile</option>
-                        <option value="lvp">Luxury Engineered Vinyl Plank</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <span className="text-muted-foreground font-medium block mb-1">
-                        Interior Wall Tone:
-                      </span>
-                      <select
-                        aria-label="Select interior wall paint tone"
-                        value={houseSpec.wallColor}
-                        onChange={(e) =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            wallColor: e.target.value as InteriorWallColor,
-                          }))
-                        }
-                        className="w-full p-1.5 rounded border border-border bg-background text-foreground"
-                      >
-                        <option value="alabaster">Warm Alabaster (Sherwin 7008)</option>
-                        <option value="greige">Modern Greige / Agreeable Gray</option>
-                        <option value="navy">Hale Navy Feature Accent</option>
-                        <option value="sage">Botanical Sage Green</option>
-                      </select>
-                    </div>
-
-                    <div className="pt-2 border-t border-border flex items-center justify-between">
-                      <span className="text-muted-foreground">3D Staging Furniture:</span>
-                      <button
-                        onClick={() =>
-                          setHouseSpec((prev) => ({
-                            ...prev,
-                            furnished: !prev.furnished,
-                          }))
-                        }
-                        className={cn(
-                          "px-2.5 py-1 rounded-full text-xs font-semibold transition-all border",
-                          houseSpec.furnished
-                            ? "bg-transparent text-foreground font-bold border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.35)]"
-                            : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {houseSpec.furnished ? "Furnished" : "Unfurnished"}
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* 4. Subdivision Master Infrastructure */}
-                <Card className="shadow-sm">
-                  <CardHeader className="pb-2.5">
-                    <CardTitle className="text-sm flex items-center gap-1.5">
-                      <Waves className="w-4 h-4 text-primary" />
-                      Subdivision Amenities
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-xs">
-                    <div className="flex justify-between py-1 border-b border-border">
-                      <span className="text-muted-foreground">Stormwater Pond:</span>
-                      <span className="font-semibold text-sky-600">
-                        {subdivisionConfig.pondAcreage} Ac ({subdivisionConfig.pondRadiusFt}&apos;
-                        rad)
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border">
-                      <span className="text-muted-foreground">Aeration Fountain:</span>
-                      <span className="font-semibold text-emerald-600">Active Spray Nozzle</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border">
-                      <span className="text-muted-foreground">Walking Trail:</span>
-                      <span className="font-semibold text-foreground">Loop Trail + Benches</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-border">
-                      <span className="text-muted-foreground">Streetlight Network:</span>
-                      <span className="font-semibold text-foreground">Post-Top Lanterns</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-muted-foreground">Dedicated Open Space:</span>
-                      <span className="font-semibold text-foreground">
-                        {subdivisionConfig.openSpaceAcreage} Ac (
-                        {(
-                          (subdivisionConfig.openSpaceAcreage / subdivisionConfig.grossAcres) *
-                          100
-                        ).toFixed(0)}
-                        %)
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
 
             {/* TAB 2: ZONING & TOPOGRAPHY RESTRICTIONS */}
             {activeTab === "ZoningRestrictions" && (
@@ -1112,12 +707,41 @@ function Scene3DPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="shadow-sm">
                   <CardHeader>
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      <span>Architectural Spec Sheet: Residential Plan</span>
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        <span>Architectural Spec Sheet: Residential Plan</span>
+                      </span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {houseSpec.stories} {houseSpec.stories === 1 ? "Story" : "Stories"}
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3 text-xs">
+                  <CardContent className="space-y-4 text-xs">
+                    {/* Story Selection */}
+                    <div>
+                      <span className="text-muted-foreground font-medium block mb-1.5">
+                        Story Configuration:
+                      </span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[1, 2, 3, 4].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => handleSetStories(s as 1 | 2 | 3 | 4)}
+                            className={cn(
+                              "py-1.5 text-center rounded-md font-bold transition-all border",
+                              houseSpec.stories === s
+                                ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                : "bg-transparent hover:bg-muted/30 text-muted-foreground hover:text-foreground border-border/60",
+                            )}
+                          >
+                            {s}F
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
                         <span className="text-muted-foreground block">Building Footprint:</span>
@@ -1133,39 +757,157 @@ function Scene3DPage() {
                         </span>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
-                        <span className="text-muted-foreground block">Story Configuration:</span>
-                        <span className="font-bold text-sm">
-                          {houseSpec.stories} {houseSpec.stories === 1 ? "Story" : "Stories"}
+                        <span className="text-muted-foreground block">Ridge Peak Elevation:</span>
+                        <span
+                          className={`font-bold text-sm ${
+                            isHeightExceeded ? "text-red-500" : "text-emerald-600"
+                          }`}
+                        >
+                          {houseSpec.heightFt}&apos; Above Grade
                         </span>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/40 border border-border">
-                        <span className="text-muted-foreground block">Ridge Peak Elevation:</span>
+                        <span className="text-muted-foreground block">Max Zoning Height:</span>
                         <span className="font-bold text-sm">
-                          {houseSpec.heightFt}&apos; Above Grade
+                          {subdivisionConfig.maxZoningHeight}&apos; Max Allowed
                         </span>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-border space-y-2">
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Facade Material:</span>
-                        <span className="font-semibold capitalize">{houseSpec.facadeMaterial}</span>
+                    <div className="pt-2 border-t border-border space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-muted-foreground block mb-1 font-medium">
+                            Architectural Style:
+                          </label>
+                          <select
+                            value={houseSpec.style}
+                            onChange={(e) =>
+                              setHouseSpec((prev) => ({
+                                ...prev,
+                                style: e.target.value as ArchitectureStyle,
+                              }))
+                            }
+                            className="w-full p-1.5 rounded border border-border bg-background text-foreground text-xs"
+                          >
+                            <option value="modernCraftsman">Modern Craftsman</option>
+                            <option value="traditionalColonial">Traditional Colonial</option>
+                            <option value="modernFarmhouse">Modern Farmhouse</option>
+                            <option value="contemporary">Contemporary Minimalist</option>
+                            <option value="europeanCountry">European Country Manor</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground block mb-1 font-medium">
+                            Garage Capacity:
+                          </label>
+                          <div className="grid grid-cols-3 gap-1">
+                            {[1, 2, 3].map((g) => (
+                              <button
+                                key={g}
+                                type="button"
+                                onClick={() =>
+                                  setHouseSpec((prev) => ({ ...prev, garageBays: g as 1 | 2 | 3 }))
+                                }
+                                className={cn(
+                                  "py-1.5 text-center rounded border font-semibold text-xs transition-all",
+                                  houseSpec.garageBays === g
+                                    ? "bg-transparent text-foreground font-bold border-orange-500/60 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                                    : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground",
+                                )}
+                              >
+                                {g} Bay
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Roof Style & System:</span>
-                        <span className="font-semibold capitalize">{houseSpec.roofMaterial}</span>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-muted-foreground block mb-1 font-medium">
+                            Exterior Facade:
+                          </label>
+                          <select
+                            value={houseSpec.facadeMaterial}
+                            onChange={(e) =>
+                              setHouseSpec((prev) => ({
+                                ...prev,
+                                facadeMaterial: e.target.value as FacadeMaterial,
+                              }))
+                            }
+                            className="w-full p-1.5 rounded border border-border bg-background text-foreground text-xs"
+                          >
+                            <option value="vinyl">Vinyl Siding</option>
+                            <option value="hardiePlank">James Hardie Fiber Cement</option>
+                            <option value="brickPartial">Partial Masonry / Brick Front</option>
+                            <option value="brickFull">Full Brick Veneer</option>
+                            <option value="stoneAccent">Fieldstone & Ledgerock Accent</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground block mb-1 font-medium">
+                            Roof System:
+                          </label>
+                          <select
+                            value={houseSpec.roofMaterial}
+                            onChange={(e) =>
+                              setHouseSpec((prev) => ({
+                                ...prev,
+                                roofMaterial: e.target.value as RoofMaterial,
+                              }))
+                            }
+                            className="w-full p-1.5 rounded border border-border bg-background text-foreground text-xs"
+                          >
+                            <option value="asphaltShingle">Architectural Asphalt Shingles</option>
+                            <option value="metalStandingSeam">Standing Seam Metal Roof</option>
+                            <option value="slateTile">Synthetic Slate Tile</option>
+                          </select>
+                        </div>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Garage Capacity:</span>
-                        <span className="font-semibold">{houseSpec.garageBays}-Car Integrated</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-border">
-                        <span className="text-muted-foreground">Primary Flooring:</span>
-                        <span className="font-semibold capitalize">{houseSpec.flooring}</span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-muted-foreground">Interior Wall Palette:</span>
-                        <span className="font-semibold capitalize">{houseSpec.wallColor}</span>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-muted-foreground block mb-1 font-medium">
+                            Primary Flooring:
+                          </label>
+                          <select
+                            value={houseSpec.flooring}
+                            onChange={(e) =>
+                              setHouseSpec((prev) => ({
+                                ...prev,
+                                flooring: e.target.value as InteriorFlooring,
+                              }))
+                            }
+                            className="w-full p-1.5 rounded border border-border bg-background text-foreground text-xs"
+                          >
+                            <option value="oakHardwood">Engineered White Oak Hardwood</option>
+                            <option value="luxuryVinylPlank">Commercial Grade LVP</option>
+                            <option value="porcelainTile">Porcelain Tile & Natural Stone</option>
+                            <option value="plushCarpet">Plush Nylon Carpet</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-muted-foreground block mb-1 font-medium">
+                            Interior Wall Palette:
+                          </label>
+                          <select
+                            value={houseSpec.wallColor}
+                            onChange={(e) =>
+                              setHouseSpec((prev) => ({
+                                ...prev,
+                                wallColor: e.target.value as InteriorWallColor,
+                              }))
+                            }
+                            className="w-full p-1.5 rounded border border-border bg-background text-foreground text-xs"
+                          >
+                            <option value="agreeableGray">Agreeable Gray (SW 7029)</option>
+                            <option value="pureWhite">Pure White (SW 7005)</option>
+                            <option value="navalNavy">Naval Blue (SW 6244)</option>
+                            <option value="sageGreen">Clary Sage (SW 6178)</option>
+                            <option value="charcoal">Iron Ore Charcoal (SW 7069)</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

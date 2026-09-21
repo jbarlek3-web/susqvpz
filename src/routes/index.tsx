@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Bot,
-  Box,
   CheckCircle2,
   ContactRound,
+  DollarSign,
   Gavel,
   Layers,
   Map as MapIcon,
@@ -149,10 +149,10 @@ function Home() {
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Feature
-            icon={Box}
+            icon={DollarSign}
             title="Subdivision Underwriting & Costs Engine"
             badge="Pro Forma"
-            body="Compute site improvements, earthwork, stormwater detention, and multi-story architectural spec costs with location-tied underwriting."
+            body="Compute site improvements, earthwork, stormwater detention, and residential construction specs with location-tied underwriting."
             href="/scene-3d"
             cta="Launch Costs Engine"
           />
