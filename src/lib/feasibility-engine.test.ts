@@ -151,4 +151,53 @@ describe("Feasibility Assessment Engine", () => {
     assert.ok(assessment.diligenceChecklist.some((task) => task.id === "dd-penndot-uop"));
     assert.ok(assessment.diligenceChecklist.some((task) => task.id === "dd-cross-drainage-easement"));
   });
+
+  it("calculates contiguous assemblage with custom user overrides on acreage and asking price", () => {
+    const p1 = PARCELS[0]!;
+    const p2 = PARCELS[1]!;
+
+    const config: AssemblageConfig = {
+      mode: "contiguous_assemblage",
+      slots: [
+        { parcel: p1, role: "primary", elevationTrend: "neutral" },
+        {
+          parcel: p2,
+          role: "contiguous_adjacent",
+          elevationTrend: "neutral",
+          isCustom: true,
+          customOverrides: {
+            acres: 5.5,
+            askingPrice: 320_000,
+            slopePct: 5,
+          },
+        },
+      ],
+    };
+
+    const assessment = assessParcelFeasibility(p1, "subdivision", undefined, "lot_developer", config);
+    const expectedAcres = Number((p1.acres + 5.5).toFixed(2));
+    assert.equal(assessment.grossAcres, expectedAcres);
+    assert.equal(assessment.assemblage.totalGrossAcres, expectedAcres);
+    assert.equal(assessment.assemblage.totalAssessedValue, (p1.assessed || 120_000) + 320_000);
+  });
+
+  it("calculates exact setback recovery area when custom boundary depth and setback width are specified", () => {
+    const p1 = PARCELS[0]!;
+    const p2 = PARCELS[1]!;
+
+    const config: AssemblageConfig = {
+      mode: "contiguous_assemblage",
+      slots: [
+        { parcel: p1, role: "primary", elevationTrend: "neutral" },
+        { parcel: p2, role: "contiguous_adjacent", elevationTrend: "neutral" },
+      ],
+      customBoundaryDepthFt: 400,
+      customInternalSetbackFt: 25,
+    };
+
+    const assessment = assessParcelFeasibility(p1, "subdivision", undefined, "lot_developer", config);
+    // 1 boundary * 400 ft * (25 * 2) = 20,000 sq ft
+    assert.equal(assessment.assemblage.setbackAreaRecoveredSqFt, 20_000);
+    assert.equal(assessment.assemblage.setbackAreaRecoveredAcres, Number((20_000 / 43560).toFixed(2)));
+  });
 });

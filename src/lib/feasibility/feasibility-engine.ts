@@ -40,6 +40,15 @@ export interface AssemblageSlot {
   parcel: Parcel;
   role: "primary" | "contiguous_adjacent" | "cross_street_subdivisible";
   elevationTrend?: "high" | "neutral" | "low";
+  isCustom?: boolean;
+  customOverrides?: {
+    acres?: number;
+    askingPrice?: number;
+    slopePct?: number;
+    waterAvailable?: boolean;
+    sewerAvailable?: boolean;
+    zoning?: string;
+  };
 }
 
 export interface AssemblageAnalysis {
@@ -322,6 +331,8 @@ export const COUNTY_BENCHMARKS: Record<
 export interface AssemblageConfig {
   mode: AssemblageMode;
   slots: AssemblageSlot[];
+  customBoundaryDepthFt?: number;
+  customInternalSetbackFt?: number;
 }
 
 export function assessParcelFeasibility(
@@ -345,9 +356,13 @@ export function assessParcelFeasibility(
     ? assemblageConfig.slots
     : [{ parcel, role: "primary", elevationTrend: "neutral" }];
 
-  const allParcels = slots.map((s) => s.parcel);
-  const totalGrossAcres = Number(allParcels.reduce((sum, p) => sum + p.acres, 0).toFixed(2));
-  const totalAssessedValue = allParcels.reduce((sum, p) => sum + (p.assessed || 120_000), 0);
+  const totalGrossAcres = Number(
+    slots.reduce((sum, s) => sum + (s.customOverrides?.acres ?? s.parcel.acres), 0).toFixed(2),
+  );
+  const totalAssessedValue = slots.reduce(
+    (sum, s) => sum + (s.customOverrides?.askingPrice ?? s.parcel.assessed ?? 120_000),
+    0,
+  );
   
   // Calculate contiguous boundaries & setback recovery
   const contiguousSlots = slots.filter((s) => s.role === "primary" || s.role === "contiguous_adjacent");
@@ -355,8 +370,20 @@ export function assessParcelFeasibility(
   
   const contiguousBoundaryCount = Math.max(0, contiguousSlots.length - 1);
   // Reclaimed buildable area: In standard PA suburban zoning, eliminating two 25-ft side setbacks along a 300-ft property depth
-  // recovers approx. 50 ft x 300 ft = 15,000 sq ft (~0.34 acres) per common boundary.
-  const setbackAreaRecoveredSqFt = contiguousBoundaryCount * 18_000;
+  // recovers approx. 50 ft x 300 ft = 15,000 to 18,000 sq ft (~0.34-0.41 acres) per common boundary.
+  // When custom depth and setback are specified, calculates exact formula:
+  let setbackAreaRecoveredSqFt = contiguousBoundaryCount * 18_000;
+  if (
+    assemblageConfig?.customBoundaryDepthFt &&
+    assemblageConfig.customBoundaryDepthFt > 0 &&
+    assemblageConfig?.customInternalSetbackFt &&
+    assemblageConfig.customInternalSetbackFt > 0
+  ) {
+    setbackAreaRecoveredSqFt =
+      contiguousBoundaryCount *
+      assemblageConfig.customBoundaryDepthFt *
+      (assemblageConfig.customInternalSetbackFt * 2);
+  }
   const setbackAreaRecoveredAcres = Number((setbackAreaRecoveredSqFt / 43_560).toFixed(2));
 
   const reverseSubdivisionRequired = contiguousBoundaryCount > 0;
@@ -405,7 +432,8 @@ export function assessParcelFeasibility(
   let undevPct = 0.05; // slope & environmental buffers
 
   // Blended slope and flood across participating parcels
-  const avgSlopePct = slots.reduce((sum, s) => sum + s.parcel.slopePct, 0) / slots.length;
+  const avgSlopePct =
+    slots.reduce((sum, s) => sum + (s.customOverrides?.slopePct ?? s.parcel.slopePct), 0) / slots.length;
   if (avgSlopePct > 15) {
     undevPct += 0.20;
   } else if (avgSlopePct > 8) {
