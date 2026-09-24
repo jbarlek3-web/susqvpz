@@ -4,15 +4,19 @@ import {
   AlertTriangle,
   ArrowRight,
   Bot,
+  Briefcase,
   Building,
   CheckCircle2,
   ChevronDown,
   Database,
   DollarSign,
   ExternalLink,
+  Factory,
   FileCheck2,
   FileSearch,
   Filter,
+  Home,
+  Layers,
   Layers3,
   MapPin,
   Plus,
@@ -20,8 +24,10 @@ import {
   Scale,
   ShieldAlert,
   Sparkles,
+  Store,
   TrendingDown,
   TrendingUp,
+  Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useHub } from "@/lib/store";
@@ -37,10 +43,13 @@ import {
   assessParcelFeasibility,
   COUNTY_BENCHMARKS,
   OBJECTIVE_LABELS,
+  ROLE_LABELS,
+  type AssemblageConfig,
   type DevelopmentObjective,
+  type DevelopmentRole,
   type ParcelFeasibilityAssessment,
 } from "@/lib/feasibility/feasibility-engine";
-import { ParcelCompareGrid } from "@/components/feasibility/parcel-compare-grid";
+import { AssemblageBuilder } from "@/components/feasibility/assemblage-builder";
 import { FeasibilityReportTab } from "@/components/feasibility/feasibility-report-tab";
 import { FEASIBILITY_DATA_GROUPS, FEASIBILITY_DATA_SOURCES } from "@/lib/data/feasibility-data";
 import { DD_GROUPS, PERMIT_PATHS, SCREENING_CHECKS } from "@/lib/data/acquisition";
@@ -48,14 +57,14 @@ import { DD_GROUPS, PERMIT_PATHS, SCREENING_CHECKS } from "@/lib/data/acquisitio
 export interface AcquireSearch {
   parcelId?: string;
   tab?: string;
-  compareId?: string;
+  role?: string;
 }
 
 export const Route = createFileRoute("/acquire")({
   validateSearch: (search: Record<string, unknown>): AcquireSearch => ({
     parcelId: typeof search.parcelId === "string" ? search.parcelId : undefined,
     tab: typeof search.tab === "string" ? search.tab : undefined,
-    compareId: typeof search.compareId === "string" ? search.compareId : undefined,
+    role: typeof search.role === "string" ? search.role : undefined,
   }),
   component: AcquireStudio,
 });
@@ -115,16 +124,40 @@ function AcquireStudio() {
     return PARCELS.find((p) => p.id === activeParcelId) ?? PARCELS[0]!;
   }, [activeParcelId]);
 
-  // Comparison parcels state
-  const [compareIds, setCompareIds] = useState<string[]>(() => {
-    if (search.compareId && PARCELS.some((p) => p.id === search.compareId)) {
-      return [search.compareId];
+  // Development Role / Business Model
+  const [developmentRole, setDevelopmentRole] = useState<DevelopmentRole>(() => {
+    if (search.role && search.role in ROLE_LABELS) {
+      return search.role as DevelopmentRole;
     }
-    return [];
+    return "lot_developer";
   });
 
   // Development objective
   const [objective, setObjective] = useState<DevelopmentObjective>("subdivision");
+
+  // Assemblage configuration state
+  const [assemblageConfig, setAssemblageConfig] = useState<AssemblageConfig>({
+    mode: "single_parcel",
+    slots: [{ parcel: activeParcel, role: "primary", elevationTrend: "neutral" }],
+  });
+
+  // Update primary parcel in assemblage when activeParcel changes
+  useEffect(() => {
+    setAssemblageConfig((prev) => {
+      if (prev.mode === "single_parcel") {
+        return {
+          mode: "single_parcel",
+          slots: [{ parcel: activeParcel, role: "primary", elevationTrend: "neutral" }],
+        };
+      }
+      // In assemblage mode, ensure the active parcel is the primary slot
+      const otherSlots = prev.slots.filter((s) => s.parcel.id !== activeParcel.id);
+      return {
+        ...prev,
+        slots: [{ parcel: activeParcel, role: "primary", elevationTrend: "neutral" }, ...otherSlots],
+      };
+    });
+  }, [activeParcel]);
 
   // Financial overrides
   const [customAsp, setCustomAsp] = useState<number | undefined>(undefined);
@@ -144,50 +177,40 @@ function AcquireStudio() {
     setCustomLots(undefined);
   };
 
+  const handleRoleChange = (newRole: DevelopmentRole) => {
+    setDevelopmentRole(newRole);
+    setCustomLots(undefined);
+    if (newRole === "townhome_developer") {
+      setObjective("townhome");
+    } else if (newRole === "commercial_pad") {
+      setObjective("commercial");
+    } else if (newRole === "industrial_logistics") {
+      setObjective("commercial");
+    } else if (newRole === "lot_developer" || newRole === "builder_developer") {
+      setObjective("subdivision");
+    }
+  };
+
   // Filtered parcels list
   const filteredParcels = useMemo(() => {
     if (selectedCounty === "all") return PARCELS;
     return parcelsByCounty(selectedCounty);
   }, [selectedCounty]);
 
-  // Feasibility assessment for active parcel
+  // Feasibility assessment for active parcel and configured assemblage
   const activeAssessment = useMemo(() => {
-    return assessParcelFeasibility(activeParcel, objective, {
-      customAsp,
-      customSiteworkPerLot: customSitework,
-      customTargetLots: customLots,
-    });
-  }, [activeParcel, objective, customAsp, customSitework, customLots]);
-
-  // Feasibility assessments for all compared parcels
-  const comparisonAssessments = useMemo(() => {
-    const allIds = Array.from(new Set([activeParcel.id, ...compareIds]));
-    return allIds
-      .map((id) => PARCELS.find((p) => p.id === id))
-      .filter((p): p is Parcel => Boolean(p))
-      .map((p) => assessParcelFeasibility(p, objective));
-  }, [activeParcel.id, compareIds, objective]);
-
-  const toggleCompareParcel = (id: string) => {
-    setCompareIds((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((item) => item !== id);
-      }
-      return [...prev, id];
-    });
-  };
-
-  const removeCompareParcel = (id: string) => {
-    if (id === activeParcel.id) {
-      const nextId = compareIds[0];
-      if (nextId) {
-        selectParcel(nextId);
-        setCompareIds((prev) => prev.filter((item) => item !== nextId));
-      }
-    } else {
-      setCompareIds((prev) => prev.filter((item) => item !== id));
-    }
-  };
+    return assessParcelFeasibility(
+      activeParcel,
+      objective,
+      {
+        customAsp,
+        customSiteworkPerLot: customSitework,
+        customTargetLots: customLots,
+      },
+      developmentRole,
+      assemblageConfig,
+    );
+  }, [activeParcel, objective, customAsp, customSitework, customLots, developmentRole, assemblageConfig]);
 
   return (
     <AppShell>
@@ -202,9 +225,7 @@ function AcquireStudio() {
           </div>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Acquisition Feasibility Studio</h1>
           <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">
-            Automated 4-pillar feasibility analysis, density yield calculation, civil constraints
-            triage, and residual land valuation (MAO) across Cumberland, Dauphin, Lancaster, and
-            York Counties.
+            Role-specific underwriting, PA MPC Act 247 parcel assemblage modeling, civil constraints triage, and residual land valuation (MAO) across Cumberland, Dauphin, Lancaster, and York Counties.
           </p>
         </div>
 
@@ -230,7 +251,7 @@ function AcquireStudio() {
       {/* Mode 1: Instant Feasibility Studio (Primary Default) */}
       {activeMode === "assessment" && (
         <div className="mt-6 space-y-6">
-          {/* STEP 1: PARCEL SELECTION & OBJECTIVE BAR */}
+          {/* STEP 1A: SELECT DEVELOPMENT ROLE & BUSINESS INTENT */}
           <Card className="cyber-card border-primary/20">
             <CardHeader className="pb-3 border-b border-border/40">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -239,7 +260,73 @@ function AcquireStudio() {
                     1
                   </span>
                   <CardTitle className="text-base font-semibold">
-                    Select Target Site & Development Objective
+                    Select Development Intent & Underwriting Role
+                  </CardTitle>
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">
+                  Customizes pro forma cash flows, returns metrics, and diligence
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+                {(Object.keys(ROLE_LABELS) as DevelopmentRole[]).map((r) => {
+                  const isSelected = developmentRole === r;
+                  const meta = ROLE_LABELS[r];
+                  const Icon =
+                    r === "lot_developer"
+                      ? Briefcase
+                      : r === "builder_developer"
+                        ? Home
+                        : r === "townhome_developer"
+                          ? Building
+                          : r === "commercial_pad"
+                            ? Store
+                            : Factory;
+
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => handleRoleChange(r)}
+                      className={cn(
+                        "rounded-lg border p-3 text-left transition-all duration-150 flex flex-col justify-between relative",
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-[0_0_14px_rgba(249,115,22,0.2)]"
+                          : "border-border/60 bg-muted/10 hover:border-border hover:bg-muted/20",
+                      )}
+                    >
+                      {isSelected && (
+                        <span className="absolute top-2.5 right-2.5 flex size-2 rounded-full bg-primary" />
+                      )}
+                      <div>
+                        <div className="flex items-center gap-1.5 text-primary mb-1">
+                          <Icon className="size-4" />
+                          <span className="text-xs font-bold uppercase tracking-wider">{meta.title}</span>
+                        </div>
+                        <p className="text-[11px] font-semibold text-foreground leading-snug">
+                          {meta.subtitle}
+                        </p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground line-clamp-3 mt-2 leading-tight">
+                        {meta.desc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* STEP 1B: PARCEL SELECTION & OBJECTIVE BAR */}
+          <Card className="cyber-card border-primary/20">
+            <CardHeader className="pb-3 border-b border-border/40">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+                    2
+                  </span>
+                  <CardTitle className="text-base font-semibold">
+                    Select Anchor Parcel & County Scope
                   </CardTitle>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -270,60 +357,31 @@ function AcquireStudio() {
                 ))}
               </div>
 
-              {/* Primary Parcel Dropdown & Multi-Compare Control */}
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
-                    Active Parcel under Evaluation
-                  </label>
-                  <select
-                    value={activeParcel.id}
-                    onChange={(e) => handleParcelChange(e.target.value)}
-                    className="w-full rounded-lg border border-border/80 bg-background/90 px-3.5 py-2.5 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
-                  >
-                    {filteredParcels.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.address} ({p.municipality}, {p.county} Co.) — {p.acres} ac · {p.zoning} (
-                        {p.zoningName})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
-                    Compare Multiple Parcels
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value) toggleCompareParcel(e.target.value);
-                      }}
-                      className="w-full rounded-lg border border-border/80 bg-background/90 px-3 py-2.5 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    >
-                      <option value="">+ Add Site to Compare Grid...</option>
-                      {PARCELS.filter(
-                        (p) => p.id !== activeParcel.id && !compareIds.includes(p.id),
-                      ).map((p) => (
-                        <option key={p.id} value={p.id}>
-                          + {p.address} ({p.municipality}, {p.acres} ac)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+              {/* Primary Parcel Dropdown */}
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                  Anchor Parcel under Evaluation
+                </label>
+                <select
+                  value={activeParcel.id}
+                  onChange={(e) => handleParcelChange(e.target.value)}
+                  className="w-full rounded-lg border border-border/80 bg-background/90 px-3.5 py-2.5 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+                >
+                  {filteredParcels.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.address} ({p.municipality}, {p.county} Co.) — {p.acres} ac · {p.zoning} ({p.zoningName})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Objective Selector */}
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
-                  Development Target Objective
+                  Product Typology & Zoning Sub-Objective
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                  {(
-                    Object.keys(OBJECTIVE_LABELS) as DevelopmentObjective[]
-                  ).map((key) => {
+                  {(Object.keys(OBJECTIVE_LABELS) as DevelopmentObjective[]).map((key) => {
                     const info = OBJECTIVE_LABELS[key];
                     const isSelected = objective === key;
                     return (
@@ -356,15 +414,14 @@ function AcquireStudio() {
             </CardContent>
           </Card>
 
-          {/* MULTI-PARCEL COMPARISON MATRIX (When 2+ parcels are in comparison) */}
-          {comparisonAssessments.length > 1 && (
-            <ParcelCompareGrid
-              assessments={comparisonAssessments}
-              onSelectPrimary={handleParcelChange}
-              onRemoveParcel={removeCompareParcel}
-              primaryId={activeParcel.id}
-            />
-          )}
+          {/* STEP 1C: SITE STRUCTURE & LAND ASSEMBLAGE STRATEGY */}
+          <AssemblageBuilder
+            primaryParcel={activeParcel}
+            availableParcels={filteredParcels}
+            assemblageConfig={assemblageConfig}
+            onChangeConfig={setAssemblageConfig}
+            assessment={activeAssessment}
+          />
 
           {/* STEP 2: INSTANT FEASIBILITY SCORECARD & EXECUTIVE VERDICT */}
           <div className="grid gap-6 lg:grid-cols-12">
@@ -416,8 +473,7 @@ function AcquireStudio() {
                       </h2>
                       <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                         <span>
-                          <strong>Gross Tract:</strong> {activeAssessment.grossAcres} ac (
-                          {activeAssessment.parcel.sqft.toLocaleString()} sf)
+                          <strong>Gross Tract:</strong> {activeAssessment.grossAcres} ac
                         </span>
                         <span>•</span>
                         <span>
@@ -428,50 +484,392 @@ function AcquireStudio() {
                         <span>
                           <strong>Calculated Yield:</strong>{" "}
                           <strong className="text-primary font-bold">
-                            {activeAssessment.estimatedLots} {activeAssessment.estimatedLots === 1 ? "Lot" : "Lots"}
+                            {activeAssessment.estimatedLots}{" "}
+                            {developmentRole === "commercial_pad"
+                              ? "Commercial Pads"
+                              : developmentRole === "industrial_logistics"
+                                ? "Building Pad"
+                                : activeAssessment.estimatedLots === 1
+                                  ? "Lot"
+                                  : "Lots"}
                           </strong>{" "}
-                          ({activeAssessment.grossDensityUa} / ac gross)
+                          ({activeAssessment.grossDensityUa} gross / {activeAssessment.netDensityUa} net DU/ac)
                         </span>
+                        {activeAssessment.assemblage.setbackAreaRecoveredSqFt > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="text-emerald-400 font-semibold">
+                              +{activeAssessment.assemblage.setbackAreaRecoveredSqFt.toLocaleString()} sq ft setback area recovered
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end justify-center shrink-0 border-t md:border-t-0 md:border-l border-border/40 pt-3 md:pt-0 md:pl-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {/* MAO Summary Callout */}
+                  <div className="rounded-xl border border-primary/40 bg-background/80 p-4 md:text-right shrink-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Maximum Allowable Offer (MAO)
                     </p>
-                    <p className="text-2xl font-black text-primary">
+                    <p className="text-2xl font-black text-foreground">
                       {money(activeAssessment.financials.maxAllowableOfferTotal)}
                     </p>
-                    <p
-                      className={cn(
-                        "text-xs font-semibold mt-0.5",
-                        activeAssessment.financials.spreadAmount >= 0
-                          ? "text-emerald-400"
-                          : "text-amber-400",
-                      )}
-                    >
-                      {activeAssessment.financials.spreadAmount >= 0
-                        ? `+$${activeAssessment.financials.spreadAmount.toLocaleString()} under asking/assessed`
-                        : `-$${Math.abs(activeAssessment.financials.spreadAmount).toLocaleString()} over asking/assessed`}
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {money(activeAssessment.financials.maxAllowableOfferPerLot)} / lot ·{" "}
+                      <span
+                        className={cn(
+                          "font-bold",
+                          activeAssessment.financials.spreadAmount >= 0
+                            ? "text-emerald-500"
+                            : "text-amber-500",
+                        )}
+                      >
+                        {activeAssessment.financials.spreadAmount >= 0
+                          ? `+$${activeAssessment.financials.spreadAmount.toLocaleString()} spread`
+                          : `-$${Math.abs(activeAssessment.financials.spreadAmount).toLocaleString()} over asking`}
+                      </span>
                     </p>
                   </div>
                 </div>
-
-                {/* Fatal Flaw Alerts (if any) */}
-                {activeAssessment.fatalFlaws.length > 0 && (
-                  <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive flex items-start gap-2">
-                    <AlertTriangle className="size-4 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold">Caution / Site Constraint Detected: </span>
-                      {activeAssessment.fatalFlaws.join(" ")}
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
-            {/* THE 4 KEY FEASIBILITY PILLARS */}
+            {/* ROLE-SPECIFIC UNDERWRITING PRO FORMA CARD */}
+            {developmentRole === "lot_developer" && activeAssessment.roleProForma.lotDeveloper && (
+              <Card className="cyber-card lg:col-span-12 border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 border-b border-primary/20">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="size-4 text-primary" />
+                      <CardTitle className="text-base font-bold">
+                        Master Lot Developer Pro Forma · Builder Takedown & Option Waterfall
+                      </CardTitle>
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      Takedowns Pace to Homebuilder Absorption
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Finished Lot Value (FLV)</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.lotDeveloper.finishedLotValue)} / lot
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        ${activeAssessment.roleProForma.lotDeveloper.frontFootPrice.toLocaleString()} / front linear foot (65 ft lot width)
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Gross Lot Consideration</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.lotDeveloper.grossLotRevenue)}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {activeAssessment.estimatedLots} Finished Shovel-Ready Lots
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Builder Takedown Schedule</span>
+                      <span className="text-base font-bold text-primary">
+                        {activeAssessment.roleProForma.lotDeveloper.phase1Lots} Initial Lots + {activeAssessment.roleProForma.lotDeveloper.quarterlyTakedownLots}/qtr
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Over {activeAssessment.roleProForma.lotDeveloper.takedownDurationQuarters} quarters w/ 0.75% price escalators
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Developer Return Hurdle</span>
+                      <span className="text-base font-bold text-emerald-400">
+                        {activeAssessment.roleProForma.lotDeveloper.developerLeveredIrr}% Levered IRR
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {activeAssessment.roleProForma.lotDeveloper.equityMultipleMoic}x Equity Multiple (MOIC)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3 text-[11px] text-muted-foreground border-t border-border/40 pt-3">
+                    <div>
+                      <strong>Builder Option Deposit (10%):</strong>{" "}
+                      {money(activeAssessment.roleProForma.lotDeveloper.optionDepositAmount)} non-refundable deposit held in escrow.
+                    </div>
+                    <div>
+                      <strong>Horizontal Sitework Total:</strong>{" "}
+                      {money(activeAssessment.roleProForma.lotDeveloper.totalHorizontalCost)} ({money(activeAssessment.roleProForma.lotDeveloper.horizontalCostPerLot)}/lot).
+                    </div>
+                    <div>
+                      <strong>PA MPC Performance Bond Carry:</strong>{" "}
+                      {money(activeAssessment.roleProForma.lotDeveloper.performanceBondCarry)} / year (1.5% annual fee on 110% bond).
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {developmentRole === "builder_developer" && activeAssessment.roleProForma.builderDeveloper && (
+              <Card className="cyber-card lg:col-span-12 border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 border-b border-primary/20">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Home className="size-4 text-primary" />
+                      <CardTitle className="text-base font-bold">
+                        Integrated Builder-Developer Pro Forma · Dual Horizontal & Vertical Margin
+                      </CardTitle>
+                    </div>
+                    <span className="text-xs font-semibold text-emerald-400">
+                      Captures Both Site Development & Vertical Building Profit
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Total Retail Home Revenue</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.builderDeveloper.totalHomeRevenue)}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {activeAssessment.estimatedLots} Homes @ {money(activeAssessment.roleProForma.builderDeveloper.homeAsp)} ASP
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Vertical Direct Hard Costs</span>
+                      <span className="text-base font-bold text-foreground">
+                        ${activeAssessment.roleProForma.builderDeveloper.verticalDirectCostPerSqFt} / SF
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {money(activeAssessment.roleProForma.builderDeveloper.verticalCostPerHome)} / home (2,400 SF avg)
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Absorption & Inventory Turn</span>
+                      <span className="text-base font-bold text-primary">
+                        {activeAssessment.roleProForma.builderDeveloper.monthlyAbsorptionRate} sales / month
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {activeAssessment.roleProForma.builderDeveloper.absorptionDurationMonths} months total project absorption
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Dual Combined Gross Margin</span>
+                      <span className="text-base font-bold text-emerald-400">
+                        {activeAssessment.roleProForma.builderDeveloper.combinedGrossMarginPct}% Combined Margin
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        14% Horizontal Lot Margin + 20% Vertical Builder Margin
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3 text-[11px] text-muted-foreground border-t border-border/40 pt-3">
+                    <div>
+                      <strong>Total Vertical Hard Cost:</strong>{" "}
+                      {money(activeAssessment.roleProForma.builderDeveloper.totalVerticalCost)} sticks & bricks.
+                    </div>
+                    <div>
+                      <strong>Total Horizontal Sitework:</strong>{" "}
+                      {money(activeAssessment.roleProForma.builderDeveloper.totalHorizontalSitework)} civil infrastructure.
+                    </div>
+                    <div>
+                      <strong>Project Return on Inventory:</strong>{" "}
+                      {activeAssessment.roleProForma.builderDeveloper.returnOnInventoryPct}% ROI ({activeAssessment.roleProForma.builderDeveloper.projectIrr}% Project IRR).
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {developmentRole === "townhome_developer" && activeAssessment.roleProForma.townhome && (
+              <Card className="cyber-card lg:col-span-12 border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 border-b border-primary/20">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Building className="size-4 text-primary" />
+                      <CardTitle className="text-base font-bold">
+                        Townhome & Attached Cluster Pro Forma · Density & Private HOA Cartways
+                      </CardTitle>
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      {activeAssessment.roleProForma.townhome.densityPerAcre} DU / Acre Density
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Townhome Unit ASP</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.townhome.unitAsp)}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Total Gross Revenue: {money(activeAssessment.roleProForma.townhome.totalRevenue)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Street & Access Typology</span>
+                      <span className="text-base font-bold text-foreground">
+                        {activeAssessment.roleProForma.townhome.streetTypology}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {activeAssessment.roleProForma.townhome.garageTypology} (22 ft lot frontage)
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Horizontal Cost / Unit</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.townhome.horizontalCostPerUnit)} / unit
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        High density reduces linear utility cost per unit
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Project Margin Target</span>
+                      <span className="text-base font-bold text-emerald-400">
+                        {activeAssessment.roleProForma.townhome.combinedMarginPct}% Combined Margin
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Land MAO: {money(activeAssessment.roleProForma.townhome.maxAllowableOfferTotal)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {developmentRole === "commercial_pad" && activeAssessment.roleProForma.commercialPad && (
+              <Card className="cyber-card lg:col-span-12 border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 border-b border-primary/20">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Store className="size-4 text-primary" />
+                      <CardTitle className="text-base font-bold">
+                        Commercial Outparcel & Pad Development Pro Forma · NNN Ground Leases & Pad Sales
+                      </CardTitle>
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      {activeAssessment.roleProForma.commercialPad.outparcelsCount} Pad-Ready Outparcels
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Fee-Simple Pad Value</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.commercialPad.avgPadPrice)} / pad
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Total Pad Consideration: {money(activeAssessment.roleProForma.commercialPad.totalPadRevenue)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">NNN Ground Lease Option</span>
+                      <span className="text-base font-bold text-foreground">
+                        {money(activeAssessment.roleProForma.commercialPad.annualGroundRentPerPad)} / yr rent
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Capitalized @ {activeAssessment.roleProForma.commercialPad.groundLeaseCapRate}% Cap Rate
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">PennDOT HOP Turning Lane</span>
+                      <span className="text-base font-bold text-primary">
+                        {money(activeAssessment.roleProForma.commercialPad.penndotHopTurnLaneEscrow)} Escrow
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Auxiliary deceleration lane & traffic impact study
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Commercial Land MAO</span>
+                      <span className="text-base font-bold text-emerald-400">
+                        {money(activeAssessment.roleProForma.commercialPad.maxAllowableOfferTotal)}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {activeAssessment.roleProForma.commercialPad.farRatio} FAR · 65% Impervious Coverage
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {developmentRole === "industrial_logistics" && activeAssessment.roleProForma.industrialLogistics && (
+              <Card className="cyber-card lg:col-span-12 border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 border-b border-primary/20">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Factory className="size-4 text-primary" />
+                      <CardTitle className="text-base font-bold">
+                        Industrial Logistics & Warehouse Pad Pro Forma · WB-67 Truck Court
+                      </CardTitle>
+                    </div>
+                    <span className="text-xs font-semibold text-primary">
+                      {activeAssessment.roleProForma.industrialLogistics.potentialBuildingSqFt.toLocaleString()} SF Footprint
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs">
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Building Footprint (0.32 FAR)</span>
+                      <span className="text-base font-bold text-foreground">
+                        {activeAssessment.roleProForma.industrialLogistics.potentialBuildingSqFt.toLocaleString()} SF
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        ~{activeAssessment.roleProForma.industrialLogistics.dockDoorsEstimated} Dock Doors Estimated
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Truck Court Clearance</span>
+                      <span className="text-base font-bold text-foreground">
+                        {activeAssessment.roleProForma.industrialLogistics.truckCourtDepthFt} ft Depth
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        AASHTO WB-67 interstate semitrailer turning compliance
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Utility Capacities Required</span>
+                      <span className="text-base font-bold text-primary">
+                        {activeAssessment.roleProForma.industrialLogistics.fireFlowGpmRequired.toLocaleString()} GPM Fire Flow
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        ESFR Sprinkler · {activeAssessment.roleProForma.industrialLogistics.powerCapacityKva.toLocaleString()} kVA 3-Phase Power
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-border/50 bg-background/70 p-3">
+                      <span className="text-muted-foreground block text-[11px]">Industrial Land MAO</span>
+                      <span className="text-base font-bold text-emerald-400">
+                        {money(activeAssessment.roleProForma.industrialLogistics.maxAllowableOfferTotal)}
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        ${activeAssessment.roleProForma.industrialLogistics.padReadyValuePerSqFt} / SF Finished Pad Benchmark
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Pillar 1: Zoning & Entitlement */}
             <Card className="cyber-card lg:col-span-6 border-primary/20">
@@ -480,7 +878,7 @@ function AcquireStudio() {
                   <div className="flex items-center gap-2">
                     <Scale className="size-4 text-primary" />
                     <CardTitle className="text-base font-bold">
-                      1. Zoning & Entitlement Yield
+                      1. Zoning & Entitlement Feasibility
                     </CardTitle>
                   </div>
                   <span
@@ -499,59 +897,30 @@ function AcquireStudio() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pt-2 text-xs">
-                <div className="rounded-md bg-muted/20 p-2.5">
-                  <div className="flex items-center justify-between font-bold text-foreground">
-                    <span>
-                      District: {activeParcel.zoning} — {activeParcel.zoningName}
-                    </span>
-                    <span className="text-primary font-bold">
-                      {activeAssessment.estimatedLots} Lots Calculated
-                    </span>
-                  </div>
-                  <p className="mt-1 text-muted-foreground">{activeParcel.zoningSummary}</p>
+                <div className="rounded-md border border-border/40 bg-muted/20 p-2.5">
+                  <span className="font-semibold text-foreground">Classification: </span>
+                  <span className="font-bold text-primary">{activeParcel.zoning}</span> —{" "}
+                  <span className="text-muted-foreground">{activeParcel.zoningName}</span>
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-                  <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">Max Lot Coverage</span>
-                    <span>{activeParcel.maxCoverage}% of tract</span>
-                  </div>
-                  <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">Height Restriction</span>
-                    <span>{activeParcel.maxHeight} feet</span>
-                  </div>
-                  <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">Setbacks (F / S / R)</span>
-                    <span>
-                      {activeParcel.setbacks.front}&apos; / {activeParcel.setbacks.side}&apos; /{" "}
-                      {activeParcel.setbacks.rear}&apos;
-                    </span>
-                  </div>
-                  <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">Net Density</span>
-                    <span>{activeAssessment.netDensityUa} dwelling units/ac</span>
-                  </div>
-                </div>
-
                 <ul className="space-y-1 text-muted-foreground">
-                  {activeAssessment.pillars.zoning.details.map((d, i) => (
-                    <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-primary">•</span>
-                      <span>{d}</span>
+                  {activeAssessment.pillars.zoning.details.map((detail, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-primary font-bold">•</span>
+                      <span>{detail}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
             </Card>
 
-            {/* Pillar 2: Civil & Environmental */}
+            {/* Pillar 2: Site Civil & Environmental */}
             <Card className="cyber-card lg:col-span-6 border-primary/20">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Building className="size-4 text-cyan-500" />
+                    <ShieldAlert className="size-4 text-amber-500" />
                     <CardTitle className="text-base font-bold">
-                      2. Civil & Environmental Site Conditions
+                      2. Site Civil & Environmental Triage
                     </CardTitle>
                   </div>
                   <span
@@ -570,46 +939,30 @@ function AcquireStudio() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pt-2 text-xs">
-                <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+                <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">Slope & Topography</span>
+                    <span className="font-bold text-foreground block">Terrain Slope</span>
                     <span
-                      className={
-                        activeParcel.slopePct > 15
-                          ? "text-destructive font-bold"
-                          : activeParcel.slopePct > 8
-                            ? "text-amber-400"
-                            : "text-foreground"
-                      }
+                      className={cn(
+                        "font-semibold",
+                        activeParcel.slopePct > 15 ? "text-destructive" : "text-emerald-400",
+                      )}
                     >
-                      {activeParcel.slopePct}% grade ({activeAssessment.pillars.civil.summary})
+                      {activeParcel.slopePct}% grade ({activeParcel.slopePct > 15 ? "Steep Slope" : "Standard"})
                     </span>
                   </div>
                   <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">FEMA Flood Zone</span>
-                    <span>Zone {activeParcel.flood["5"] || "X"} (100-Yr Boundary)</span>
-                  </div>
-                  <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">PA DEP Chapter 102</span>
-                    <span>
-                      {activeParcel.acres >= 1.0 ? "NPDES Permit Required" : "Standard E&S Plan"}
-                    </span>
-                  </div>
-                  <div className="rounded border border-border/40 p-2">
-                    <span className="font-semibold text-foreground block">Karst Limestone</span>
-                    <span>
-                      {activeParcel.county === "Cumberland" || activeParcel.county === "Lancaster"
-                        ? "High Formation Hazard"
-                        : "Low / Moderate"}
+                    <span className="font-bold text-foreground block">FEMA Flood Zone</span>
+                    <span className="font-semibold text-muted-foreground">
+                      Zone {activeParcel.flood["5"] || "X"} ({activeParcel.flood["5"] === "AE" ? "100-Yr Hazard" : "Minimal"})
                     </span>
                   </div>
                 </div>
-
                 <ul className="space-y-1 text-muted-foreground">
-                  {activeAssessment.pillars.civil.details.map((d, i) => (
-                    <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-cyan-500">•</span>
-                      <span>{d}</span>
+                  {activeAssessment.pillars.civil.details.map((detail, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-primary font-bold">•</span>
+                      <span>{detail}</span>
                     </li>
                   ))}
                 </ul>
@@ -645,15 +998,11 @@ function AcquireStudio() {
                 <div className="rounded border border-border/40 p-2.5 space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-bold text-foreground">Public Water:</span>
-                    <span className="text-muted-foreground text-right">
-                      {activeParcel.utilities.water}
-                    </span>
+                    <span className="text-muted-foreground text-right">{activeParcel.utilities.water}</span>
                   </div>
                   <div className="flex items-start justify-between gap-2 border-t border-border/40 pt-1.5">
                     <span className="font-bold text-foreground">Sanitary Sewer:</span>
-                    <span className="text-muted-foreground text-right">
-                      {activeParcel.utilities.sewer}
-                    </span>
+                    <span className="text-muted-foreground text-right">{activeParcel.utilities.sewer}</span>
                   </div>
                   <div className="flex items-start justify-between gap-2 border-t border-border/40 pt-1.5">
                     <span className="font-bold text-foreground">Electric & Gas:</span>
@@ -665,9 +1014,7 @@ function AcquireStudio() {
 
                 <div className="rounded border border-border/40 p-2 flex items-center justify-between">
                   <div>
-                    <span className="font-semibold text-foreground block">
-                      Traffic Corridor (AADT)
-                    </span>
+                    <span className="font-semibold text-foreground block">Traffic Corridor (AADT)</span>
                     <span className="text-muted-foreground">
                       {activeParcel.aadt.toLocaleString()} vehicles/day
                     </span>
@@ -678,24 +1025,24 @@ function AcquireStudio() {
                 </div>
 
                 <ul className="space-y-1 text-muted-foreground">
-                  {activeAssessment.pillars.utilities.details.map((d, i) => (
-                    <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-emerald-500">•</span>
-                      <span>{d}</span>
+                  {activeAssessment.pillars.utilities.details.map((detail, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-primary font-bold">•</span>
+                      <span>{detail}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
             </Card>
 
-            {/* Pillar 4: Residual Land Value & Financial Pro Forma */}
+            {/* Pillar 4: Residual Financials & Interactive Inputs */}
             <Card className="cyber-card lg:col-span-6 border-primary/20">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <DollarSign className="size-4 text-primary" />
                     <CardTitle className="text-base font-bold">
-                      4. Residual Land Valuation & MAO
+                      4. Residual Valuation & Land Budget
                     </CardTitle>
                   </div>
                   <span
@@ -714,68 +1061,38 @@ function AcquireStudio() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pt-2 text-xs">
-                {/* Pro Forma Table */}
-                <div className="rounded-lg border border-border/40 bg-muted/10 p-2.5 space-y-1.5">
-                  <div className="flex justify-between items-center text-foreground font-semibold">
-                    <span>Projected Finished Home ASP</span>
-                    <span>{money(activeAssessment.financials.finishedHomeAsp)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Finished Lot Value (22% FLV)</span>
-                    <span>{money(activeAssessment.financials.finishedLotValue)} / lot</span>
-                  </div>
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Horizontal Sitework Cost</span>
-                    <span className="text-destructive font-medium">
-                      -{money(activeAssessment.financials.horizontalCostPerLot)} / lot
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Soft Costs & Permitting</span>
-                    <span className="text-destructive font-medium">
-                      -{money(activeAssessment.financials.softCostPerLot)} / lot
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Carry & Financing (5%)</span>
-                    <span className="text-destructive font-medium">
-                      -{money(activeAssessment.financials.carryCostPerLot)} / lot
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Developer Target Margin (20%)</span>
-                    <span className="text-destructive font-medium">
-                      -
-                      {money(
-                        Math.round(activeAssessment.financials.finishedLotValue * 0.2),
-                      )}{" "}
-                      / lot
-                    </span>
-                  </div>
+                <ul className="space-y-1 text-muted-foreground">
+                  {activeAssessment.pillars.financial.details.map((detail, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-primary font-bold">•</span>
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
 
-                  <div className="border-t border-border/60 pt-2 flex justify-between items-center font-bold text-sm text-foreground">
-                    <span className="text-primary">Max Allowable Offer (MAO)</span>
-                    <span className="text-primary text-base">
-                      {money(activeAssessment.financials.maxAllowableOfferTotal)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px] text-muted-foreground">
-                    <span>Current Assessed/Asking</span>
-                    <span>{money(activeAssessment.financials.currentAssessedOrAsking)}</span>
-                  </div>
-                </div>
-
-                {/* Quick Override Toggle */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
+                {/* Overrides Input Bar */}
+                <div className="border-t border-border/40 pt-3 grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-[10px] uppercase font-bold text-muted-foreground block">
-                      Custom ASP ($)
+                      Target ASP ($)
                     </label>
                     <Input
                       type="number"
                       step={5000}
                       value={customAsp ?? activeAssessment.financials.finishedHomeAsp}
                       onChange={(e) => setCustomAsp(Number(e.target.value))}
+                      className="h-8 text-xs mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground block">
+                      Sitework/Lot ($)
+                    </label>
+                    <Input
+                      type="number"
+                      step={2500}
+                      value={customSitework ?? activeAssessment.financials.horizontalCostPerLot}
+                      onChange={(e) => setCustomSitework(Number(e.target.value))}
                       className="h-8 text-xs mt-1"
                     />
                   </div>
@@ -853,17 +1170,13 @@ function AcquireStudio() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-xs">
                   <div className="rounded-md border border-border/40 p-2.5 space-y-1">
-                    <span className="font-bold text-foreground block">
-                      Governing Jurisdiction:
-                    </span>
+                    <span className="font-bold text-foreground block">Governing Jurisdiction:</span>
                     <p className="text-muted-foreground font-medium">
                       {activeAssessment.approvalTimeline.governingBody}
                     </p>
                   </div>
                   <div className="rounded-md border border-border/40 p-2.5 space-y-1">
-                    <span className="font-bold text-foreground block">
-                      County Planning Review:
-                    </span>
+                    <span className="font-bold text-foreground block">County Planning Review:</span>
                     <p className="text-muted-foreground font-medium">
                       {activeAssessment.approvalTimeline.countyPlanningCommission}
                     </p>
@@ -878,6 +1191,11 @@ function AcquireStudio() {
                       <span>{activeAssessment.approvalTimeline.majorMonths}</span>
                     </div>
                   </div>
+                  {activeAssessment.approvalTimeline.reverseSubdivisionMonths && (
+                    <div className="rounded border border-primary/30 bg-primary/10 p-2 text-primary font-semibold">
+                      Reverse Subdivision (PA MPC Act 247): {activeAssessment.approvalTimeline.reverseSubdivisionMonths}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -930,7 +1248,7 @@ function AcquireStudio() {
             <span className="text-foreground font-medium">
               Generating official source-grounded report for:{" "}
               <strong>
-                {activeParcel.address} ({activeParcel.municipality})
+                {activeParcel.address} ({activeParcel.municipality}) · {ROLE_LABELS[developmentRole].title}
               </strong>
             </span>
             <Button
@@ -949,91 +1267,67 @@ function AcquireStudio() {
       {/* Mode 3: Due Diligence & Developer Data Register */}
       {activeMode === "reference" && (
         <div className="mt-6 space-y-6">
-          <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3 text-xs">
-            <span className="text-muted-foreground">
-              Official authoritative reference sources, screening checklists, and permit pathways for
-              South Central Pennsylvania developers.
-            </span>
+          <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/10 p-4">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">
+                Central Pennsylvania Development Reference Library
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Official county datasets, SALDO screening standards, and state environmental permit matrices.
+              </p>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs"
+              className="text-xs"
               onClick={() => setActiveMode("assessment")}
             >
-              ← Back to Feasibility Studio
+              ← Return to Studio
             </Button>
           </div>
 
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="size-5 text-primary" /> Developer Data Register
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>
-                  Official mapping, hazard, market, and housing-finance sources used for early
-                  feasibility and underwriting research across York, Cumberland, Dauphin, and
-                  Lancaster Counties.
-                </p>
-              </CardContent>
-            </Card>
-
+          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
             {FEASIBILITY_DATA_GROUPS.map((group) => {
-              const sources = FEASIBILITY_DATA_SOURCES.filter(
-                (source) => source.mode === group.mode,
-              );
+              const sources = FEASIBILITY_DATA_SOURCES.filter((s) => s.mode === group.mode);
               return (
-                <section key={group.mode}>
-                  <h2 className="text-lg font-semibold">{group.title}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{group.description}</p>
-                  <div className="mt-3 grid gap-3 lg:grid-cols-2">
-                    {sources.map((source) => (
-                      <Card key={source.id}>
-                        <CardHeader className="pb-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <CardTitle className="text-base">{source.title}</CardTitle>
-                            <span className="shrink-0 rounded-full bg-surface-low px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {source.status}
-                            </span>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                          <p className="font-medium">{source.provider}</p>
-                          <p className="text-muted-foreground">{source.use}</p>
-                          <p className="text-xs text-muted-foreground">{source.detail}</p>
-                          <div className="flex flex-wrap gap-3 pt-1 text-sm font-semibold text-primary">
-                            {source.mode === "live-map" ? (
-                              <Link to="/map" className="inline-flex items-center gap-1 underline">
-                                <Layers3 className="size-3.5" /> Open map
-                              </Link>
-                            ) : null}
-                            {source.id === "central-pa-market-report-2026-08" ? (
-                              <a
-                                href={source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 underline"
-                              >
-                                Download market report <ExternalLink className="size-3.5" />
-                              </a>
-                            ) : (
-                              <a
-                                href={source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 underline"
-                              >
-                                Official source <ExternalLink className="size-3.5" />
-                              </a>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                <Card key={group.title} className="cyber-card border-primary/20">
+                  <CardHeader className="pb-3 border-b border-border/40">
+                    <div className="flex items-center gap-2">
+                      <Database className="size-4 text-primary" />
+                      <CardTitle className="text-sm font-bold">{group.title}</CardTitle>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">{group.description}</p>
+                  </CardHeader>
+                  <CardContent className="pt-3 space-y-3">
+                    {sources.map((item) => (
+                      <div key={item.id} className="text-xs border-b border-border/40 pb-2.5 last:border-none">
+                        <div className="flex items-start justify-between gap-1">
+                          <span className="font-semibold text-foreground text-[11px]">{item.title}</span>
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground shrink-0">
+                            {item.status}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">{item.use}</p>
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-primary">
+                          <span>{item.provider}</span>
+                          {item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 hover:underline"
+                            >
+                              {item.id === "central-pa-market-report-2026-08"
+                                ? "Download market report"
+                                : "Official"}{" "}
+                              <ExternalLink className="size-2.5" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     ))}
-                  </div>
-                </section>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
