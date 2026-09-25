@@ -28,7 +28,7 @@ function FlyToLookup() {
   const map = useMap();
   const lookup = useHub((s) => s.lookup);
   useEffect(() => {
-    if (!lookup) return;
+    if (!lookup || lookup.placed === false) return;
     map.setView([lookup.lat, lookup.lng], Math.max(map.getZoom(), 16));
   }, [lookup, map]);
   return null;
@@ -49,6 +49,7 @@ export function LeafletMap({ className }: { className?: string }) {
   const selectParcel = useHub((s) => s.selectParcel);
   const satellite = useHub((s) => s.satellite);
   const query = useHub((s) => s.query);
+  const lookup = useHub((s) => s.lookup);
   const c = COUNTY_CENTERS[county];
 
   const parcels = PARCELS.filter((p) => {
@@ -124,6 +125,57 @@ export function LeafletMap({ className }: { className?: string }) {
             </Polygon>
           );
         })}
+        {lookup && lookup.placed !== false && (
+          <CircleMarker
+            center={[lookup.lat, lookup.lng]}
+            radius={14}
+            pathOptions={{
+              color: "#f97316",
+              fillColor: "#ea580c",
+              fillOpacity: 0.85,
+              weight: 3,
+            }}
+          >
+            <Popup>
+              <div className="min-w-48 text-xs">
+                <div className="font-bold text-sm text-foreground">
+                  {lookup.parcel?.address || lookup.matchedAddress}
+                </div>
+                {lookup.parcel?.pidn && (
+                  <div className="font-mono text-muted-foreground mt-0.5">
+                    PIDN: {lookup.parcel.pidn}
+                  </div>
+                )}
+                {lookup.zoning && (
+                  <div className="mt-1 font-semibold text-primary">
+                    {lookup.zoning.municipalityPretty || lookup.zoning.municipality} · {lookup.zoning.zcode} ({lookup.zoning.zname})
+                  </div>
+                )}
+                {lookup.parcel?.owner && (
+                  <div className="text-muted-foreground mt-0.5">
+                    Owner: {lookup.parcel.owner}
+                  </div>
+                )}
+                {lookup.parcel?.acres != null && (
+                  <div className="text-muted-foreground">
+                    Area: {lookup.parcel.acres.toFixed(2)} acres
+                  </div>
+                )}
+                {lookup.parcel?.assessed != null && (
+                  <div className="text-muted-foreground">
+                    Assessed: {lookup.parcel.assessed.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
+                  </div>
+                )}
+                {lookup.parcel?.salePrice != null && (
+                  <div className="text-muted-foreground">
+                    Last sale: {lookup.parcel.salePrice.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
+                    {lookup.parcel.saleDate ? ` (${lookup.parcel.saleDate})` : ""}
+                  </div>
+                )}
+              </div>
+            </Popup>
+          </CircleMarker>
+        )}
         {layers.traffic &&
           parcels.map((p) => (
             <CircleMarker

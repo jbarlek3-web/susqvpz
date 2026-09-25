@@ -1,4 +1,5 @@
 import { PARCELS, getParcel } from "../data/parcels.ts";
+import { detectCountyAndMuni } from "../data/pa-geography.ts";
 import type { County, Parcel } from "../types.ts";
 import type { SubdivisionConfig } from "./types.ts";
 
@@ -152,15 +153,19 @@ export function resolveAddressOrParcel(idOrAddress: string): ResolvedLocationPro
     };
   }
 
-  // Check matching address query if query is non-empty
+  // Match parcel in mock dataset
   const query = sanitizedInput.toLowerCase();
+  const normQuery = sanitizedInput.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
   if (query.length > 0) {
     const match = PARCELS.find(
       (p) =>
         p.address.toLowerCase().includes(query) ||
         p.apn.toLowerCase().includes(query) ||
         p.id.toLowerCase() === query ||
-        p.municipality.toLowerCase().includes(query),
+        p.municipality.toLowerCase().includes(query) ||
+        (normQuery.length >= 4 &&
+          (p.apn.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().includes(normQuery) ||
+            p.id.replace(/[^a-zA-Z0-9]/g, "").toLowerCase().includes(normQuery))),
     );
 
     if (match) {
@@ -171,38 +176,13 @@ export function resolveAddressOrParcel(idOrAddress: string): ResolvedLocationPro
     }
   }
 
-  // Fallback to custom subdivision with intelligent county guessing
-  let detectedCounty: County = "York";
-  if (
-    /cumberland|camp hill|carlisle|mechanicsburg|hampden|silver spring|upper allen|lower allen|east pennsboro|shippensburg/i.test(
-      sanitizedInput,
-    )
-  ) {
-    detectedCounty = "Cumberland";
-  } else if (
-    /dauphin|harrisburg|derry|hershey|swatara|lower paxton|susquehanna|middletown|hummelstown/i.test(
-      sanitizedInput,
-    )
-  ) {
-    detectedCounty = "Dauphin";
-  } else if (
-    /lancaster|manheim|ephrata|lititz|east hempfield|mount joy|millersville|columbia/i.test(
-      sanitizedInput,
-    )
-  ) {
-    detectedCounty = "Lancaster";
-  } else if (
-    /york|springettsbury|spring garden|manchester|dover|fairview|hanover|red lion|dallastown|shrewsbury/i.test(
-      sanitizedInput,
-    )
-  ) {
-    detectedCounty = "York";
-  }
+  // Fallback to custom subdivision with authoritative regional PA municipality & county detection
+  const { county: detectedCounty, municipality: detectedMuni } = detectCountyAndMuni(sanitizedInput);
 
   const custom = createCustomSubdivision(
     sanitizedInput,
     detectedCounty,
-    `${detectedCounty} Township`,
+    detectedMuni,
     12.0,
   );
 

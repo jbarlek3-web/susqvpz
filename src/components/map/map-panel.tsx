@@ -27,7 +27,9 @@ import { COUNTIES } from "@/lib/data/catalog";
 import { useHub } from "@/lib/store";
 import type { County, LayerId } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { YorkParcelSuggestList } from "@/components/map/york-parcel-suggestions";
 import { lookupYorkAddress } from "@/lib/york-lookup";
+import { useYorkParcelSuggestions } from "@/lib/use-york-parcel-search";
 import { dimLabel, prettyMuni } from "@/lib/data/york-zoning";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
@@ -117,6 +119,7 @@ export function MapPanel() {
   const setLookupBusy = useHub((s) => s.setLookupBusy);
   const setLookupResult = useHub((s) => s.setLookupResult);
   const clearLookup = useHub((s) => s.clearLookup);
+  const yorkMatches = useYorkParcelSuggestions(query);
 
   async function runLookup(value: string) {
     if (isPending) return;
@@ -126,8 +129,8 @@ export function MapPanel() {
       return;
     }
     const q = value.trim();
-    if (q.length < 4) {
-      toast.error("Enter a York County street address");
+    if (q.length < 3) {
+      toast.error("Enter a street address or APN/PINID");
       return;
     }
     setLookupBusy(true);
@@ -164,9 +167,20 @@ export function MapPanel() {
             onKeyDown={(e) => {
               if (e.key === "Enter") void runLookup(query);
             }}
-            placeholder="York address or APN…"
+            placeholder="Search address, owner, or PIN…"
             className="pl-9"
           />
+          {yorkMatches.length > 0 && (
+            <div className="mt-2 rounded-md border border-outline-variant bg-card">
+              <YorkParcelSuggestList
+                matches={yorkMatches}
+                onPick={(pidn) => {
+                  setQuery(pidn);
+                  void runLookup(pidn);
+                }}
+              />
+            </div>
+          )}
         </div>
         <Button
           className="mt-2 w-full"
@@ -174,32 +188,49 @@ export function MapPanel() {
           onClick={() => void runLookup(query)}
           disabled={lookupBusy}
         >
-          {lookupBusy ? "Looking up York County…" : "Look up York address"}
+          {lookupBusy ? "Searching live GIS & parcels…" : "Search Address / APN"}
         </Button>
         {lookupError && <p className="mt-2 text-xs text-destructive">{lookupError}</p>}
         {lookup && (
           <div className="mt-3 rounded-md border border-outline-variant bg-surface-low p-3 text-sm">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-              Live YCPC match
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                {lookup.parcel?.source === "assessment-roll"
+                  ? "York assessment roll"
+                  : lookup.parcel
+                    ? "Verified Parcel Match"
+                    : "Regional Geocoded Match"}
+              </span>
+              {lookup.parcel?.acres != null && (
+                <span className="text-[11px] font-semibold text-foreground">
+                  {lookup.parcel.acres.toFixed(2)} ac
+                </span>
+              )}
             </div>
-            <div className="font-semibold">{lookup.parcel?.address || lookup.matchedAddress}</div>
+            <div className="font-semibold text-foreground mt-1">
+              {lookup.parcel?.address || lookup.matchedAddress}
+            </div>
             {lookup.parcel?.pidn && (
               <div className="font-mono text-xs text-muted-foreground">
-                PIDN {lookup.parcel.pidn}
+                APN/PIN: {lookup.parcel.pidn}
               </div>
             )}
-            {lookup.parcel?.owner && <div className="text-xs">{lookup.parcel.owner}</div>}
-            {lookup.parcel?.acres != null && (
-              <div className="text-xs">{lookup.parcel.acres.toFixed(3)} ac</div>
+            {lookup.parcel?.owner && (
+              <div className="text-xs text-muted-foreground truncate">
+                Owner: {lookup.parcel.owner}
+              </div>
             )}
+            <AssessmentFacts parcel={lookup.parcel} />
             {lookup.zoning && (
-              <div className="mt-2 text-xs">
-                <span className="font-semibold">
+              <div className="mt-2 rounded bg-surface/50 p-2 text-xs border border-border/40">
+                <div className="font-semibold text-foreground">
                   {lookup.zoning.zcode} — {lookup.zoning.zname}
-                </span>
-                <div>{prettyMuni(lookup.zoning.municipality ?? "")}</div>
+                </div>
+                <div className="text-primary font-medium">
+                  {lookup.zoning.municipalityPretty || prettyMuni(lookup.zoning.municipality ?? "")}
+                </div>
                 {lookup.district && (
-                  <div className="mt-1">
+                  <div className="mt-1 text-muted-foreground text-[11px]">
                     Front {dimLabel(lookup.district.front, "ft")} · Side{" "}
                     {dimLabel(lookup.district.side, "ft")}
                     <br />
@@ -209,12 +240,24 @@ export function MapPanel() {
                 )}
               </div>
             )}
-            <button
-              className="mt-2 text-[11px] font-semibold text-primary-container"
-              onClick={clearLookup}
-            >
-              Clear match
-            </button>
+            <div className="mt-2.5 flex items-center justify-between pt-1 border-t border-border/30">
+              <Link
+                to="/aide"
+                search={{
+                  municipality: lookup.zoning?.municipalityPretty || lookup.zoning?.municipality || undefined,
+                  county: "York",
+                }}
+                className="text-[11px] font-semibold text-primary hover:underline"
+              >
+                Launch Aide →
+              </Link>
+              <button
+                className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                onClick={clearLookup}
+              >
+                Clear match
+              </button>
+            </div>
           </div>
         )}
         <p className="mt-3 mb-1.5 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
@@ -522,6 +565,62 @@ export function MapToolbar() {
       >
         Zoning
       </button>
+    </div>
+  );
+}
+
+function money(value: number) {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+}
+
+function AssessmentFacts({
+  parcel,
+}: {
+  parcel: {
+    source?: string;
+    class: string | null;
+    assessed?: number | null;
+    landValue?: number | null;
+    buildingValue?: number | null;
+    salePrice?: number | null;
+    saleDate?: string | null;
+    yearBuilt?: number | null;
+    livingArea?: number | null;
+    deed?: string | null;
+    school: string | null;
+    mailAddress?: string | null;
+    utility?: string | null;
+  } | null;
+}) {
+  if (!parcel || parcel.source !== "assessment-roll") return null;
+  return (
+    <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+      {parcel.class && <div>Class: {parcel.class}</div>}
+      {parcel.assessed != null && <div>Assessed: {money(parcel.assessed)}</div>}
+      {(parcel.landValue != null || parcel.buildingValue != null) && (
+        <div>
+          Land {parcel.landValue != null ? money(parcel.landValue) : "—"} · Building{" "}
+          {parcel.buildingValue != null ? money(parcel.buildingValue) : "—"}
+        </div>
+      )}
+      {parcel.salePrice != null && (
+        <div>
+          Last sale: {money(parcel.salePrice)}
+          {parcel.saleDate ? ` on ${parcel.saleDate}` : ""}
+        </div>
+      )}
+      {parcel.yearBuilt != null && <div>Year built: {parcel.yearBuilt}</div>}
+      {parcel.livingArea != null && (
+        <div>Living area: {parcel.livingArea.toLocaleString()} sf</div>
+      )}
+      {parcel.utility && <div>Utilities: {parcel.utility}</div>}
+      {parcel.deed && <div>Deed book/page: {parcel.deed}</div>}
+      {parcel.school && <div>School district: {parcel.school}</div>}
+      {parcel.mailAddress && <div className="truncate">Mail: {parcel.mailAddress}</div>}
     </div>
   );
 }

@@ -20,7 +20,9 @@ import type { County } from "@/lib/types";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { YorkParcelSuggestList } from "@/components/map/york-parcel-suggestions";
 import { lookupYorkAddress } from "@/lib/york-lookup";
+import { useYorkParcelSuggestions } from "@/lib/use-york-parcel-search";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { PARCELS } from "@/lib/data/parcels";
 
@@ -33,6 +35,27 @@ function Home() {
   const setLookupResult = useHub((s) => s.setLookupResult);
   const nav = useNavigate();
   const { user, isPending } = useCurrentUserState();
+  const yorkMatches = useYorkParcelSuggestions(q);
+
+  function searchFor(value: string) {
+    if (isPending) return;
+    const trimmed = value.trim();
+    if (!user) {
+      void nav({ to: "/login" });
+      return;
+    }
+    setQuery(trimmed);
+    if (trimmed.length >= 3) {
+      setLookupBusy(true);
+      void lookupYorkAddress({ data: { q: trimmed } })
+        .then((res) => {
+          if (res.ok) setLookupResult(res.result);
+          else setLookupResult(null, res.error);
+        })
+        .catch(() => setLookupResult(null, "Lookup failed. Try again."));
+    }
+    void nav({ to: "/map" });
+  }
 
   return (
     <AppShell>
@@ -60,22 +83,7 @@ function Home() {
             className="mx-auto mt-8 flex max-w-xl flex-col gap-2 sm:flex-row"
             onSubmit={(e) => {
               e.preventDefault();
-              if (isPending) return;
-              if (!user) {
-                nav({ to: "/login" });
-                return;
-              }
-              setQuery(q);
-              if (q.trim().length >= 4) {
-                setLookupBusy(true);
-                void lookupYorkAddress({ data: { q: q.trim() } })
-                  .then((res) => {
-                    if (res.ok) setLookupResult(res.result);
-                    else setLookupResult(null, res.error);
-                  })
-                  .catch(() => setLookupResult(null, "Lookup failed. Try again."));
-              }
-              nav({ to: "/map" });
+              searchFor(q);
             }}
           >
             <div className="relative flex-1">
@@ -86,12 +94,23 @@ function Home() {
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="York County address — live parcel + zoning"
+                placeholder="Search address, owner, or PIN — York assessment roll"
                 aria-label="Search a York County address"
                 className="h-12 rounded-xl bg-card pl-9 text-on-surface focus:ring-2 focus:ring-secondary/40"
                 autoComplete="off"
                 suppressHydrationWarning
               />
+              {yorkMatches.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-xl border border-outline-variant bg-card p-2 text-left shadow-2xl">
+                  <YorkParcelSuggestList
+                    matches={yorkMatches}
+                    onPick={(pidn) => {
+                      setQ(pidn);
+                      searchFor(pidn);
+                    }}
+                  />
+                </div>
+              )}
             </div>
             <Button type="submit" size="lg" className="h-12 rounded-xl">
               Explore Map

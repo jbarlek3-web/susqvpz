@@ -737,8 +737,23 @@ export const COUNTY_CENTERS: Record<County | "all", { lat: number; lng: number; 
   Lancaster: { lat: 40.04, lng: -76.3, zoom: 10 },
 };
 
-export function getParcel(id: string) {
-  return PARCELS.find((p) => p.id === id);
+export function getParcel(idOrApn: string) {
+  if (!idOrApn) return undefined;
+  const raw = idOrApn.trim();
+  // 1. Direct ID or APN match
+  const direct = PARCELS.find((p) => p.id === raw || p.apn === raw);
+  if (direct) return direct;
+
+  // 2. Normalized alphanumeric match
+  const norm = raw.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  if (norm.length >= 4) {
+    return PARCELS.find(
+      (p) =>
+        p.id.replace(/[^a-zA-Z0-9]/g, "").toLowerCase() === norm ||
+        p.apn.replace(/[^a-zA-Z0-9]/g, "").toLowerCase() === norm,
+    );
+  }
+  return undefined;
 }
 
 export function parcelsByCounty(county: County | "all") {
@@ -749,14 +764,26 @@ export function parcelsByCounty(county: County | "all") {
 export function searchParcels(q: string) {
   const s = q.trim().toLowerCase();
   if (!s) return PARCELS;
-  return PARCELS.filter(
-    (p) =>
+  const normQ = s.replace(/[^a-z0-9]/g, "");
+  return PARCELS.filter((p) => {
+    if (
       p.address.toLowerCase().includes(s) ||
       p.apn.toLowerCase().includes(s) ||
       p.municipality.toLowerCase().includes(s) ||
       p.owner.toLowerCase().includes(s) ||
-      p.zoning.toLowerCase().includes(s),
-  );
+      p.zoning.toLowerCase().includes(s)
+    ) {
+      return true;
+    }
+    if (normQ.length >= 4) {
+      const normApn = p.apn.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+      const normId = p.id.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+      if (normApn.includes(normQ) || normId.includes(normQ)) {
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 export const BRIDGES = [

@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Bell, BookOpen, ContactRound, FileText, HelpCircle, Menu, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldAcqOrdinanceAideLogo } from "@/components/brand/field-acq-ordinance-aide-logo";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { YorkParcelSuggestList } from "@/components/map/york-parcel-suggestions";
 import { PARCELS, searchParcels } from "@/lib/data/parcels";
 import { ZONING_CODES as CODES } from "@/lib/data/zoning";
+import { useYorkParcelSuggestions } from "@/lib/use-york-parcel-search";
+import { lookupYorkAddress } from "@/lib/york-lookup";
 import { useHub } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { getEntitlement } from "@/lib/billing";
@@ -51,6 +54,11 @@ export function AppShell({
   const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const nav = useNavigate();
+  const setQuery = useHub((s) => s.setQuery);
+  const setLookupBusy = useHub((s) => s.setLookupBusy);
+  const setLookupResult = useHub((s) => s.setLookupResult);
+  const yorkMatches = useYorkParcelSuggestions(q);
 
   useEffect(() => {
     void useHub.persist.rehydrate();
@@ -103,6 +111,25 @@ export function AppShell({
     ).slice(0, 3);
     return { parcels, codes };
   }, [q]);
+
+  async function pickYorkParcel(pidn: string) {
+    setSearchOpen(false);
+    setQ(pidn);
+    setQuery(pidn);
+    if (!user) {
+      void nav({ to: "/login" });
+      return;
+    }
+    setLookupBusy(true);
+    try {
+      const res = await lookupYorkAddress({ data: { q: pidn } });
+      if (res.ok) setLookupResult(res.result);
+      else setLookupResult(null, res.error);
+    } catch {
+      setLookupResult(null, "Lookup failed. Try again.");
+    }
+    void nav({ to: "/map" });
+  }
 
   return (
     <div className="min-h-dvh bg-background text-on-surface">
@@ -176,7 +203,7 @@ export function AppShell({
                   }
                 }}
                 onFocus={() => setSearchOpen(true)}
-                placeholder="Address, APN, owner…"
+                placeholder="Address, owner, PIN…"
                 aria-label="Search by address, APN, or owner"
                 autoComplete="off"
                 suppressHydrationWarning
@@ -187,9 +214,16 @@ export function AppShell({
                   ⌘K
                 </kbd>
               </div>
-              {searchOpen && q.trim().length >= 2 && hits && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-outline-variant bg-card/95 p-2 text-on-surface shadow-2xl backdrop-blur-lg animate-page-enter">
-                  <SearchResults hits={hits} onPick={() => setSearchOpen(false)} />
+              {searchOpen && q.trim().length >= 2 && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-96 rounded-xl border border-outline-variant bg-card/95 p-2 text-on-surface shadow-2xl backdrop-blur-lg animate-page-enter">
+                  {hits.parcels.length || hits.codes.length || yorkMatches.length ? (
+                    <>
+                      <YorkParcelSuggestList matches={yorkMatches} onPick={(pidn) => void pickYorkParcel(pidn)} />
+                      <SearchResults hits={hits} onPick={() => setSearchOpen(false)} />
+                    </>
+                  ) : (
+                    <p className="p-3 text-sm text-muted-foreground">No matches.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -311,9 +345,7 @@ function SearchResults({
   };
   onPick: () => void;
 }) {
-  if (!hits.parcels.length && !hits.codes.length) {
-    return <p className="p-3 text-sm text-muted-foreground">No matches.</p>;
-  }
+  if (!hits.parcels.length && !hits.codes.length) return null;
   return (
     <div className="max-h-80 overflow-auto text-sm">
       {hits.parcels.map((p) => (
