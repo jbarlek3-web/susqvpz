@@ -33,12 +33,6 @@ import { Route as OrgBillingRouteImport } from './routes/org.billing'
 import { Route as OrgMembersRouteImport } from './routes/org.members'
 import { Route as ParcelsIdRouteImport } from './routes/parcels.$id'
 import { Route as ApiFeasibilityReportPdfRouteImport } from './routes/api/feasibility-report/pdf'
-import { Route as ApiGoogleDriveCallbackRouteImport } from './routes/api/google-drive/callback'
-import { Route as ApiGoogleDriveDisconnectRouteImport } from './routes/api/google-drive/disconnect'
-import { Route as ApiGoogleDriveExportRouteImport } from './routes/api/google-drive/export'
-import { Route as ApiGoogleDriveStartRouteImport } from './routes/api/google-drive/start'
-import { Route as ApiGoogleDriveStatusRouteImport } from './routes/api/google-drive/status'
-import { Route as ApiGoogleDriveUploadRouteImport } from './routes/api/google-drive/upload'
 import { Route as ApiOrdinanceStreamRouteImport } from './routes/api/ordinance/stream'
 import { Route as ApiWebhooksClerkRouteImport } from './routes/api/webhooks/clerk'
 import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
@@ -163,37 +157,6 @@ const ApiFeasibilityReportPdfRoute = ApiFeasibilityReportPdfRouteImport.update({
   path: '/api/feasibility-report/pdf',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGoogleDriveCallbackRoute = ApiGoogleDriveCallbackRouteImport.update({
-  id: '/api/google-drive/callback',
-  path: '/api/google-drive/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGoogleDriveDisconnectRoute =
-  ApiGoogleDriveDisconnectRouteImport.update({
-    id: '/api/google-drive/disconnect',
-    path: '/api/google-drive/disconnect',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiGoogleDriveExportRoute = ApiGoogleDriveExportRouteImport.update({
-  id: '/api/google-drive/export',
-  path: '/api/google-drive/export',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGoogleDriveStartRoute = ApiGoogleDriveStartRouteImport.update({
-  id: '/api/google-drive/start',
-  path: '/api/google-drive/start',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGoogleDriveStatusRoute = ApiGoogleDriveStatusRouteImport.update({
-  id: '/api/google-drive/status',
-  path: '/api/google-drive/status',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiGoogleDriveUploadRoute = ApiGoogleDriveUploadRouteImport.update({
-  id: '/api/google-drive/upload',
-  path: '/api/google-drive/upload',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiOrdinanceStreamRoute = ApiOrdinanceStreamRouteImport.update({
   id: '/api/ordinance/stream',
   path: '/api/ordinance/stream',
@@ -235,12 +198,6 @@ export interface FileRoutesByFullPath {
   '/org/members': typeof OrgMembersRoute
   '/parcels/$id': typeof ParcelsIdRoute
   '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
-  '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
-  '/api/google-drive/disconnect': typeof ApiGoogleDriveDisconnectRoute
-  '/api/google-drive/export': typeof ApiGoogleDriveExportRoute
-  '/api/google-drive/start': typeof ApiGoogleDriveStartRoute
-  '/api/google-drive/status': typeof ApiGoogleDriveStatusRoute
-  '/api/google-drive/upload': typeof ApiGoogleDriveUploadRoute
   '/api/ordinance/stream': typeof ApiOrdinanceStreamRoute
   '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
@@ -270,12 +227,6 @@ export interface FileRoutesByTo {
   '/org/members': typeof OrgMembersRoute
   '/parcels/$id': typeof ParcelsIdRoute
   '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
-  '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
-  '/api/google-drive/disconnect': typeof ApiGoogleDriveDisconnectRoute
-  '/api/google-drive/export': typeof ApiGoogleDriveExportRoute
-  '/api/google-drive/start': typeof ApiGoogleDriveStartRoute
-  '/api/google-drive/status': typeof ApiGoogleDriveStatusRoute
-  '/api/google-drive/upload': typeof ApiGoogleDriveUploadRoute
   '/api/ordinance/stream': typeof ApiOrdinanceStreamRoute
   '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
@@ -306,12 +257,6 @@ export interface FileRoutesById {
   '/org/members': typeof OrgMembersRoute
   '/parcels/$id': typeof ParcelsIdRoute
   '/api/feasibility-report/pdf': typeof ApiFeasibilityReportPdfRoute
-  '/api/google-drive/callback': typeof ApiGoogleDriveCallbackRoute
-  '/api/google-drive/disconnect': typeof ApiGoogleDriveDisconnectRoute
-  '/api/google-drive/export': typeof ApiGoogleDriveExportRoute
-  '/api/google-drive/start': typeof ApiGoogleDriveStartRoute
-  '/api/google-drive/status': typeof ApiGoogleDriveStatusRoute
-  '/api/google-drive/upload': typeof ApiGoogleDriveUploadRoute
   '/api/ordinance/stream': typeof ApiOrdinanceStreamRoute
   '/api/webhooks/clerk': typeof ApiWebhooksClerkRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
@@ -343,12 +288,6 @@ export interface FileRouteTypes {
     | '/org/members'
     | '/parcels/$id'
     | '/api/feasibility-report/pdf'
-    | '/api/google-drive/callback'
-    | '/api/google-drive/disconnect'
-    | '/api/google-drive/export'
-    | '/api/google-drive/start'
-    | '/api/google-drive/status'
-    | '/api/google-drive/upload'
     | '/api/ordinance/stream'
     | '/api/webhooks/clerk'
     | '/api/webhooks/stripe'
@@ -378,12 +317,6 @@ export interface FileRouteTypes {
     | '/org/members'
     | '/parcels/$id'
     | '/api/feasibility-report/pdf'
-    | '/api/google-drive/callback'
-    | '/api/google-drive/disconnect'
-    | '/api/google-drive/export'
-    | '/api/google-drive/start'
-    | '/api/google-drive/status'
-    | '/api/google-drive/upload'
     | '/api/ordinance/stream'
     | '/api/webhooks/clerk'
     | '/api/webhooks/stripe'
@@ -413,12 +346,6 @@ export interface FileRouteTypes {
     | '/org/members'
     | '/parcels/$id'
     | '/api/feasibility-report/pdf'
-    | '/api/google-drive/callback'
-    | '/api/google-drive/disconnect'
-    | '/api/google-drive/export'
-    | '/api/google-drive/start'
-    | '/api/google-drive/status'
-    | '/api/google-drive/upload'
     | '/api/ordinance/stream'
     | '/api/webhooks/clerk'
     | '/api/webhooks/stripe'
@@ -449,12 +376,6 @@ export interface RootRouteChildren {
   OrgMembersRoute: typeof OrgMembersRoute
   ParcelsIdRoute: typeof ParcelsIdRoute
   ApiFeasibilityReportPdfRoute: typeof ApiFeasibilityReportPdfRoute
-  ApiGoogleDriveCallbackRoute: typeof ApiGoogleDriveCallbackRoute
-  ApiGoogleDriveDisconnectRoute: typeof ApiGoogleDriveDisconnectRoute
-  ApiGoogleDriveExportRoute: typeof ApiGoogleDriveExportRoute
-  ApiGoogleDriveStartRoute: typeof ApiGoogleDriveStartRoute
-  ApiGoogleDriveStatusRoute: typeof ApiGoogleDriveStatusRoute
-  ApiGoogleDriveUploadRoute: typeof ApiGoogleDriveUploadRoute
   ApiOrdinanceStreamRoute: typeof ApiOrdinanceStreamRoute
   ApiWebhooksClerkRoute: typeof ApiWebhooksClerkRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
@@ -630,48 +551,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiFeasibilityReportPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/google-drive/callback': {
-      id: '/api/google-drive/callback'
-      path: '/api/google-drive/callback'
-      fullPath: '/api/google-drive/callback'
-      preLoaderRoute: typeof ApiGoogleDriveCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/google-drive/disconnect': {
-      id: '/api/google-drive/disconnect'
-      path: '/api/google-drive/disconnect'
-      fullPath: '/api/google-drive/disconnect'
-      preLoaderRoute: typeof ApiGoogleDriveDisconnectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/google-drive/export': {
-      id: '/api/google-drive/export'
-      path: '/api/google-drive/export'
-      fullPath: '/api/google-drive/export'
-      preLoaderRoute: typeof ApiGoogleDriveExportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/google-drive/start': {
-      id: '/api/google-drive/start'
-      path: '/api/google-drive/start'
-      fullPath: '/api/google-drive/start'
-      preLoaderRoute: typeof ApiGoogleDriveStartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/google-drive/status': {
-      id: '/api/google-drive/status'
-      path: '/api/google-drive/status'
-      fullPath: '/api/google-drive/status'
-      preLoaderRoute: typeof ApiGoogleDriveStatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/google-drive/upload': {
-      id: '/api/google-drive/upload'
-      path: '/api/google-drive/upload'
-      fullPath: '/api/google-drive/upload'
-      preLoaderRoute: typeof ApiGoogleDriveUploadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/ordinance/stream': {
       id: '/api/ordinance/stream'
       path: '/api/ordinance/stream'
@@ -721,12 +600,6 @@ const rootRouteChildren: RootRouteChildren = {
   OrgMembersRoute: OrgMembersRoute,
   ParcelsIdRoute: ParcelsIdRoute,
   ApiFeasibilityReportPdfRoute: ApiFeasibilityReportPdfRoute,
-  ApiGoogleDriveCallbackRoute: ApiGoogleDriveCallbackRoute,
-  ApiGoogleDriveDisconnectRoute: ApiGoogleDriveDisconnectRoute,
-  ApiGoogleDriveExportRoute: ApiGoogleDriveExportRoute,
-  ApiGoogleDriveStartRoute: ApiGoogleDriveStartRoute,
-  ApiGoogleDriveStatusRoute: ApiGoogleDriveStatusRoute,
-  ApiGoogleDriveUploadRoute: ApiGoogleDriveUploadRoute,
   ApiOrdinanceStreamRoute: ApiOrdinanceStreamRoute,
   ApiWebhooksClerkRoute: ApiWebhooksClerkRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,

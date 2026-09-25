@@ -201,17 +201,8 @@ async function syncUserData(userData: ClerkWebhookUserData): Promise<void> {
 export type ClerkWebhookUserPurger = (userId: string) => Promise<void>;
 
 async function purgeUserData(userId: string): Promise<void> {
-  try {
-    const { disconnectGoogleDrive } = await import("./google-drive.server.ts");
-    await disconnectGoogleDrive(userId);
-  } catch {
-    // Best-effort external revocation failure does not abort local data deletion
-  }
-
   const { getSql } = await import("./db.ts");
   const sql = await getSql();
-  await sql`delete from google_drive_connections where user_id = ${userId}`;
-  await sql`delete from google_drive_oauth_states where user_id = ${userId}`;
   await sql`delete from stripe_entitlements where user_id = ${userId}`;
   await sql`delete from ai_credit_accounts where user_id = ${userId}`;
   await sql`delete from ai_usage_periods where user_id = ${userId}`;
