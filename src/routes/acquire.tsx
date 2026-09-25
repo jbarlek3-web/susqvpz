@@ -14,20 +14,25 @@ import {
   Factory,
   FileCheck2,
   FileSearch,
+  FileSpreadsheet,
   Filter,
   Home,
   Layers,
   Layers3,
+  Lock,
   MapPin,
   Plus,
   RefreshCw,
+  RotateCcw,
   Scale,
   ShieldAlert,
+  SlidersHorizontal,
   Sparkles,
   Store,
   TrendingDown,
   TrendingUp,
   Truck,
+  Unlock,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useHub } from "@/lib/store";
@@ -39,6 +44,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { PARCELS, parcelsByCounty } from "@/lib/data/parcels";
 import type { County, Parcel } from "@/lib/types";
+import {
+  useUserUnderwritingPreset,
+  calculateResidualLandValue,
+  type UserUnderwritingPreset,
+} from "@/lib/feasibility/user-underwriting-presets";
 import {
   assessParcelFeasibility,
   COUNTY_BENCHMARKS,
@@ -159,16 +169,35 @@ function AcquireStudio() {
     });
   }, [activeParcel]);
 
+  // User Underwriting Presets & Locking
+  const {
+    preset: userPreset,
+    isLocked: isUserPresetLocked,
+    lockValues: lockPresetValues,
+    unlockValues: unlockPresetValues,
+    resetToBenchmarks: resetPresetToBenchmarks,
+  } = useUserUnderwritingPreset();
+
+  // Working draft for editable underwriting parameters
+  const [underwriteDraft, setUnderwritingDraft] = useState<UserUnderwritingPreset>(() => userPreset);
+
+  // Sync draft when userPreset changes
+  useEffect(() => {
+    setUnderwritingDraft(userPreset);
+  }, [userPreset]);
+
   // Financial overrides
-  const [customAsp, setCustomAsp] = useState<number | undefined>(undefined);
-  const [customSitework, setCustomSitework] = useState<number | undefined>(undefined);
+  const [customAsp, setCustomAsp] = useState<number | undefined>(() => (isUserPresetLocked ? userPreset.customAsp : undefined));
+  const [customSitework, setCustomSitework] = useState<number | undefined>(() => (isUserPresetLocked ? userPreset.siteworkPerUnit : undefined));
   const [customLots, setCustomLots] = useState<number | undefined>(undefined);
 
-  // Reset custom overrides when parcel or objective changes
+  // Reset custom overrides when parcel changes — but keep locked defaults!
   const handleParcelChange = (newId: string) => {
     selectParcel(newId);
-    setCustomAsp(undefined);
-    setCustomSitework(undefined);
+    if (!isUserPresetLocked) {
+      setCustomAsp(undefined);
+      setCustomSitework(undefined);
+    }
     setCustomLots(undefined);
   };
 
@@ -199,18 +228,60 @@ function AcquireStudio() {
 
   // Feasibility assessment for active parcel and configured assemblage
   const activeAssessment = useMemo(() => {
+    const siteworkToUse = isUserPresetLocked ? userPreset.siteworkPerUnit : customSitework;
+    const verticalToUse = isUserPresetLocked ? userPreset.verticalCostPerUnit : undefined;
+    const softToUse = isUserPresetLocked ? userPreset.softCostPct : undefined;
+    const marginToUse = isUserPresetLocked ? userPreset.targetProfitMarginPct : undefined;
+    const sellingToUse = isUserPresetLocked ? userPreset.sellingCostPct : undefined;
+
     return assessParcelFeasibility(
       activeParcel,
       objective,
       {
-        customAsp,
-        customSiteworkPerLot: customSitework,
+        customAsp: customAsp ?? (isUserPresetLocked ? userPreset.customAsp : undefined),
+        customSiteworkPerLot: siteworkToUse,
         customTargetLots: customLots,
+        customVerticalCostPerHome: verticalToUse,
+        customSoftCostPercent: softToUse,
+        customTargetProfitMarginPercent: marginToUse,
+        customSellingCostPercent: sellingToUse,
+        customOffsiteInfrastructure: isUserPresetLocked ? userPreset.offsiteInfrastructure : undefined,
+        customEntitlementFees: isUserPresetLocked ? userPreset.entitlementFees : undefined,
       },
       developmentRole,
       assemblageConfig,
     );
-  }, [activeParcel, objective, customAsp, customSitework, customLots, developmentRole, assemblageConfig]);
+  }, [
+    activeParcel,
+    objective,
+    customAsp,
+    customSitework,
+    customLots,
+    developmentRole,
+    assemblageConfig,
+    isUserPresetLocked,
+    userPreset,
+  ]);
+
+  // Complete Residual Land Value (Suggested Max Bid) Underwriting Model
+  const residualSummary = useMemo(() => {
+    return calculateResidualLandValue({
+      potentialUnits: activeAssessment.estimatedLots,
+      averageUnitSalePrice: customAsp ?? (isUserPresetLocked && userPreset.customAsp ? userPreset.customAsp : activeAssessment.financials.finishedHomeAsp),
+      grossAcres: activeParcel.acres,
+      askingOrAssessedPrice: activeParcel.assessed || 120_000,
+      preset: isUserPresetLocked ? userPreset : underwriteDraft,
+    });
+  }, [
+    activeAssessment.estimatedLots,
+    activeAssessment.financials.finishedHomeAsp,
+    activeParcel.acres,
+    activeParcel.assessed,
+    customAsp,
+    isUserPresetLocked,
+    userPreset,
+    underwriteDraft,
+  ]);
 
   return (
     <AppShell>
@@ -1079,8 +1150,12 @@ function AcquireStudio() {
                     <Input
                       type="number"
                       step={5000}
-                      value={customAsp ?? activeAssessment.financials.finishedHomeAsp}
-                      onChange={(e) => setCustomAsp(Number(e.target.value))}
+                      value={customAsp ?? (isUserPresetLocked && userPreset.customAsp ? userPreset.customAsp : activeAssessment.financials.finishedHomeAsp)}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setCustomAsp(val);
+                        setUnderwritingDraft((prev) => ({ ...prev, customAsp: val }));
+                      }}
                       className="h-8 text-xs mt-1"
                     />
                   </div>
@@ -1092,7 +1167,11 @@ function AcquireStudio() {
                       type="number"
                       step={2500}
                       value={customSitework ?? activeAssessment.financials.horizontalCostPerLot}
-                      onChange={(e) => setCustomSitework(Number(e.target.value))}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setCustomSitework(val);
+                        setUnderwritingDraft((prev) => ({ ...prev, siteworkPerUnit: val }));
+                      }}
                       className="h-8 text-xs mt-1"
                     />
                   </div>
@@ -1107,6 +1186,414 @@ function AcquireStudio() {
                       onChange={(e) => setCustomLots(Math.max(1, Number(e.target.value)))}
                       className="h-8 text-xs mt-1"
                     />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* COMPREHENSIVE RESIDUAL LAND VALUE UNDERWRITING & USER COST LOCK */}
+            <Card className="cyber-card lg:col-span-12 border-primary/30 bg-card/75 backdrop-blur-md">
+              <CardHeader className="pb-3 border-b border-border/50">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <FileSpreadsheet className="size-5 text-primary" />
+                    <div>
+                      <CardTitle className="text-base font-bold flex items-center gap-2">
+                        <span>Residual Land Value (MAO) Underwriting Model</span>
+                        {isUserPresetLocked ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 text-[11px] font-bold border border-emerald-500/40">
+                            <Lock className="size-3" /> Locked Defaults Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-400 px-2.5 py-0.5 text-[11px] font-bold border border-amber-500/40">
+                            <Unlock className="size-3" /> Live Inputs (Unsaved)
+                          </span>
+                        )}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Input, save, and lock in your standard cost assumptions for future use across all parcels.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isUserPresetLocked ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={unlockPresetValues}
+                        className="h-7 text-xs gap-1 border-border/60 hover:border-primary/50"
+                      >
+                        <Unlock className="size-3" /> Unlock to Edit
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => lockPresetValues(underwriteDraft)}
+                        className="h-7 text-xs gap-1.5 bg-primary text-primary-foreground font-bold hover:brightness-110 active:scale-95 transition-all shadow-[0_0_12px_rgba(249,115,22,0.35)]"
+                      >
+                        <Lock className="size-3" /> Save &amp; Lock In My Defaults
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        resetPresetToBenchmarks();
+                        setUnderwritingDraft(userPreset);
+                        setCustomAsp(undefined);
+                        setCustomSitework(undefined);
+                      }}
+                      className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                      title="Reset all fields to regional county benchmarks"
+                    >
+                      <RotateCcw className="size-3" /> Reset Benchmarks
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-5 pt-4 text-xs">
+                {/* 1. Interactive Inputs Grid */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <SlidersHorizontal className="size-3.5 text-primary" /> Cost Assumptions &amp; Underwriting Inputs
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Sitework / Unit ($)
+                      </label>
+                      <Input
+                        type="number"
+                        step={1000}
+                        value={underwriteDraft.siteworkPerUnit}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, siteworkPerUnit: val }));
+                          if (isUserPresetLocked) lockPresetValues({ siteworkPerUnit: val });
+                          else setCustomSitework(val);
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Standard: $22,000</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Vertical Cost / Unit ($)
+                      </label>
+                      <Input
+                        type="number"
+                        step={2500}
+                        value={underwriteDraft.verticalCostPerUnit}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, verticalCostPerUnit: val }));
+                          if (isUserPresetLocked) lockPresetValues({ verticalCostPerUnit: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Standard: $165,000</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Soft Costs (%)
+                      </label>
+                      <Input
+                        type="number"
+                        step={0.5}
+                        min={0}
+                        max={30}
+                        value={underwriteDraft.softCostPct}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, softCostPct: val }));
+                          if (isUserPresetLocked) lockPresetValues({ softCostPct: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Standard: 12%</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Contingency (%)
+                      </label>
+                      <Input
+                        type="number"
+                        step={0.5}
+                        min={0}
+                        max={25}
+                        value={underwriteDraft.contingencyPct}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, contingencyPct: val }));
+                          if (isUserPresetLocked) lockPresetValues({ contingencyPct: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Standard: 8%</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Selling Costs (%)
+                      </label>
+                      <Input
+                        type="number"
+                        step={0.5}
+                        min={0}
+                        max={15}
+                        value={underwriteDraft.sellingCostPct}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, sellingCostPct: val }));
+                          if (isUserPresetLocked) lockPresetValues({ sellingCostPct: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Standard: 6%</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Target Profit Margin (%)
+                      </label>
+                      <Input
+                        type="number"
+                        step={0.5}
+                        min={5}
+                        max={40}
+                        value={underwriteDraft.targetProfitMarginPct}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, targetProfitMarginPct: val }));
+                          if (isUserPresetLocked) lockPresetValues({ targetProfitMarginPct: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Standard: 18%</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Offsite Infrastructure ($)
+                      </label>
+                      <Input
+                        type="number"
+                        step={25000}
+                        value={underwriteDraft.offsiteInfrastructure}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, offsiteInfrastructure: val }));
+                          if (isUserPresetLocked) lockPresetValues({ offsiteInfrastructure: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Off-site roads/utilities</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Entitlement Fees ($)
+                      </label>
+                      <Input
+                        type="number"
+                        step={10000}
+                        value={underwriteDraft.entitlementFees}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setUnderwritingDraft((prev) => ({ ...prev, entitlementFees: val }));
+                          if (isUserPresetLocked) lockPresetValues({ entitlementFees: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Impact &amp; municipal escrow</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Debt Share / Rate
+                      </label>
+                      <div className="grid grid-cols-2 gap-1 mt-1">
+                        <Input
+                          type="number"
+                          step={1}
+                          value={underwriteDraft.debtCostSharePct}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setUnderwritingDraft((prev) => ({ ...prev, debtCostSharePct: val }));
+                            if (isUserPresetLocked) lockPresetValues({ debtCostSharePct: val });
+                          }}
+                          className="h-8 text-xs bg-background/80"
+                          title="LTC Debt Share %"
+                        />
+                        <Input
+                          type="number"
+                          step={0.5}
+                          value={underwriteDraft.annualInterestRatePct}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setUnderwritingDraft((prev) => ({ ...prev, annualInterestRatePct: val }));
+                            if (isUserPresetLocked) lockPresetValues({ annualInterestRatePct: val });
+                          }}
+                          className="h-8 text-xs bg-background/80"
+                          title="Annual Interest Rate %"
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">65% LTC · 9.0% Rate</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Target ASP ($)
+                      </label>
+                      <Input
+                        type="number"
+                        step={5000}
+                        value={customAsp ?? (underwriteDraft.customAsp || activeAssessment.financials.finishedHomeAsp)}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setCustomAsp(val);
+                          setUnderwritingDraft((prev) => ({ ...prev, customAsp: val }));
+                          if (isUserPresetLocked) lockPresetValues({ customAsp: val });
+                        }}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Average unit sale price</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-foreground block">
+                        Potential Lots
+                      </label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={customLots ?? activeAssessment.estimatedLots}
+                        onChange={(e) => setCustomLots(Math.max(1, Number(e.target.value)))}
+                        className="h-8 text-xs mt-1 bg-background/80"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">Gross yield override</span>
+                    </div>
+
+                    <div className="flex flex-col justify-end">
+                      {!isUserPresetLocked ? (
+                        <Button
+                          onClick={() => lockPresetValues(underwriteDraft)}
+                          className="h-8 text-xs font-bold gap-1 bg-primary text-primary-foreground hover:brightness-110 shadow-[0_0_10px_rgba(249,115,22,0.3)]"
+                        >
+                          <Lock className="size-3" /> Lock Defaults
+                        </Button>
+                      ) : (
+                        <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-1.5 text-center text-[10px] text-emerald-400 font-semibold">
+                          ✓ Locked Active
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Live Residual Land Value Underwriting Table */}
+                <div className="rounded-xl border border-border/50 bg-background/60 p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-2.5">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                        Underwriting Cash Flow &amp; Residual Max Bid
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {residualSummary.potentialUnits} Lots · {money(residualSummary.averageUnitSalePrice)} ASP · {activeParcel.acres} Gross Acres
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground block">Suggested Max Bid (MAO)</span>
+                      <span className="text-xl font-black text-emerald-400">
+                        {money(residualSummary.suggestedMaxBid)}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        {money(residualSummary.residualValuePerAcre)} / acre · {money(residualSummary.residualValuePerUnit)} / lot
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Gross Sellout Revenue:</span>
+                        <span className="font-bold text-foreground">{money(residualSummary.grossSelloutRevenue)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Selling Costs ({underwriteDraft.sellingCostPct}%):</span>
+                        <span className="text-red-400">-{money(residualSummary.sellingCosts)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Sitework Costs (${underwriteDraft.siteworkPerUnit.toLocaleString()}/lot):</span>
+                        <span className="text-red-400">-{money(residualSummary.siteworkCosts)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Vertical Costs (${underwriteDraft.verticalCostPerUnit.toLocaleString()}/unit):</span>
+                        <span className="text-red-400">-{money(residualSummary.verticalCosts)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Soft Costs ({underwriteDraft.softCostPct}%):</span>
+                        <span className="text-red-400">-{money(residualSummary.softCosts)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Contingency ({underwriteDraft.contingencyPct}%):</span>
+                        <span className="text-red-400">-{money(residualSummary.contingency)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Offsite Infrastructure:</span>
+                        <span className="text-red-400">-{money(residualSummary.offsiteInfrastructure)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Entitlement Fees:</span>
+                        <span className="text-red-400">-{money(residualSummary.entitlementFees)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Developer Profit ({underwriteDraft.targetProfitMarginPct}%):</span>
+                        <span className="text-red-400">-{money(residualSummary.developerProfit)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-border/40 bg-muted/20 p-2.5 space-y-1">
+                      <div className="flex justify-between text-muted-foreground font-semibold">
+                        <span>Total Uses (Excl. Land):</span>
+                        <span className="text-foreground">{money(residualSummary.totalUsesExcludingLand)}</span>
+                      </div>
+                      <div className="flex justify-between text-muted-foreground">
+                        <span>Current Asking / Assessed:</span>
+                        <span className="text-foreground font-bold">{money(residualSummary.askingOrAssessedPrice)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1 border-t border-border/40">
+                        <span className="font-semibold text-foreground">Underwriting Spread:</span>
+                        <span className={cn("font-black", residualSummary.isFeasible ? "text-emerald-400" : "text-amber-400")}>
+                          {residualSummary.spreadAmount >= 0 ? "+" : ""}{money(residualSummary.spreadAmount)} ({residualSummary.spreadPercent}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={cn(
+                    "rounded-lg p-2.5 border text-xs flex flex-wrap items-center justify-between gap-2",
+                    residualSummary.isFeasible ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                  )}>
+                    <span className="font-medium">
+                      {residualSummary.isFeasible
+                        ? `✓ Feasible Acquisition: Asking price (${money(residualSummary.askingOrAssessedPrice)}) is within the suggested maximum bid (${money(residualSummary.suggestedMaxBid)}). Project supports ${underwriteDraft.targetProfitMarginPct}% target profit margin.`
+                        : `⚠ Price Negotiation Recommended: Asking price (${money(residualSummary.askingOrAssessedPrice)}) exceeds suggested bid (${money(residualSummary.suggestedMaxBid)}) by ${money(Math.abs(residualSummary.spreadAmount))}. Negotiate land basis or adjust density.`}
+                    </span>
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      LTC Debt: {money(residualSummary.debtAmount)} ({underwriteDraft.debtCostSharePct}%) · Equity Required: {money(residualSummary.equityRequired)}
+                    </span>
                   </div>
                 </div>
               </CardContent>

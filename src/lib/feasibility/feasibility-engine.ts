@@ -302,7 +302,7 @@ export const COUNTY_BENCHMARKS: Record<
 > = {
   Cumberland: {
     avgAsp: 425_000,
-    baseSiteworkPerLot: 55_000,
+    baseSiteworkPerLot: 26_000,
     softCostPercent: 12,
     countyPlanning: "Cumberland County Planning Commission (CCPC)",
     meetingMinutesUrl: "https://www.cumberlandcountypa.gov/4884/Meeting-Schedule-Minutes",
@@ -310,7 +310,7 @@ export const COUNTY_BENCHMARKS: Record<
   },
   Dauphin: {
     avgAsp: 395_000,
-    baseSiteworkPerLot: 52_000,
+    baseSiteworkPerLot: 25_000,
     softCostPercent: 12,
     countyPlanning: "Dauphin County Planning Commission (DCPC)",
     meetingMinutesUrl: "https://www.dauphincounty.gov/government/support-services/property-taxes/board-of-assessment-appeals/meeting-minutes",
@@ -318,7 +318,7 @@ export const COUNTY_BENCHMARKS: Record<
   },
   Lancaster: {
     avgAsp: 440_000,
-    baseSiteworkPerLot: 58_000,
+    baseSiteworkPerLot: 27_000,
     softCostPercent: 14,
     countyPlanning: "Lancaster County Planning Commission (Places2040)",
     meetingMinutesUrl: "https://pa-lancastercounty.civicplus.com/agendacenter",
@@ -326,7 +326,7 @@ export const COUNTY_BENCHMARKS: Record<
   },
   York: {
     avgAsp: 375_000,
-    baseSiteworkPerLot: 50_000,
+    baseSiteworkPerLot: 24_000,
     softCostPercent: 11,
     countyPlanning: "York County Planning Commission (YCPC)",
     meetingMinutesUrl: "https://yorkcountypa.gov/1275/_2026",
@@ -341,15 +341,26 @@ export interface AssemblageConfig {
   customInternalSetbackFt?: number;
 }
 
+export interface FeasibilityCustomOverrides {
+  customAsp?: number;
+  customSiteworkPerLot?: number;
+  customTargetLots?: number;
+  customAskingPrice?: number;
+  customVerticalCostPerHome?: number;
+  customSoftCostPercent?: number;
+  customContingencyPercent?: number;
+  customOffsiteInfrastructure?: number;
+  customEntitlementFees?: number;
+  customSellingCostPercent?: number;
+  customTargetProfitMarginPercent?: number;
+  customDebtCostSharePercent?: number;
+  customAnnualInterestRatePercent?: number;
+}
+
 export function assessParcelFeasibility(
   parcel: Parcel,
   objective: DevelopmentObjective = "subdivision",
-  customOverrides?: {
-    customAsp?: number;
-    customSiteworkPerLot?: number;
-    customTargetLots?: number;
-    customAskingPrice?: number;
-  },
+  customOverrides?: FeasibilityCustomOverrides,
   role: DevelopmentRole = "lot_developer",
   assemblageConfig?: AssemblageConfig,
 ): ParcelFeasibilityAssessment {
@@ -630,9 +641,10 @@ export function assessParcelFeasibility(
   const assemblageCostPerLot = Math.round(assemblageTotalSurcharges / Math.max(1, estimatedLots));
   siteworkCostPerLot += assemblageCostPerLot;
 
-  const softCostPerLot = Math.round(finishedLotValue * (benchmark.softCostPercent / 100));
+  const softCostPct = (customOverrides?.customSoftCostPercent ?? benchmark.softCostPercent) / 100;
+  const softCostPerLot = Math.round(finishedLotValue * softCostPct);
   const carryCostPerLot = Math.round(finishedLotValue * 0.05); // 5% carry & financing
-  const targetMarginPct = role === "builder_developer" ? 0.22 : 0.20; // 20% lot dev margin, 22% builder margin
+  const targetMarginPct = (customOverrides?.customTargetProfitMarginPercent ?? (role === "builder_developer" ? 22 : 20)) / 100;
   const marginPerLot = Math.round(finishedLotValue * targetMarginPct);
 
   // Maximum Allowable Offer per lot = FLV - Sitework - Soft - Carry - Margin
@@ -653,7 +665,7 @@ export function assessParcelFeasibility(
   const financialDetails: string[] = [
     `Projected Finished Home ASP: $${asp.toLocaleString()} (Finished Lot Value: $${finishedLotValue.toLocaleString()} @ ${Math.round(lotToBaseRatio * 100)}%).`,
     `Site civil & horizontal development: $${siteworkCostPerLot.toLocaleString()} / lot ($${(siteworkCostPerLot * estimatedLots).toLocaleString()} total incl. assemblage surcharges).`,
-    `Soft costs, engineering & permitting: $${softCostPerLot.toLocaleString()} / lot (${benchmark.softCostPercent}%).`,
+    `Soft costs, engineering & permitting: $${softCostPerLot.toLocaleString()} / lot (${Math.round(softCostPct * 100)}%).`,
     `Maximum Allowable Offer (MAO): $${maxAllowableOfferTotal.toLocaleString()} ($${maxAllowableOfferPerLot.toLocaleString()}/lot) based on ${Math.round(targetMarginPct * 100)}% target margin.`,
     `Current Assessed/Asking: $${currentAssessedOrAsking.toLocaleString()} (${spreadAmount >= 0 ? `Underpriced by $${spreadAmount.toLocaleString()} (+${spreadPct}%)` : `Overpriced by $${Math.abs(spreadAmount).toLocaleString()} (${spreadPct}%)`}).`,
   ];
@@ -709,9 +721,9 @@ export function assessParcelFeasibility(
     };
   } else if (role === "builder_developer") {
     const totalHomeRevenue = asp * estimatedLots;
-    const avgHomeSquareFootage = 2400;
-    const verticalDirectCostPerSqFt = 165;
-    const verticalCostPerHome = avgHomeSquareFootage * verticalDirectCostPerSqFt;
+    const avgHomeSquareFootage = 1500;
+    const verticalCostPerHome = customOverrides?.customVerticalCostPerHome ?? 165_000;
+    const verticalDirectCostPerSqFt = Math.max(105, Math.round(verticalCostPerHome / avgHomeSquareFootage));
     const totalVerticalCost = verticalCostPerHome * estimatedLots;
     const totalHorizontalSitework = siteworkCostPerLot * estimatedLots;
     const monthlyAbsorptionRate = 2.8;
@@ -726,7 +738,7 @@ export function assessParcelFeasibility(
       totalVerticalCost,
       horizontalSiteworkPerLot: siteworkCostPerLot,
       totalHorizontalSitework,
-      salesCommissionAndClosingPct: 5.0,
+      salesCommissionAndClosingPct: customOverrides?.customSellingCostPercent ?? 5.0,
       monthlyAbsorptionRate,
       absorptionDurationMonths,
       horizontalMarginPct: 14.0,

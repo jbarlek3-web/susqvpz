@@ -38,6 +38,7 @@ import {
   calculateRenovationCost,
 } from "@/lib/subdivision/cost-estimator";
 import { resolveAddressOrParcel } from "@/lib/subdivision/address-resolver";
+import { useUserUnderwritingPreset } from "@/lib/feasibility/user-underwriting-presets";
 import type {
   ArchitectureStyle,
   BuilderTier,
@@ -186,6 +187,8 @@ function Scene3DPage() {
   const setRenovationSqft = (sqft: number) =>
     setUnderwriteDraft((prev) => ({ ...prev, renovationSqft: sqft }));
 
+  const { preset: userUnderwritingPreset } = useUserUnderwritingPreset();
+
   const costBreakdown: CostBreakdown = useMemo(() => {
     return calculateDevelopmentCost(subdivisionConfig, houseSpec, {
       customTargetSalePrice: customTargetSalePrice > 0 ? customTargetSalePrice : undefined,
@@ -193,6 +196,8 @@ function Scene3DPage() {
       customFinishTier,
       builderTier: customBuilderTier,
       renovationScope,
+      customSiteworkPerLot: userUnderwritingPreset.isLocked ? userUnderwritingPreset.siteworkPerUnit : undefined,
+      customVerticalCostPerHome: userUnderwritingPreset.isLocked ? userUnderwritingPreset.verticalCostPerUnit : undefined,
     });
   }, [
     subdivisionConfig,
@@ -202,6 +207,9 @@ function Scene3DPage() {
     renovationScope,
     customTargetSalePrice,
     customLandCostPerAcre,
+    userUnderwritingPreset.isLocked,
+    userUnderwritingPreset.siteworkPerUnit,
+    userUnderwritingPreset.verticalCostPerUnit,
   ]);
 
   const renovationBreakdown: RenovationBreakdown = useMemo(() => {
@@ -1238,6 +1246,33 @@ function Scene3DPage() {
                 {/* PROJECT MODE: SUBDIVISION LAND DEVELOPMENT */}
                 {projectCostMode === "subdivision" ? (
                   <>
+                    {/* User Underwriting Defaults Status Banner */}
+                    {userUnderwritingPreset.isLocked ? (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-xs">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span className="text-foreground">
+                            <strong>User Underwriting Defaults Locked:</strong> Sitework: ${userUnderwritingPreset.siteworkPerUnit.toLocaleString()}/lot | Vertical: ${userUnderwritingPreset.verticalCostPerUnit.toLocaleString()}/unit
+                          </span>
+                        </div>
+                        <Link to="/acquire" className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline shrink-0">
+                          Edit in Acquire Studio &rarr;
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-2.5 rounded-xl border border-border/60 bg-muted/30 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <span>
+                            Standard baseline calibrated. You can input, save, and lock in your custom cost assumptions.
+                          </span>
+                        </div>
+                        <Link to="/acquire" className="text-primary font-semibold hover:underline shrink-0">
+                          Lock In My Defaults &rarr;
+                        </Link>
+                      </div>
+                    )}
+
                     {/* Executive Underwriting Pro Forma KPI Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       <div className="p-4 rounded-xl border border-border bg-card shadow-sm">

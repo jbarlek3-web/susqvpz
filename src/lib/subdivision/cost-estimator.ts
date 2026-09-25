@@ -186,6 +186,8 @@ export function calculateDevelopmentCost(
     customFinishTier?: "standard" | "upgraded" | "luxury";
     builderTier?: BuilderTier;
     renovationScope?: RenovationScope;
+    customSiteworkPerLot?: number;
+    customVerticalCostPerHome?: number;
   },
 ): CostBreakdown {
   const countyInfo = COUNTY_COST_FACTORS[subdivision.county] ?? COUNTY_COST_FACTORS.York;
@@ -259,7 +261,7 @@ export function calculateDevelopmentCost(
     (85_000 + subdivision.totalLots * 3_200) * countyInfo.permitFeeFactor * loc,
   );
 
-  const totalHorizontalCost =
+  const computedHorizontalCost =
     earthworkGradingCost +
     stormwaterPondCost +
     roadwayPavingCost +
@@ -269,6 +271,10 @@ export function calculateDevelopmentCost(
     dryUtilitiesTrenchingCost +
     landscapingStreetTreesCost +
     civilEngineeringAndPermitsCost;
+
+  const totalHorizontalCost = overrides?.customSiteworkPerLot
+    ? overrides.customSiteworkPerLot * subdivision.totalLots
+    : (overrides?.customFinishTier === "standard" ? Math.round(computedHorizontalCost * 0.50) : computedHorizontalCost);
 
   const horizontalCostPerLot = Math.round(totalHorizontalCost / Math.max(1, subdivision.totalLots));
 
@@ -321,13 +327,18 @@ export function calculateDevelopmentCost(
   const singleHomeInteriorFinishesCost = Math.round(spec.totalSqft * (tierConfig.interiorBasePerSqft + interiorAdder) * loc);
   const singleHomeMEPCost = Math.round(spec.totalSqft * tierConfig.mepPerSqft * loc);
 
-  const singleHomeTotalCost =
+  const computedSingleHomeTotalCost =
     singleHomeFoundationCost +
     singleHomeFramingCost +
     singleHomeExteriorFinishesCost +
     singleHomeInteriorFinishesCost +
     singleHomeMEPCost +
     patioCost;
+
+  const standardScaling = finishTier === "standard" ? 0.50 : 1.0;
+  const singleHomeTotalCost = overrides?.customVerticalCostPerHome
+    ? overrides.customVerticalCostPerHome
+    : Math.round(computedSingleHomeTotalCost * standardScaling);
 
   const singleHomeCostPerSqft = Math.round(singleHomeTotalCost / Math.max(1, spec.totalSqft));
   const allHomesVerticalCost = singleHomeTotalCost * subdivision.totalLots;
