@@ -18,6 +18,7 @@ const QuestionInput = z.object({
   projectType: z
     .enum(["residential", "commercial", "industrial", "subdivision", "accessory", "general"])
     .optional(),
+  parcelId: z.string().trim().max(100).optional(),
 });
 
 export type OrdinanceAgentScope = {
@@ -119,6 +120,15 @@ export const askOrdinanceAide = createServerFn({ method: "POST" })
       .join("")
       .replace(/<\/?(user_query|reference_context|jurisdiction|system)>/gi, "");
 
+    let parcelInfo = "";
+    if (data.parcelId) {
+      const { PARCELS } = await import("./data/parcels.ts");
+      const p = PARCELS.find((item) => item.id === data.parcelId);
+      if (p) {
+        parcelInfo = `\nTarget Parcel: ${p.address} (${p.municipality}, ${p.county} Co.) | APN: ${p.apn} | Area: ${p.acres} acres | Zoning: ${p.zoning} (${p.zoningName}) | Assessed: $${p.assessed.toLocaleString()}`;
+      }
+    }
+
     let answer = "";
     let attempts = 0;
     const maxAttempts = 2;
@@ -145,7 +155,7 @@ export const askOrdinanceAide = createServerFn({ method: "POST" })
                 role: "user",
                 content: `<jurisdiction>
 County: ${data.county}
-Municipality: ${data.municipality}${data.zoningDistrict ? `\nZoning District: ${data.zoningDistrict}` : ""}${data.projectType ? `\nProject Type: ${data.projectType}` : ""}${focusInstruction}
+Municipality: ${data.municipality}${data.zoningDistrict ? `\nZoning District: ${data.zoningDistrict}` : ""}${parcelInfo}${data.projectType ? `\nProject Type: ${data.projectType}` : ""}${focusInstruction}
 </jurisdiction>
 
 <user_query>
@@ -224,6 +234,7 @@ export const StreamInputSchema = z.object({
   projectType: z
     .enum(["residential", "commercial", "industrial", "subdivision", "accessory", "general"])
     .optional(),
+  parcelId: z.string().trim().max(100).optional(),
 });
 
 export type StreamInput = z.infer<typeof StreamInputSchema>;
@@ -327,11 +338,20 @@ export async function streamOrdinanceAide(
     });
   }
 
+  let parcelInfo = "";
+  if (input.parcelId) {
+    const { PARCELS } = await import("./data/parcels.ts");
+    const p = PARCELS.find((item) => item.id === input.parcelId);
+    if (p) {
+      parcelInfo = `\nTarget Parcel: ${p.address} (${p.municipality}, ${p.county} Co.) | APN: ${p.apn} | Area: ${p.acres} acres | Zoning: ${p.zoning} (${p.zoningName}) | Assessed: $${p.assessed.toLocaleString()}`;
+    }
+  }
+
   messagesPayload.push({
     role: "user",
     content: `<jurisdiction>
 County: ${input.county}
-Municipality: ${input.municipality}${input.zoningDistrict ? `\nZoning District: ${input.zoningDistrict}` : ""}${input.projectType ? `\nProject Type: ${input.projectType}` : ""}${focusInstruction}
+Municipality: ${input.municipality}${input.zoningDistrict ? `\nZoning District: ${input.zoningDistrict}` : ""}${parcelInfo}${input.projectType ? `\nProject Type: ${input.projectType}` : ""}${focusInstruction}
 </jurisdiction>
 
 <reference_context>

@@ -446,6 +446,46 @@ function AcquireStudio() {
                 </select>
               </div>
 
+              {/* Quick Navigation & Ordinance AI Teleport */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg border border-primary/30 bg-primary/5">
+                <div className="flex items-center gap-2">
+                  <Bot className="size-4 text-primary shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">
+                    Ask AI about <strong>{activeParcel.municipality}</strong> zoning & SALDO for this parcel:
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Button asChild size="sm" variant="default" className="h-7 text-xs gap-1 font-semibold">
+                    <Link
+                      to="/aide"
+                      search={{
+                        parcelId: activeParcel.id,
+                        county: activeParcel.county,
+                        municipality: activeParcel.municipality,
+                      }}
+                    >
+                      <Bot className="size-3.5" /> Ask Ordinance Aide
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1">
+                    <Link
+                      to="/map"
+                      search={{ parcelId: activeParcel.id }}
+                    >
+                      <Layers className="size-3 text-sky-500" /> View GIS
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1">
+                    <Link
+                      to="/scene-3d"
+                      search={{ parcelId: activeParcel.id }}
+                    >
+                      <DollarSign className="size-3 text-primary" /> 3D Massing
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+
               {/* Objective Selector */}
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
@@ -1714,18 +1754,18 @@ function AcquireStudio() {
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
                     <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
-                      <Link to="/scene-3d">
+                      <Link to="/scene-3d" search={{ parcelId: activeParcel.id }}>
                         <DollarSign className="size-3.5 text-primary" /> Cost Engine
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
-                      <Link to="/aide">
+                      <Link to="/aide" search={{ parcelId: activeParcel.id, county: activeParcel.county, municipality: activeParcel.municipality }}>
                         <Bot className="size-3.5 text-cyan-500" /> Ordinance AI
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
-                      <Link to="/zoning">
-                        <Scale className="size-3.5 text-amber-500" /> View Zoning
+                      <Link to="/map" search={{ parcelId: activeParcel.id }}>
+                        <Layers className="size-3.5 text-sky-500" /> View GIS
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1">
