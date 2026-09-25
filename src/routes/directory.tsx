@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Bot,
   Building2,
+  Calendar,
   DollarSign,
   ExternalLink,
   FileText,
@@ -259,7 +260,28 @@ function CountyDirectory({ data }: { data: CountyDirectoryPayload }) {
   );
 }
 
+const COUNTY_MEETING_MINUTES_MAP: Record<string, { label: string; url: string }> = {
+  Cumberland: {
+    label: "Meeting Schedule & Minutes",
+    url: "https://www.cumberlandcountypa.gov/4884/Meeting-Schedule-Minutes",
+  },
+  Dauphin: {
+    label: "Public Meeting Minutes & Agendas",
+    url: "https://www.dauphincounty.gov/government/support-services/property-taxes/board-of-assessment-appeals/meeting-minutes",
+  },
+  Lancaster: {
+    label: "Agenda Center & Minutes",
+    url: "https://pa-lancastercounty.civicplus.com/agendacenter",
+  },
+  York: {
+    label: "Public Meeting Minutes (2026)",
+    url: "https://yorkcountypa.gov/1275/_2026",
+  },
+};
+
 function CountyCard({ entry }: { entry: CountyDirectoryRecord }) {
+  const meetingInfo = COUNTY_MEETING_MINUTES_MAP[entry.county];
+
   return (
     <Card>
       <CardContent className="p-5">
@@ -292,13 +314,27 @@ function CountyCard({ entry }: { entry: CountyDirectoryRecord }) {
             <ContactLine icon={MapPin} text={entry.physicalAddress} />
           ) : null}
         </ul>
-        {entry.websiteUrl ? (
-          <Button asChild variant="outline" size="sm" className="mt-5">
-            <a href={entry.websiteUrl} target="_blank" rel="noreferrer">
-              <ExternalLink className="size-3.5" /> Open department website
-            </a>
-          </Button>
-        ) : null}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          {entry.websiteUrl ? (
+            <Button asChild variant="outline" size="sm">
+              <a href={entry.websiteUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5">
+                <ExternalLink className="size-3.5" /> Open department website
+              </a>
+            </Button>
+          ) : null}
+          {meetingInfo ? (
+            <Button asChild variant="secondary" size="sm">
+              <a
+                href={meetingInfo.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5"
+              >
+                <Calendar className="size-3.5" /> Meeting minutes &amp; agendas
+              </a>
+            </Button>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );

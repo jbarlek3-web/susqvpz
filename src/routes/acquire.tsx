@@ -1176,7 +1176,20 @@ function AcquireStudio() {
                     </p>
                   </div>
                   <div className="rounded-md border border-border/40 p-2.5 space-y-1">
-                    <span className="font-bold text-foreground block">County Planning Review:</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-foreground block">County Planning Review:</span>
+                      {activeAssessment.approvalTimeline.meetingMinutesUrl && (
+                        <a
+                          href={activeAssessment.approvalTimeline.meetingMinutesUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                        >
+                          <span>Meeting Minutes & Agendas</span>
+                          <ExternalLink className="size-3" />
+                        </a>
+                      )}
+                    </div>
                     <p className="text-muted-foreground font-medium">
                       {activeAssessment.approvalTimeline.countyPlanningCommission}
                     </p>

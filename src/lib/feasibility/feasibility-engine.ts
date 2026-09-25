@@ -209,6 +209,7 @@ export interface ParcelFeasibilityAssessment {
     majorMonths: string;
     governingBody: string;
     countyPlanningCommission: string;
+    meetingMinutesUrl?: string;
     reverseSubdivisionMonths?: string;
   };
 }
@@ -295,6 +296,7 @@ export const COUNTY_BENCHMARKS: Record<
     baseSiteworkPerLot: number;
     softCostPercent: number;
     countyPlanning: string;
+    meetingMinutesUrl: string;
     karstRiskHigh: boolean;
   }
 > = {
@@ -303,6 +305,7 @@ export const COUNTY_BENCHMARKS: Record<
     baseSiteworkPerLot: 55_000,
     softCostPercent: 12,
     countyPlanning: "Cumberland County Planning Commission (CCPC)",
+    meetingMinutesUrl: "https://www.cumberlandcountypa.gov/4884/Meeting-Schedule-Minutes",
     karstRiskHigh: true, // Great Valley carbonate formation
   },
   Dauphin: {
@@ -310,6 +313,7 @@ export const COUNTY_BENCHMARKS: Record<
     baseSiteworkPerLot: 52_000,
     softCostPercent: 12,
     countyPlanning: "Dauphin County Planning Commission (DCPC)",
+    meetingMinutesUrl: "https://www.dauphincounty.gov/government/support-services/property-taxes/board-of-assessment-appeals/meeting-minutes",
     karstRiskHigh: false,
   },
   Lancaster: {
@@ -317,6 +321,7 @@ export const COUNTY_BENCHMARKS: Record<
     baseSiteworkPerLot: 58_000,
     softCostPercent: 14,
     countyPlanning: "Lancaster County Planning Commission (Places2040)",
+    meetingMinutesUrl: "https://pa-lancastercounty.civicplus.com/agendacenter",
     karstRiskHigh: true, // Conestoga limestone plain
   },
   York: {
@@ -324,6 +329,7 @@ export const COUNTY_BENCHMARKS: Record<
     baseSiteworkPerLot: 50_000,
     softCostPercent: 11,
     countyPlanning: "York County Planning Commission (YCPC)",
+    meetingMinutesUrl: "https://yorkcountypa.gov/1275/_2026",
     karstRiskHigh: true, // Springettsbury/Spring Garden valley
   },
 };
@@ -910,6 +916,7 @@ export function assessParcelFeasibility(
     majorMonths: "6 to 14 months (Preliminary & Final Major SALDO approval)",
     governingBody: `${parcel.municipality} Board of Supervisors / Borough Council`,
     countyPlanningCommission: benchmark.countyPlanning,
+    meetingMinutesUrl: benchmark.meetingMinutesUrl,
     reverseSubdivisionMonths: reverseSubdivisionRequired ? "+2 to 3 months concurrent with preliminary plat" : undefined,
   };
 

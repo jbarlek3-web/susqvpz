@@ -25,6 +25,11 @@
           "title": "County GIS & Mapping Services",
           "url": "https://www.cumberlandcountypa.gov/119/GIS-Mapping",
           "description": "County parcel mapping, GIS layers, and spatial planning datasets"
+        },
+        {
+          "title": "County Meeting Schedule & Minutes",
+          "url": "https://www.cumberlandcountypa.gov/4884/Meeting-Schedule-Minutes",
+          "description": "Official Cumberland County Commissioners and Planning public meeting schedule, agendas, and approved minutes"
         }
       ]
     },
@@ -52,6 +57,11 @@
           "title": "Dauphin County GIS Services",
           "url": "https://www.dauphincounty.gov/government/departments/information_technology/gis_services/",
           "description": "Official Dauphin County geographic information systems, parcel viewer, and open data"
+        },
+        {
+          "title": "County Public Meeting Minutes & Agendas",
+          "url": "https://www.dauphincounty.gov/government/support-services/property-taxes/board-of-assessment-appeals/meeting-minutes",
+          "description": "Official Dauphin County public meeting minutes, hearings, and administrative board records"
         }
       ]
     },
@@ -79,6 +89,11 @@
           "title": "Lancaster County GIS & Parcel Viewer",
           "url": "https://lancasterpa.devnetwedge.com/",
           "description": "County public parcel assessment search and spatial GIS mapping"
+        },
+        {
+          "title": "County Agenda Center & Meeting Minutes",
+          "url": "https://pa-lancastercounty.civicplus.com/agendacenter",
+          "description": "Official Lancaster County AgendaCenter for Commissioners, Planning Commission, and Board meeting agendas and minutes"
         }
       ]
     },
@@ -116,6 +131,11 @@
           "title": "York County Act 167 Stormwater Program",
           "url": "https://www.ycpc.org/320/Water-Quality-Stormwater-Management",
           "description": "York County integrated water resources, Act 167 stormwater management, and watershed guidelines"
+        },
+        {
+          "title": "County Public Meeting Minutes (2026)",
+          "url": "https://yorkcountypa.gov/1275/_2026",
+          "description": "Official York County public meeting minutes, agendas, resolutions, and Commissioners records"
         }
       ]
     }
